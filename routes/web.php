@@ -10,6 +10,7 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BackupScheduleController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReportController;
@@ -37,6 +38,7 @@ Route::middleware(EnsureStaticAuthenticated::class)->group(function () {
         ->where('path', '.*')
         ->name('media.show');
     Route::get('/dashboard', [DashboardController::class, 'index'])->middleware($permission('dashboard'))->name('dashboard');
+    Route::get('/global-search', [GlobalSearchController::class, 'index'])->name('global-search.index');
     Route::get('assets/export', [AssetImportExportController::class, 'exportCsv'])->middleware($permission('assets', 'export'))->name('assets.export');
     Route::get('assets/import-sample', [AssetImportExportController::class, 'importSampleCsv'])->middleware($permission('assets', 'import'))->name('assets.import-sample');
     Route::post('assets/import', [AssetImportExportController::class, 'importCsv'])->middleware($permission('assets', 'import'))->name('assets.import');

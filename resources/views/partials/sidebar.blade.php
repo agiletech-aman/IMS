@@ -113,6 +113,7 @@ $groups = [
 
                 <div class="collapse nav-submenu {{ $groupActive ? 'show' : '' }}"
                      id="{{ $group['id'] }}"
+                     data-group-label="{{ $group['label'] }}"
                      data-bs-parent=".sidebar-nav">
 
                     @foreach($visibleItems as $item)

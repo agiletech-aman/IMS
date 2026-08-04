@@ -1,0 +1,115 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Asset;
+use App\Models\Complaint;
+use App\Models\User;
+use App\Services\PermissionService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class GlobalSearchController extends Controller
+{
+    private const RESULTS_PER_GROUP = 5;
+
+    public function __construct(private readonly PermissionService $permissions) {}
+
+    public function index(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'query' => ['nullable', 'string', 'max:100'],
+        ]);
+        $query = trim((string) ($data['query'] ?? ''));
+
+        if (mb_strlen($query) < 2) {
+            return response()->json(['results' => []]);
+        }
+
+        $results = [];
+
+        if ($this->permissions->allows('assets')) {
+            foreach ($this->assets($query) as $asset) {
+                $results[] = [
+                    'type' => 'Assets',
+                    'icon' => 'asset',
+                    'title' => "{$asset->asset_tag} · {$asset->name}",
+                    'description' => collect([$asset->model, $asset->status])->filter()->join(' · '),
+                    'url' => route('assets.show', $asset),
+                ];
+            }
+        }
+
+        if ($this->permissions->allows('complaints')) {
+            foreach ($this->tickets($query) as $ticket) {
+                $results[] = [
+                    'type' => 'Tickets',
+                    'icon' => 'ticket',
+                    'title' => "{$ticket->complaint_number} · {$ticket->subject}",
+                    'description' => collect([$ticket->status, $ticket->priority.' priority'])->filter()->join(' · '),
+                    'url' => route('complaints.show', $ticket),
+                ];
+            }
+        }
+
+        if ($this->permissions->allows('users')) {
+            foreach ($this->users($query) as $user) {
+                $parameters = ['search' => $user->unique_id];
+                if ($user->login_enabled) {
+                    $parameters['role'] = $user->role;
+                }
+
+                $results[] = [
+                    'type' => 'Users',
+                    'icon' => 'user',
+                    'title' => $user->name,
+                    'description' => collect([$user->unique_id, $user->email])->filter()->join(' · '),
+                    'url' => route('users.index', $parameters),
+                ];
+            }
+        }
+
+        return response()->json(['results' => $results]);
+    }
+
+    private function assets(string $query)
+    {
+        return Asset::query()
+            ->where(function ($builder) use ($query): void {
+                $builder->where('asset_tag', 'like', "%{$query}%")
+                    ->orWhere('name', 'like', "%{$query}%")
+                    ->orWhere('serial_number', 'like', "%{$query}%")
+                    ->orWhere('model', 'like', "%{$query}%");
+            })
+            ->orderBy('asset_tag')
+            ->limit(self::RESULTS_PER_GROUP)
+            ->get(['id', 'asset_tag', 'name', 'model', 'status']);
+    }
+
+    private function tickets(string $query)
+    {
+        return Complaint::query()
+            ->where(function ($builder) use ($query): void {
+                $builder->where('complaint_number', 'like', "%{$query}%")
+                    ->orWhere('subject', 'like', "%{$query}%")
+                    ->orWhere('requester_name', 'like', "%{$query}%");
+            })
+            ->latest()
+            ->limit(self::RESULTS_PER_GROUP)
+            ->get(['id', 'complaint_number', 'subject', 'status', 'priority']);
+    }
+
+    private function users(string $query)
+    {
+        return User::query()
+            ->where(function ($builder) use ($query): void {
+                $builder->where('name', 'like', "%{$query}%")
+                    ->orWhere('email', 'like', "%{$query}%")
+                    ->orWhere('unique_id', 'like', "%{$query}%")
+                    ->orWhere('contact', 'like', "%{$query}%");
+            })
+            ->orderBy('name')
+            ->limit(self::RESULTS_PER_GROUP)
+            ->get(['id', 'unique_id', 'name', 'email', 'role', 'login_enabled']);
+    }
+}

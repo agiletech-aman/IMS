@@ -2,10 +2,21 @@
     @php $permissionService = app(\App\Services\PermissionService::class); @endphp
     <div class="d-flex align-items-center gap-3">
         <button class="icon-btn" id="sidebarToggle" aria-label="Toggle sidebar"><i class="fa-solid fa-bars"></i></button>
-        <div class="global-search">
+        <div class="global-search" data-global-search data-search-url="{{ route('global-search.index') }}" role="search">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="search" placeholder="Search assets, tickets, users…" aria-label="Global search">
-            <kbd>⌘ K</kbd>
+            <input
+                id="globalSearchInput"
+                type="search"
+                placeholder="Search assets, tickets, users…"
+                aria-label="Global search"
+                aria-autocomplete="list"
+                aria-controls="globalSearchResults"
+                aria-expanded="false"
+                autocomplete="off"
+                maxlength="100"
+            >
+            <kbd title="Press Ctrl or ⌘ and K">⌘ K</kbd>
+            <div class="global-search-results" id="globalSearchResults" role="listbox" hidden></div>
         </div>
     </div>
     <div class="topbar-actions">

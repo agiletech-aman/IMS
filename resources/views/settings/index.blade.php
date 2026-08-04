@@ -153,7 +153,7 @@
                 </div>
                 <div class="panel-body">
                     <div class="smtp-info"><i class="fa-solid fa-database"></i><span>SMTP credentials are stored in the database. The password is encrypted using the application key and is never displayed after saving.</span></div>
-                    <form method="POST" action="{{ route('settings.smtp.update') }}">@csrf
+                    <form id="smtpSettingsForm" method="POST" action="{{ route('settings.smtp.update') }}">@csrf
                         <div class="smtp-enable-row">
                             <div><strong>Enable email delivery</strong><small>Use these SMTP settings for notification emails</small></div>
                             <div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="enabled" value="1" @checked($smtp->enabled)></div>
@@ -168,9 +168,13 @@
                             <div class="col-md-4"><label class="form-label">From Email *</label><input class="form-control" type="email" name="from_address" value="{{ old('from_address',$smtp->from_address) }}"></div>
                             <div class="col-12"><label class="form-label">Alert Recipient Emails *</label><textarea class="form-control" name="notification_emails" rows="2" placeholder="admin@company.com, assets@company.com">{{ old('notification_emails',$smtp->notification_emails) }}</textarea><small class="text-secondary">Separate multiple recipients with commas, semicolons, or spaces.</small></div>
                         </div>
-                        @if($canUpdateAdvanced)<button class="btn btn-primary mt-4"><i class="fa-solid fa-floppy-disk me-2"></i>Save SMTP Settings</button>@endif
                     </form>
-                    @if($canUpdateAdvanced)<form class="d-inline" method="POST" action="{{ route('settings.smtp.test') }}">@csrf<button class="btn btn-soft mt-3"><i class="fa-solid fa-paper-plane me-2"></i>Send Test Email</button></form>@endif
+                    @if($canUpdateAdvanced)
+                        <div class="d-flex align-items-center gap-2 mt-4">
+                            <button type="submit" form="smtpSettingsForm" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save SMTP Settings</button>
+                            <form method="POST" action="{{ route('settings.smtp.test') }}">@csrf<button class="btn btn-soft"><i class="fa-solid fa-paper-plane me-2"></i>Send Test Email</button></form>
+                        </div>
+                    @endif
                 </div>
             </div>
 
