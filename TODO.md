@@ -1,0 +1,12 @@
+- [ ] Add CSV export/import routes for assets
+- [ ] Implement CSV export (no image fields; columns based on Asset model)
+- [ ] Implement CSV import with row-level validation
+  - [ ] Match asset_category by name
+  - [ ] Match asset_type by name AND belongs to category
+  - [ ] Match brand by name (optional)
+  - [ ] Validate required fields
+  - [ ] Collect errors as list with row number
+- [ ] Decide behavior on unique fields (asset_tag/serial_number)
+- [ ] Update assets index UI: make Export/Import buttons functional + add import modal + show error list
+- [ ] Manual test: export -> edit -> import; verify errors for wrong category/type
+
