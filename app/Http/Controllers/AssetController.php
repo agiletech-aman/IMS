@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
-use App\Models\AssetCategory;
 use App\Models\AssetType;
 use App\Models\Brand;
 use App\Models\Department;
@@ -18,12 +17,13 @@ use Illuminate\View\View;
 
 class AssetController extends Controller
 {
-    public function index(Request $request): View
+public function index(Request $request): View
     {
-        $query = Asset::with(['category', 'type', 'brand', 'department']);
+        $query = Asset::with(['type', 'brand', 'department']);
         if ($search = trim((string) $request->query('search'))) {
             $query->where(fn ($q) => $q->where('asset_tag', 'like', "%{$search}%")
-                ->orWhere('name', 'like', "%{$search}%")->orWhere('serial_number', 'like', "%{$search}%"));
+                ->orWhere('name', 'like', "%{$search}%")->orWhere('serial_number', 'like', "%{$search}%")
+                ->orWhere('fr_number', 'like', "%{$search}%"));
         }
 
         return view('assets.index', [
@@ -59,9 +59,9 @@ class AssetController extends Controller
         return redirect()->route('assets.show', $asset)->with('success', 'Asset created successfully.');
     }
 
-    public function show(Asset $asset): View
+public function show(Asset $asset): View
     {
-        return view('assets.show', ['asset' => $asset->load(['category', 'type', 'brand', 'department', 'subDepartment'])]);
+        return view('assets.show', ['asset' => $asset->load(['type', 'brand', 'department', 'subDepartment'])]);
     }
 
     public function edit(Asset $asset): View
@@ -96,8 +96,7 @@ class AssetController extends Controller
 
     private function formData(): array
     {
-        return [
-            'categories' => AssetCategory::where('status', 'Active')->orderBy('name')->get(),
+return [
             'types' => AssetType::where('status', 'Active')->orderBy('name')->get(),
             'brands' => Brand::where('status', 'Active')->orderBy('name')->get(),
             'departments' => Department::where('status', 'Active')->orderBy('name')->get(),
@@ -107,18 +106,19 @@ class AssetController extends Controller
 
     private function rules(Request $request, ?int $id = null): array
     {
-        return [
+return [
             'name' => ['required', 'string', 'max:255'],
-            'asset_category_id' => ['required', 'exists:asset_categories,id'],
-            'asset_type_id' => ['required', Rule::exists('asset_types', 'id')->where('asset_category_id', $request->input('asset_category_id'))],
+            'asset_type_id' => ['required', 'exists:asset_types,id'],
             'brand_id' => ['nullable', 'exists:brands,id'],
             'department_id' => ['nullable', 'exists:departments,id'],
             'sub_department_id' => ['nullable', Rule::exists('sub_departments', 'id')->where('department_id', $request->input('department_id'))],
-            'model' => ['nullable', 'string', 'max:255'],
             'serial_number' => ['nullable', 'string', 'max:255', Rule::unique('assets')->ignore($id)],
-            'purchase_date' => ['nullable', 'date'],
+            'fr_number' => ['nullable', 'string', 'max:255'],
             'installation_date' => ['nullable', 'date'],
-            'location' => ['nullable', 'string', 'max:255'],
+            'cpu' => ['nullable', 'string', 'max:255'],
+            'hdd' => ['nullable', 'string', 'max:255'],
+            'ram' => ['nullable', 'string', 'max:255'],
+            'operating_system' => ['nullable', 'string', 'max:255'],
             'assigned_to' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::in(['Active', 'In Stock', 'Under Maintenance', 'Retired'])],
             'warranty_expiry' => ['nullable', 'date'],

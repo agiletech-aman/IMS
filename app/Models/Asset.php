@@ -7,24 +7,35 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Asset extends Model
 {
-    protected $fillable = [
-        'asset_tag', 'name', 'asset_category_id', 'asset_type_id', 'brand_id',
-        'department_id', 'sub_department_id', 'model', 'serial_number', 'purchase_date',
-        'installation_date', 'location', 'assigned_to', 'status', 'warranty_expiry',
-        'amc_expiry', 'image_path', 'notes',
-    ];
+   protected $fillable = [
+    'asset_tag',
+    'name',
+    'asset_type_id',
+    'brand_id',
+    'department_id',
+    'sub_department_id',
+    'serial_number',
+    'fr_number',
+    'installation_date',
+    'assigned_to',
+    'status',
+    'warranty_expiry',
+    'amc_expiry',
+    'image_path',
+    'notes',
 
-    protected function casts(): array
+    'cpu',
+    'hdd',
+    'ram',
+    'operating_system',
+];
+
+protected function casts(): array
     {
         return [
-            'purchase_date' => 'date', 'installation_date' => 'date',
+            'installation_date' => 'date',
             'warranty_expiry' => 'date', 'amc_expiry' => 'date',
         ];
-    }
-
-    public function category(): BelongsTo
-    {
-        return $this->belongsTo(AssetCategory::class, 'asset_category_id');
     }
 
     public function type(): BelongsTo

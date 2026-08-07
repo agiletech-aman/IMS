@@ -53,7 +53,7 @@
 @if($visibility['assets'])<div class="row g-3 mb-3">
     <div class="col-xl-5">
         <div class="panel h-100">
-            <div class="panel-header"><div><h2>Asset Distribution</h2><p>Live inventory grouped by category</p></div><span class="badge-soft">{{ number_format($assetTotal) }} total</span></div>
+            <div class="panel-header"><div><h2>Asset Distribution</h2><p>Live inventory grouped by type</p></div><span class="badge-soft">{{ number_format($assetTotal) }} total</span></div>
             <div class="panel-body"><div class="chart-wrap"><canvas id="assetCategoryChart"></canvas></div></div>
         </div>
     </div>

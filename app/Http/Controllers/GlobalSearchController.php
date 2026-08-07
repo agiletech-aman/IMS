@@ -34,7 +34,7 @@ class GlobalSearchController extends Controller
                     'type' => 'Assets',
                     'icon' => 'asset',
                     'title' => "{$asset->asset_tag} · {$asset->name}",
-                    'description' => collect([$asset->model, $asset->status])->filter()->join(' · '),
+'description' => collect([$asset->fr_number, $asset->status])->filter()->join(' · '),
                     'url' => route('assets.show', $asset),
                 ];
             }
@@ -76,14 +76,14 @@ class GlobalSearchController extends Controller
     {
         return Asset::query()
             ->where(function ($builder) use ($query): void {
-                $builder->where('asset_tag', 'like', "%{$query}%")
+$builder->where('asset_tag', 'like', "%{$query}%")
                     ->orWhere('name', 'like', "%{$query}%")
                     ->orWhere('serial_number', 'like', "%{$query}%")
-                    ->orWhere('model', 'like', "%{$query}%");
+                    ->orWhere('fr_number', 'like', "%{$query}%");
             })
             ->orderBy('asset_tag')
             ->limit(self::RESULTS_PER_GROUP)
-            ->get(['id', 'asset_tag', 'name', 'model', 'status']);
+            ->get(['id', 'asset_tag', 'name', 'fr_number', 'status']);
     }
 
     private function tickets(string $query)

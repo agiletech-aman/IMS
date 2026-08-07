@@ -37,10 +37,10 @@ class DashboardController extends Controller
             'audit' => $permissions->allows('audit_logs'),
         ];
 
-        $categoryDistribution = $visibility['assets'] ? Asset::query()
-            ->leftJoin('asset_categories', 'assets.asset_category_id', '=', 'asset_categories.id')
-            ->selectRaw("COALESCE(asset_categories.name, 'Uncategorized') as label, COUNT(assets.id) as total")
-            ->groupBy('asset_categories.name')
+$categoryDistribution = $visibility['assets'] ? Asset::query()
+            ->leftJoin('asset_types', 'assets.asset_type_id', '=', 'asset_types.id')
+            ->selectRaw("COALESCE(asset_types.name, 'Uncategorized') as label, COUNT(assets.id) as total")
+            ->groupBy('asset_types.name')
             ->orderByDesc('total')
             ->get() : collect();
 
@@ -110,7 +110,7 @@ class DashboardController extends Controller
                 'values' => $activityBreakdown->pluck('total'),
             ],
             'coverageChart' => $coverageForecast,
-            'recentAssets' => $visibility['assets'] ? Asset::with(['category', 'type'])->latest()->limit(5)->get() : collect(),
+'recentAssets' => $visibility['assets'] ? Asset::with(['type'])->latest()->limit(5)->get() : collect(),
             'recentAlerts' => $visibility['notifications'] ? SystemNotification::where('in_app_visible', true)->latest()->limit(5)->get() : collect(),
             'recentActivity' => $visibility['audit'] ? AuditLog::latest()->limit(6)->get() : collect(),
             'upcomingExpiries' => $visibility['reports'] && $visibility['assets'] ? $this->upcomingExpiries() : collect(),

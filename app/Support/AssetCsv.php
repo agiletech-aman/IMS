@@ -3,7 +3,6 @@
 namespace App\Support;
 
 use App\Models\Asset;
-use App\Models\AssetCategory;
 use App\Models\AssetType;
 use App\Models\Brand;
 use App\Models\Department;
@@ -18,19 +17,20 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class AssetCsv
 {
-    public const COLUMNS = [
+public const COLUMNS = [
         'asset_tag',
         'name',
-        'asset_category',
         'asset_type',
         'brand',
         'department',
         'sub_department',
-        'model',
         'serial_number',
-        'purchase_date',
+        'fr_number',
         'installation_date',
-        'location',
+        'cpu',
+        'hdd',
+        'ram',
+        'operating_system',
         'assigned_to',
         'status',
         'warranty_expiry',
@@ -40,16 +40,17 @@ class AssetCsv
 
     public const IMPORT_COLUMNS = [
         'name',
-        'asset_category',
         'asset_type',
         'brand',
         'department',
         'sub_department',
-        'model',
         'serial_number',
-        'purchase_date',
+        'fr_number',
         'installation_date',
-        'location',
+        'cpu',
+        'hdd',
+        'ram',
+        'operating_system',
         'assigned_to',
         'status',
         'warranty_expiry',
@@ -59,16 +60,17 @@ class AssetCsv
 
     public const IMPORT_HEADINGS = [
         'Name',
-        'Asset Category',
         'Asset Type',
         'Brand',
         'Department',
         'Sub Department',
-        'Model',
         'Serial Number',
-        'Purchase Date',
+        'FR Number',
         'Installation Date',
-        'Location',
+        'CPU',
+        'HDD',
+        'RAM',
+        'Operating System',
         'Assigned To',
         'Status',
         'Warranty Expiry',
@@ -78,7 +80,7 @@ class AssetCsv
 
     public static function exportRows(): array
     {
-        $assets = Asset::with(['category', 'type', 'brand', 'department', 'subDepartment'])
+$assets = Asset::with(['type', 'brand', 'department', 'subDepartment'])
             ->orderBy('id')
             ->get();
 
@@ -88,16 +90,17 @@ class AssetCsv
             $rows[] = [
                 'asset_tag' => $asset->asset_tag,
                 'name' => $asset->name,
-                'asset_category' => $asset->category?->name ?? '',
                 'asset_type' => $asset->type?->name ?? '',
                 'brand' => $asset->brand?->name ?? '',
                 'department' => $asset->department?->name ?? '',
                 'sub_department' => $asset->subDepartment?->name ?? '',
-                'model' => $asset->model ?? '',
                 'serial_number' => $asset->serial_number ?? '',
-                'purchase_date' => $asset->purchase_date?->format('Y-m-d') ?? '',
+                'fr_number' => $asset->fr_number ?? '',
                 'installation_date' => $asset->installation_date?->format('Y-m-d') ?? '',
-                'location' => $asset->location ?? '',
+                'cpu' => $asset->cpu ?? '',
+                'hdd' => $asset->hdd ?? '',
+                'ram' => $asset->ram ?? '',
+                'operating_system' => $asset->operating_system ?? '',
                 'assigned_to' => $asset->assigned_to ?? '',
                 'status' => $asset->status ?? '',
                 'warranty_expiry' => $asset->warranty_expiry?->format('Y-m-d') ?? '',
@@ -313,51 +316,26 @@ class AssetCsv
         return ['rows' => $rows, 'errors' => $errors];
     }
 
-    public static function resolveIdsForRow(array $row): array
+public static function resolveIdsForRow(array $row): array
     {
         $errors = [];
 
-        $assetCategoryName = trim((string) ($row['asset_category'] ?? ''));
         $assetTypeName = trim((string) ($row['asset_type'] ?? ''));
         $brandName = trim((string) ($row['brand'] ?? ''));
         $departmentName = trim((string) ($row['department'] ?? ''));
         $subDepartmentName = trim((string) ($row['sub_department'] ?? ''));
 
-        if ($assetCategoryName === '') {
-            $errors[] = 'asset_category is required.';
-        }
-
         if ($assetTypeName === '') {
             $errors[] = 'asset_type is required.';
-        }
-
-        $category = null;
-
-        if ($assetCategoryName !== '') {
-            $category = AssetCategory::whereRaw('LOWER(name)=?', [Str::lower($assetCategoryName)])->first();
-
-            if (!$category) {
-                $errors[] = "Asset category not found: {$assetCategoryName}";
-            }
         }
 
         $type = null;
 
         if ($assetTypeName !== '') {
-            if ($category) {
-                $type = AssetType::whereRaw('LOWER(name)=?', [Str::lower($assetTypeName)])
-                    ->where('asset_category_id', $category->id)
-                    ->first();
+            $type = AssetType::whereRaw('LOWER(name)=?', [Str::lower($assetTypeName)])->first();
 
-                if (!$type) {
-                    $errors[] = "Asset type not found for category (type: {$assetTypeName}, category: {$assetCategoryName})";
-                }
-            } else {
-                $type = AssetType::whereRaw('LOWER(name)=?', [Str::lower($assetTypeName)])->first();
-
-                if (!$type) {
-                    $errors[] = "Asset type not found: {$assetTypeName}";
-                }
+            if (!$type) {
+                $errors[] = "Asset type not found: {$assetTypeName}";
             }
         }
 
@@ -408,8 +386,7 @@ class AssetCsv
             }
         }
 
-        foreach ([
-            'purchase_date' => 'Purchase Date',
+foreach ([
             'installation_date' => 'Installation Date',
             'warranty_expiry' => 'Warranty Expiry',
             'amc_expiry' => 'AMC Expiry',
@@ -427,10 +404,9 @@ class AssetCsv
             $errors[] = "Invalid status: {$status}";
         }
 
-        return [
+return [
             'errors' => $errors,
             'resolved' => [
-                'asset_category_id' => $category?->id,
                 'asset_type_id' => $type?->id,
                 'brand_id' => $brand?->id,
                 'department_id' => $department?->id,

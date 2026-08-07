@@ -31,17 +31,15 @@ class ReportManagementTest extends TestCase
             'amc_expiry' => today()->addMonths(6),
         ]);
 
-        Asset::create([
+Asset::create([
             'asset_tag' => 'AST-UN-001',
             'name' => 'Unassigned Test Asset',
-            'asset_category_id' => $asset->asset_category_id,
             'asset_type_id' => $asset->asset_type_id,
             'brand_id' => $asset->brand_id,
             'status' => 'In Stock',
         ]);
 
         $filters = [
-            'asset_category_id' => $asset->asset_category_id,
             'asset_type_id' => $asset->asset_type_id,
             'brand_id' => $asset->brand_id,
             'department_id' => $asset->department_id,
@@ -67,10 +65,9 @@ class ReportManagementTest extends TestCase
     public function test_unassigned_and_no_coverage_filters_return_only_matching_assets(): void
     {
         $template = Asset::firstOrFail();
-        Asset::create([
+Asset::create([
             'asset_tag' => 'AST-NC-001',
             'name' => 'No Coverage Asset',
-            'asset_category_id' => $template->asset_category_id,
             'asset_type_id' => $template->asset_type_id,
             'status' => 'In Stock',
             'assigned_to' => null,

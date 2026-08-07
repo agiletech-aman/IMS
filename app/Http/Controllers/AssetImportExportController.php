@@ -130,18 +130,19 @@ class AssetImportExportController extends Controller
 
             $resolvedIds = $resolved['resolved'] ?? [];
 
-            $payload = [
+$payload = [
                 'name' => (string) $row['name'],
-                'asset_category_id' => (int) ($resolvedIds['asset_category_id'] ?? 0),
                 'asset_type_id' => (int) ($resolvedIds['asset_type_id'] ?? 0),
                 'brand_id' => $resolvedIds['brand_id'] ? (int) $resolvedIds['brand_id'] : null,
                 'department_id' => $resolvedIds['department_id'] ? (int) $resolvedIds['department_id'] : null,
                 'sub_department_id' => $resolvedIds['sub_department_id'] ? (int) $resolvedIds['sub_department_id'] : null,
-                'model' => (string) $row['model'],
                 'serial_number' => (string) $row['serial_number'],
-                'purchase_date' => $this->toDate($row['purchase_date']),
+                'fr_number' => (string) $row['fr_number'],
                 'installation_date' => $this->toDate($row['installation_date']),
-                'location' => (string) $row['location'],
+                'cpu' => (string) $row['cpu'],
+                'hdd' => (string) $row['hdd'],
+                'ram' => (string) $row['ram'],
+                'operating_system' => (string) $row['operating_system'],
                 'assigned_to' => (string) $row['assigned_to'],
                 'status' => (string) $row['status'],
                 'warranty_expiry' => $this->toDate($row['warranty_expiry']),

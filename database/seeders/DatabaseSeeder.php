@@ -38,11 +38,13 @@ class DatabaseSeeder extends Seeder
         $apple = Brand::firstOrCreate(['code' => 'BR-APPLE'], ['name' => 'Apple', 'country' => 'United States', 'status' => 'Active']);
         Brand::firstOrCreate(['code' => 'BR-DELL'], ['name' => 'Dell', 'country' => 'United States', 'status' => 'Active']);
 
-        Asset::firstOrCreate(['asset_tag' => 'AST-LT-2486'], [
-            'name' => 'MacBook Pro 14”', 'asset_category_id' => $hardware->id, 'asset_type_id' => $laptop->id,
-            'brand_id' => $apple->id, 'department_id' => $design->id, 'model' => 'MacBook Pro M3',
-            'serial_number' => 'C02XG7H9MD6T', 'purchase_date' => '2025-01-18', 'installation_date' => '2025-01-22',
-            'location' => 'Mumbai HQ', 'assigned_to' => 'Riya Mehta', 'status' => 'Active',
+Asset::firstOrCreate(['asset_tag' => 'AST-LT-2486'], [
+            'name' => 'MacBook Pro 14”', 'asset_type_id' => $laptop->id,
+            'brand_id' => $apple->id, 'department_id' => $design->id,
+            'serial_number' => 'C02XG7H9MD6T', 'fr_number' => 'FR-2025-0001',
+            'installation_date' => '2025-01-22',
+            'cpu' => 'Apple M3 Pro', 'hdd' => '512GB SSD', 'ram' => '18GB', 'operating_system' => 'macOS Sonoma',
+            'assigned_to' => 'Riya Mehta', 'status' => 'Active',
             'warranty_expiry' => '2028-01-17', 'amc_expiry' => '2027-01-17',
         ]);
     }

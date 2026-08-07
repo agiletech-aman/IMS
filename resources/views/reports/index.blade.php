@@ -14,8 +14,7 @@
             <div class="report-filter-section">
                 <span class="report-filter-title"><i class="fa-solid fa-layer-group"></i>Classification</span>
                 <div class="row g-3">
-                    <div class="col-md-6 col-xl-3"><label class="form-label">Category</label><select class="form-select" name="asset_category_id" id="reportCategory"><option value="">All categories</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected((string)request('asset_category_id')===(string)$category->id)>{{ $category->name }}</option>@endforeach</select></div>
-                    <div class="col-md-6 col-xl-3"><label class="form-label">Type</label><select class="form-select" name="asset_type_id" id="reportType"><option value="">All types</option>@foreach($types as $type)<option value="{{ $type->id }}" data-category="{{ $type->asset_category_id }}" @selected((string)request('asset_type_id')===(string)$type->id)>{{ $type->name }}</option>@endforeach</select></div>
+<div class="col-md-6 col-xl-3"><label class="form-label">Type</label><select class="form-select" name="asset_type_id" id="reportType"><option value="">All types</option>@foreach($types as $type)<option value="{{ $type->id }}" @selected((string)request('asset_type_id')===(string)$type->id)>{{ $type->name }}</option>@endforeach</select></div>
                     <div class="col-md-6 col-xl-3"><label class="form-label">Brand</label><select class="form-select" name="brand_id"><option value="">All brands</option>@foreach($brands as $brand)<option value="{{ $brand->id }}" @selected((string)request('brand_id')===(string)$brand->id)>{{ $brand->name }}</option>@endforeach</select></div>
                     <div class="col-md-6 col-xl-3"><label class="form-label">Status</label><select class="form-select" name="status"><option value="">All statuses</option>@foreach(['Active','In Stock','Under Maintenance','Retired'] as $status)<option @selected(request('status')===$status)>{{ $status }}</option>@endforeach</select></div>
                 </div>
@@ -70,15 +69,15 @@
     </div>
     <div class="table-responsive">
         <table class="table data-table report-results-table">
-            <thead><tr><th>Asset</th><th>Category / Type</th><th>Brand</th><th>Department</th><th>Assigned To</th><th>Status</th><th>Warranty</th><th>AMC</th></tr></thead>
+<thead><tr><th>Asset</th><th>Type</th><th>Brand</th><th>Department</th><th>Assigned To</th><th>Status</th><th>Warranty</th><th>AMC</th></tr></thead>
             <tbody>
             @forelse($assets as $asset)
                 @php
                     $coverageClass = fn ($date) => !$date ? 'muted' : ($date->isPast() ? 'danger' : ($date->lte(today()->addDays(30)) ? 'warning' : 'success'));
                 @endphp
                 <tr>
-                    <td><div class="cell-title"><span class="mini-icon"><i class="fa-solid fa-laptop-file"></i></span><span><strong>{{ $asset->name }}</strong><small>{{ $asset->asset_tag }}</small></span></div></td>
-                    <td><strong>{{ $asset->category?->name ?: '—' }}</strong><small class="d-block text-secondary">{{ $asset->type?->name ?: 'No type' }}</small></td>
+<td><div class="cell-title"><span class="mini-icon"><i class="fa-solid fa-laptop-file"></i></span><span><strong>{{ $asset->name }}</strong><small>{{ $asset->asset_tag }}</small></span></div></td>
+                    <td>{{ $asset->type?->name ?: '—' }}</td>
                     <td>{{ $asset->brand?->name ?: '—' }}</td>
                     <td><strong>{{ $asset->department?->name ?: '—' }}</strong><small class="d-block text-secondary">{{ $asset->subDepartment?->name ?: 'No sub department' }}</small></td>
                     <td>{{ $asset->assigned_to ?: 'Unassigned' }}</td>
@@ -111,8 +110,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   };
   parent.addEventListener('change',sync);sync();
  };
- connect('reportCategory','reportType','category');
- connect('reportDepartment','reportSubDepartment','department');
+connect('reportDepartment','reportSubDepartment','department');
 });
 </script>
 @endpush

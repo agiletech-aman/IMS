@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
-use App\Models\AssetCategory;
 use App\Models\AssetType;
 use App\Models\Brand;
 use App\Models\Department;
@@ -34,7 +33,6 @@ class ReportController extends Controller
                 'amc_due' => (clone $query)->whereBetween('amc_expiry', [today(), today()->addDays(30)])->count(),
             ],
             'hasGenerated' => $hasGenerated,
-            'categories' => AssetCategory::where('status', 'Active')->orderBy('name')->get(),
             'types' => AssetType::where('status', 'Active')->orderBy('name')->get(),
             'brands' => Brand::where('status', 'Active')->orderBy('name')->get(),
             'departments' => Department::where('status', 'Active')->orderBy('name')->get(),
@@ -99,7 +97,7 @@ class ReportController extends Controller
         return response()->streamDownload(function () use ($assets): void {
             $output = fopen('php://output', 'wb');
             fputcsv($output, [
-                'Asset ID', 'Asset Name', 'Category', 'Type', 'Brand', 'Department',
+                'Asset ID', 'Asset Name', 'Type', 'Brand', 'Department',
                 'Sub Department', 'Assigned To', 'Status', 'Warranty Expiry', 'AMC Expiry',
             ]);
 
@@ -107,7 +105,6 @@ class ReportController extends Controller
                 fputcsv($output, [
                     $asset->asset_tag,
                     $asset->name,
-                    $asset->category?->name,
                     $asset->type?->name,
                     $asset->brand?->name,
                     $asset->department?->name,
@@ -124,10 +121,10 @@ class ReportController extends Controller
 
     private function reportQuery(array $filters): Builder
     {
-        $query = Asset::with(['category', 'type', 'brand', 'department', 'subDepartment']);
+$query = Asset::with(['type', 'brand', 'department', 'subDepartment']);
 
         foreach ([
-            'asset_category_id', 'asset_type_id', 'brand_id', 'department_id',
+            'asset_type_id', 'brand_id', 'department_id',
             'sub_department_id', 'status',
         ] as $field) {
             if (filled($filters[$field] ?? null)) {
@@ -161,13 +158,8 @@ class ReportController extends Controller
 
     private function rules(Request $request): array
     {
-        return [
-            'asset_category_id' => ['nullable', 'exists:asset_categories,id'],
-            'asset_type_id' => ['nullable', Rule::exists('asset_types', 'id')->where(
-                fn ($query) => filled($request->input('asset_category_id'))
-                    ? $query->where('asset_category_id', $request->input('asset_category_id'))
-                    : $query
-            )],
+return [
+            'asset_type_id' => ['nullable', 'exists:asset_types,id'],
             'brand_id' => ['nullable', 'exists:brands,id'],
             'department_id' => ['nullable', 'exists:departments,id'],
             'sub_department_id' => ['nullable', Rule::exists('sub_departments', 'id')->where(

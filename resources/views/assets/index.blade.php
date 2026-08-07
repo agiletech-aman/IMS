@@ -21,7 +21,7 @@
             @endpermission
         </div>
     </div>
-    <div class="table-responsive"><table class="table data-table"><thead><tr><th>Asset</th><th>Category / Type</th><th>Serial Number</th><th>Department</th><th>Location</th><th>Installation Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+<div class="table-responsive"><table class="table data-table"><thead><tr><th>Asset</th><th>Type</th><th>Serial Number</th><th>FR Number</th><th>Department</th><th>Installation Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>
     @forelse($assets as $asset)
         <tr>
             <td><div class="cell-title">
@@ -29,7 +29,7 @@
                 @else<span class="mini-icon"><i class="fa-solid fa-laptop"></i></span>@endif
                 <span><strong>{{ $asset->name }}</strong><small>#{{ $asset->asset_tag }}</small></span>
             </div></td>
-            <td>{{ $asset->category?->name }} · {{ $asset->type?->name }}</td><td>{{ $asset->serial_number ?: '—' }}</td><td>{{ $asset->department?->name ?: '—' }}</td><td>{{ $asset->location ?: '—' }}</td><td>{{ $asset->installation_date?->format('d M Y') ?? '—' }}</td>
+            <td>{{ $asset->type?->name ?: '—' }}</td><td>{{ $asset->serial_number ?: '—' }}</td><td>{{ $asset->fr_number ?: '—' }}</td><td>{{ $asset->department?->name ?: '—' }}</td><td>{{ $asset->installation_date?->format('d M Y') ?? '—' }}</td>
             <td><span class="badge-soft {{ $asset->status === 'Active' ? 'success' : ($asset->status === 'Under Maintenance' ? 'warning' : '') }}">{{ $asset->status }}</span></td>
             <td>
                 <a class="btn btn-soft btn-icon" href="{{ route('assets.show',$asset) }}" title="View asset"><i class="fa-regular fa-eye"></i></a>

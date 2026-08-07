@@ -54,16 +54,15 @@ class AssetManagementCrudTest extends TestCase
             'name' => 'Lenovo', 'code' => 'BR-LENOVO', 'country' => 'China', 'status' => 'Active',
             'logo' => UploadedFile::fake()->createWithContent('lenovo.png', $png),
         ])->assertRedirect();
-        $brand = Brand::where('name', 'Lenovo')->firstOrFail();
+$brand = Brand::where('name', 'Lenovo')->firstOrFail();
         $this->assertSame('BD-001', $brand->code);
         Storage::disk('public')->assertExists($brand->logo_path);
 
-        $category = AssetCategory::where('code', 'CAT-HW')->firstOrFail();
         $type = AssetType::where('code', 'TYPE-LT')->firstOrFail();
         $department = Department::where('code', 'DEP-IT')->firstOrFail();
         $response = $this->post(route('assets.store'), [
             'asset_tag' => 'AST-LT-3000', 'name' => 'ThinkPad X1',
-            'asset_category_id' => $category->id, 'asset_type_id' => $type->id,
+            'asset_type_id' => $type->id,
             'brand_id' => $brand->id, 'department_id' => $department->id,
             'installation_date' => '2026-06-24', 'status' => 'In Stock',
             'image' => UploadedFile::fake()->createWithContent('asset.png', $png),
@@ -77,7 +76,7 @@ class AssetManagementCrudTest extends TestCase
         Storage::disk('public')->assertExists($asset->image_path);
 
         $this->post(route('assets.store'), [
-            'name' => 'ThinkPad X1', 'asset_category_id' => $category->id,
+            'name' => 'ThinkPad X1',
             'asset_type_id' => $type->id, 'status' => 'In Stock',
         ])->assertRedirect();
         $this->assertDatabaseHas('assets', ['name' => 'ThinkPad X1', 'asset_tag' => 'AST-T1-002']);
@@ -166,7 +165,6 @@ class AssetManagementCrudTest extends TestCase
 
         $this->put(route('assets.update', $asset), [
             'name' => $asset->name,
-            'asset_category_id' => $asset->asset_category_id,
             'asset_type_id' => $asset->asset_type_id,
             'status' => $asset->status,
             'warranty_enabled' => '0',
@@ -189,10 +187,11 @@ class AssetManagementCrudTest extends TestCase
         AssetCsv::exportStyledImportSample($path);
         $spreadsheet = IOFactory::load($path);
         $spreadsheet->getActiveSheet()->fromArray([
-            'Test Import Laptop', 'Hardware', 'Laptop', 'Apple', 'IT Operations', '',
-            'Model X', 'IMPORT-SERIAL-001', '2026-01-01', '2026-01-02', 'Mumbai',
+            'Test Import Laptop', 'Laptop', 'Apple', 'IT Operations', '',
+            'IMPORT-SERIAL-001', 'FR-2025-0001', '2026-01-02', 'Intel i7', '512GB SSD', '16GB', 'Windows 11',
             'Test User', 'Active', '2029-01-01', '2028-01-01', 'Imported from Excel',
         ], null, 'A2');
+
         IOFactory::createWriter($spreadsheet, 'Xlsx')->save($path);
 
         $response = $this->post(route('assets.import'), [
@@ -215,7 +214,7 @@ class AssetManagementCrudTest extends TestCase
         $response->assertOk()->assertDownload('assets_import_sample.xlsx');
         $sheet = IOFactory::load($response->baseResponse->getFile()->getPathname())->getActiveSheet();
 
-        $this->assertSame(AssetCsv::IMPORT_HEADINGS, $sheet->rangeToArray('A1:P1')[0]);
+        $this->assertSame(AssetCsv::IMPORT_HEADINGS, $sheet->rangeToArray('A1:Q1')[0]);
     }
 
     public function test_import_errors_are_returned_with_excel_row_details(): void
@@ -227,10 +226,11 @@ class AssetManagementCrudTest extends TestCase
         AssetCsv::exportStyledImportSample($path);
         $spreadsheet = IOFactory::load($path);
         $spreadsheet->getActiveSheet()->fromArray([
-            'Invalid Laptop', 'Unknown Category', 'Laptop', 'Apple', 'IT Operations', '',
-            'Model X', 'INVALID-SERIAL-001', '01/01/2026', '', 'Mumbai', '',
-            'Wrong Status', '', '', '',
+            'Invalid Laptop', 'Unknown Type', 'Apple', 'IT Operations', '',
+            'INVALID-SERIAL-001', '', '01/01/2026', '', '', '', '',
+            'Wrong Status', '', '', '', '',
         ], null, 'A2');
+
         IOFactory::createWriter($spreadsheet, 'Xlsx')->save($path);
 
         $response = $this->post(route('assets.import'), [
@@ -245,8 +245,8 @@ class AssetManagementCrudTest extends TestCase
             ->assertSessionHas('importErrors.0.asset', 'Invalid Laptop');
 
         $messages = session('importErrors.0.messages');
-        $this->assertContains('Asset category not found: Unknown Category', $messages);
-        $this->assertContains('Purchase Date must use YYYY-MM-DD format.', $messages);
+        $this->assertContains('Asset type not found: Unknown Type', $messages);
+        $this->assertContains('Installation Date must use YYYY-MM-DD format.', $messages);
         $this->assertDatabaseMissing('assets', ['serial_number' => 'INVALID-SERIAL-001']);
     }
 
@@ -261,10 +261,11 @@ class AssetManagementCrudTest extends TestCase
         AssetCsv::exportStyledImportSample($path);
         $spreadsheet = IOFactory::load($path);
         $spreadsheet->getActiveSheet()->fromArray([
-            'Changed Duplicate Name', 'Hardware', 'Laptop', 'Apple', 'IT Operations', '',
-            'Model X', 'C02XG7H9MD6T', '2026-01-01', '', 'Mumbai', '',
-            'Active', '', '', '',
+            'Changed Duplicate Name', 'Laptop', 'Apple', 'IT Operations', '',
+            'C02XG7H9MD6T', '', '2026-01-01', '', '', '', '',
+            '', 'Active', '', '', '',
         ], null, 'A2');
+
         IOFactory::createWriter($spreadsheet, 'Xlsx')->save($path);
 
         $response = $this->post(route('assets.import'), [
