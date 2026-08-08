@@ -142,10 +142,14 @@ class UserImportExportController extends Controller
 
             $loginEnabled = in_array(Str::lower(trim((string) ($row['login_enabled'] ?? ''))), ['yes', '1', 'true'], true);
             $loginEnabled = blank($row['login_enabled'] ?? null) ? true : $loginEnabled;
-            $role = trim((string) ($row['role'] ?? '')) ?: 'Viewer';
+            $defaultRole = trim((string) $request->input('role')) ?: 'Viewer';
+            if (! in_array($defaultRole, User::ROLES, true)) {
+                $defaultRole = 'Viewer';
+            }
+            $role = trim((string) ($row['role'] ?? '')) ?: $defaultRole;
 
             if ($loginEnabled && ! in_array($role, User::ROLES, true)) {
-                $role = 'Viewer';
+                $role = $defaultRole;
             }
 
             $status = trim((string) ($row['status'] ?? ''));

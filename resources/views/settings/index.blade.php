@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title','Settings')
 @section('content')
-@include('partials.page-header',['title'=>'System Settings','description'=>'Configure administrators, organization defaults, notification delivery, SMTP, security, and appearance.'])
+@include('partials.page-header',['title'=>'System Settings','description'=>'Configure administrators, organization defaults, notification delivery, SMTP, and appearance.'])
 
 @php
     $permissionService = app(\App\Services\PermissionService::class);
@@ -15,7 +15,7 @@
         $canManageAdmins ? ['administrators','fa-user-gear','Administrators'] : null,
         $canViewAdvanced ? ['smtp','fa-envelope','SMTP Settings'] : null,
         $canViewAdvanced ? ['notifications','fa-bell','Notification Settings'] : null,
-        $canViewAdvanced ? ['security','fa-shield-halved','Security Settings'] : null,
+        // $canViewAdvanced ? ['security','fa-shield-halved','Security Settings'] : null,
         $canViewBasic ? ['theme','fa-palette','Theme Settings'] : null,
     ]));
     $requestedTab = session('activeSettingsTab');
@@ -195,8 +195,9 @@
                         @permission('notifications','view')<a class="btn btn-soft mt-3" href="{{ route('notifications.index') }}#alertRules">Advanced Rules</a>@endpermission
                     </div>
                 </form>
-            </div>
+</div>
 
+            {{--
             <div class="tab-pane fade {{ $activeTab === 'security' ? 'show active' : '' }}" id="security">
                 <div class="panel-header"><h2>Security Settings</h2></div>
                 <div class="panel-body"><form method="POST" action="{{ route('settings.security.update') }}">@csrf
@@ -210,7 +211,8 @@
                     @if($canUpdateAdvanced)<button class="btn btn-primary mt-4"><i class="fa-solid fa-shield-halved me-2"></i>Update Security Policy</button>@endif
                 </form></div>
             </div>
-            @endif
+            --}}
+@endif
 
             @if($canViewBasic)
             <div class="tab-pane fade {{ $activeTab === 'theme' ? 'show active' : '' }}" id="theme">
@@ -236,8 +238,8 @@
 <script>
 (()=>{ 
  const readOnlyGroups={
-  basic:@json(!$canUpdateBasic),
-  advanced:@json(!$canUpdateAdvanced)
+  basic: {!! json_encode(!$canUpdateBasic) !!},
+  advanced: {!! json_encode(!$canUpdateAdvanced) !!}
  };
  if(readOnlyGroups.basic)document.querySelectorAll('#general form input,#general form select,#general form textarea,#company form input,#company form select,#company form textarea,#theme form input,#theme form select,#theme form textarea').forEach(field=>field.disabled=true);
  if(readOnlyGroups.advanced)document.querySelectorAll('#smtp form input,#smtp form select,#smtp form textarea,#notifications form input,#notifications form select,#notifications form textarea,#security form input,#security form select,#security form textarea').forEach(field=>field.disabled=true);

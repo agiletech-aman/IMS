@@ -3,6 +3,7 @@
     <div class="modal-content">
       <form method="POST" action="{{ route('users.import') }}" enctype="multipart/form-data">
         @csrf
+        @if(!empty($selectedRole))<input type="hidden" name="role" value="{{ $selectedRole }}">@endif
         <div class="modal-header">
           <h1 class="modal-title fs-5" id="userImportModalLabel">Import Faculties (Excel / CSV)</h1>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -18,7 +19,7 @@
           <div class="mb-2">
             <label class="form-label">Excel or CSV file</label>
             <input class="form-control" type="file" name="csv" accept=".xlsx,.xls,.csv,.txt" required>
-            <small class="text-secondary">Note: Faculty IDs are generated automatically. Imported faculties are login-enabled and Active by default. Please use the sample file and keep the column names and order unchanged.</small>
+            <small class="text-secondary">Note: Faculty IDs are generated automatically. Imported faculties are login-enabled and Active by default. The role of the current module is applied by default. Please use the sample file and keep the column names and order unchanged.</small>
             @foreach($errors->userImport->all() as $message)
               <div class="text-danger small mt-1"><i class="fa-solid fa-circle-exclamation me-1"></i>{{ $message }}</div>
             @endforeach
