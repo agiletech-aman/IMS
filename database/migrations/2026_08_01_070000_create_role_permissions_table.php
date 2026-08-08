@@ -25,7 +25,7 @@ return new class extends Migration
         });
 
         $modules = [
-            'dashboard', 'assets', 'departments', 'sub_departments', 'categories',
+            'dashboard', 'assets', 'departments', 'sub_departments',
             'types', 'brands', 'users', 'vendors', 'notifications', 'reports',
             'audit_logs', 'backup', 'settings', 'settings_basic', 'settings_advanced',
             'roles_permissions', 'administrators',
@@ -36,7 +36,6 @@ return new class extends Migration
                 'assets' => ['view', 'create', 'update', 'delete', 'assign', 'import', 'export'],
                 'departments' => ['view', 'create', 'update'],
                 'sub_departments' => ['view', 'create', 'update'],
-                'categories' => ['view', 'create', 'update'],
                 'types' => ['view', 'create', 'update'],
                 'brands' => ['view', 'create', 'update'],
                 'users' => ['view', 'create', 'update', 'delete'],
@@ -51,7 +50,6 @@ return new class extends Migration
                 'assets' => ['view', 'create', 'update', 'delete', 'assign', 'import', 'export'],
                 'departments' => ['view', 'create', 'update', 'delete'],
                 'sub_departments' => ['view', 'create', 'update', 'delete'],
-                'categories' => ['view', 'create', 'update', 'delete'],
                 'types' => ['view', 'create', 'update', 'delete'],
                 'brands' => ['view', 'create', 'update', 'delete'],
                 'users' => ['view', 'create', 'update', 'delete'],
@@ -70,7 +68,6 @@ return new class extends Migration
                 'assets' => ['view', 'export'],
                 'departments' => ['view'],
                 'sub_departments' => ['view'],
-                'categories' => ['view'],
                 'types' => ['view'],
                 'brands' => ['view'],
                 'users' => ['view'],

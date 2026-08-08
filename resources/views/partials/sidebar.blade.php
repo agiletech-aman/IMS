@@ -25,16 +25,16 @@ $groups = [
             ['users*', 'fa-user-lock', 'Viewer', 'users.index', ['role' => 'Viewer'], 'users'],
         ],
     ],
-    [
-        'id' => 'serviceManagement',
-        'label' => 'Service Management',
-        'icon' => 'fa-headset',
-        'items' => [
-            ['complaints*', 'fa-screwdriver-wrench', 'Complaint Management', 'complaints.index', [], 'complaints'],
-            ['notifications*', 'fa-bell', 'Notifications & Alerts', 'notifications.index', [], 'notifications'],
-            ['vendors*', 'fa-handshake', 'Vendors / OEM', 'vendors.index', [], 'vendors'],
-        ],
+   [
+    'id' => 'serviceManagement',
+    'label' => 'Service Management',
+    'icon' => 'fa-headset',
+    'items' => [
+        // ['complaints*', 'fa-screwdriver-wrench', 'Complaint Management', 'complaints.index', [], 'complaints'],
+        ['notifications*', 'fa-bell', 'Notifications & Alerts', 'notifications.index', [], 'notifications'],
+        ['vendors*', 'fa-handshake', 'Vendors / OEM', 'vendors.index', [], 'vendors'],
     ],
+],
    
     [
         'id' => 'governance',

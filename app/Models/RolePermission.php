@@ -16,7 +16,6 @@ class RolePermission extends Model
         'assets' => ['label' => 'Assets', 'icon' => 'fa-laptop-file', 'actions' => self::ACTIONS],
         'departments' => ['label' => 'Departments', 'icon' => 'fa-building', 'actions' => ['view', 'create', 'update', 'delete']],
         'sub_departments' => ['label' => 'Sub Departments', 'icon' => 'fa-sitemap', 'actions' => ['view', 'create', 'update', 'delete']],
-        'categories' => ['label' => 'Categories', 'icon' => 'fa-tags', 'actions' => ['view', 'create', 'update', 'delete']],
         'types' => ['label' => 'Asset Types', 'icon' => 'fa-shapes', 'actions' => ['view', 'create', 'update', 'delete']],
         'brands' => ['label' => 'Brands', 'icon' => 'fa-copyright', 'actions' => ['view', 'create', 'update', 'delete']],
         'users' => ['label' => 'Users & Access Accounts', 'icon' => 'fa-users', 'actions' => ['view', 'create', 'update', 'delete', 'assign']],
@@ -59,3 +58,4 @@ class RolePermission extends Model
         ];
     }
 }
+

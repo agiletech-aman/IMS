@@ -56,7 +56,6 @@ Route::middleware(EnsureStaticAuthenticated::class)->group(function () {
             'sub-departments' => 'sub_departments',
             'types' => 'types',
             'brands' => 'brands',
-            'categories' => 'categories',
         ] as $path => $module) {
             Route::get($path, [AssetMasterController::class, 'index'])->middleware($permission($module))->name($path.'.index');
             Route::post($path, [AssetMasterController::class, 'store'])->middleware($permission($module, 'create'))->name($path.'.store');
