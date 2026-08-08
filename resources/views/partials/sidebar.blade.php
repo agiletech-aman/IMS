@@ -18,14 +18,14 @@ $groups = [
         'label' => 'User Management',
         'icon' => 'fa-user-gear',
         'items' => [
-            ['users*', 'fa-users', 'Users', 'users.index', [], 'users'],
+            ['users*', 'fa-users', 'Faculty', 'users.index', [], 'users'],
             ['users*', 'fa-user-tie', 'Asset Manager', 'users.index', ['role' => 'Asset Manager'], 'users'],
             ['users*', 'fa-user-ninja', 'Sub admin', 'users.index', ['role' => 'Sub admin'], 'users'],
             ['users*', 'fa-user-shield', 'Auditor', 'users.index', ['role' => 'Auditor'], 'users'],
             ['users*', 'fa-user-lock', 'Viewer', 'users.index', ['role' => 'Viewer'], 'users'],
         ],
     ],
-   [
+/*   [
     'id' => 'serviceManagement',
     'label' => 'Service Management',
     'icon' => 'fa-headset',
@@ -34,11 +34,11 @@ $groups = [
         ['notifications*', 'fa-bell', 'Notifications & Alerts', 'notifications.index', [], 'notifications'],
         ['vendors*', 'fa-handshake', 'Vendors / OEM', 'vendors.index', [], 'vendors'],
     ],
-],
+],*/
    
     [
         'id' => 'governance',
-        'label' => 'Governance',
+        'label' => 'Data & Audit',
         'icon' => 'fa-chart-column',
         'items' => [
             ['reports*', 'fa-file-lines', 'Reports', 'reports.index', [], 'reports'],

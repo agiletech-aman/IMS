@@ -17,6 +17,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserImportExportController;
 use App\Http\Controllers\VendorController;
 use App\Http\Middleware\EnsureAdministrator;
 use App\Http\Middleware\EnsurePermission;
@@ -84,6 +85,9 @@ Route::middleware(EnsureStaticAuthenticated::class)->group(function () {
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->middleware($permission('notifications', 'update'))->name('notifications.read');
     Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->middleware($permission('notifications', 'delete'))->name('notifications.destroy');
     Route::post('/users/{user}/assign-asset', [UserController::class, 'assignAsset'])->middleware($permission('users', 'assign'))->name('users.assign-asset');
+    Route::get('users/export', [UserImportExportController::class, 'exportCsv'])->middleware($permission('users', 'import'))->name('users.export');
+    Route::get('users/import-sample', [UserImportExportController::class, 'importSampleCsv'])->middleware($permission('users', 'import'))->name('users.import-sample');
+    Route::post('users/import', [UserImportExportController::class, 'importCsv'])->middleware($permission('users', 'import'))->name('users.import');
     Route::get('/users', [UserController::class, 'index'])->middleware($permission('users'))->name('users.index');
     Route::post('/users', [UserController::class, 'store'])->middleware($permission('users', 'create'))->name('users.store');
     Route::match(['put', 'patch'], '/users/{user}', [UserController::class, 'update'])->middleware($permission('users', 'update'))->name('users.update');

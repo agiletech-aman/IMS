@@ -1,28 +1,34 @@
 @extends('layouts.app')
-@section('title','Users')
+@section('title','Faculties')
 @section('content')
-@include('partials.page-header',['title'=>$selectedRole ? $selectedRole.' Access Accounts' : 'Users','description'=>$selectedRole ? 'Manage dashboard login accounts assigned to the '.$selectedRole.' role.' : 'Manage users and their assigned assets.'])
+@include('partials.page-header',['title'=>$selectedRole ? $selectedRole.' Access Accounts' : 'Faculties','description'=>$selectedRole ? 'Manage dashboard login accounts assigned to the '.$selectedRole.' role.' : 'Manage faculties and their assigned assets.'])
 
 <div class="row row-cols-2 row-cols-md-3 g-3 mb-3">
-    @include('partials.stat-card',['icon'=>'fa-users','label'=>$selectedRole ? 'Login Accounts' : 'Users','value'=>number_format($stats['total'])])
+    @include('partials.stat-card',['icon'=>'fa-users','label'=>$selectedRole ? 'Login Accounts' : 'Faculties','value'=>number_format($stats['total'])])
     @include('partials.stat-card',['icon'=>'fa-user-check','label'=>'Active','value'=>number_format($stats['active']),'class'=>'success'])
     @include('partials.stat-card',['icon'=>'fa-user-slash','label'=>'Inactive','value'=>number_format($stats['inactive']),'class'=>'warning'])
 </div>
 
 <div class="panel">
     <div class="panel-header">
-        <div><h2>{{ $selectedRole ? $selectedRole.' Login Directory' : 'Asset Assignee Directory' }}</h2><p>{{ $users->total() }} {{ $selectedRole ? 'dashboard accounts' : 'non-login users' }} available</p></div>
-        @permission('users','create')
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal"><i class="fa-solid {{ $selectedRole ? 'fa-key' : 'fa-user-plus' }} me-2"></i>{{ $selectedRole ? 'Add Access Account' : 'Add User' }}</button>
-        @endpermission
+        <div><h2>{{ $selectedRole ? $selectedRole.' Login Directory' : 'Asset Assignee Directory' }}</h2><p>{{ $users->total() }} {{ $selectedRole ? 'dashboard accounts' : 'faculties' }} available</p></div>
+        <div class="table-actions">
+            @permission('users','import')
+                <a href="{{ route('users.export') }}" class="btn btn-soft"><i class="fa-solid fa-file-export me-2"></i>Export</a>
+                <button type="button" class="btn btn-soft" data-bs-toggle="modal" data-bs-target="#userImportModal"><i class="fa-solid fa-file-import me-2"></i>Import</button>
+            @endpermission
+            @permission('users','create')
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal"><i class="fa-solid {{ $selectedRole ? 'fa-key' : 'fa-user-plus' }} me-2"></i>{{ $selectedRole ? 'Add Access Account' : 'Add Faculty' }}</button>
+            @endpermission
+        </div>
     </div>
     <div class="table-toolbar">
-        <form class="table-search" method="GET">@if($selectedRole)<input type="hidden" name="role" value="{{ $selectedRole }}">@endif<i class="fa-solid fa-magnifying-glass"></i><input name="search" type="search" value="{{ request('search') }}" placeholder="Search name, email, contact or user ID…"></form>
+        <form class="table-search" method="GET">@if($selectedRole)<input type="hidden" name="role" value="{{ $selectedRole }}">@endif<i class="fa-solid fa-magnifying-glass"></i><input name="search" type="search" value="{{ request('search') }}" placeholder="Search name, email, contact or faculty ID…"></form>
         @if(request('search'))<a class="btn btn-soft" href="{{ route('users.index', $selectedRole ? ['role'=>$selectedRole] : []) }}"><i class="fa-solid fa-xmark me-2"></i>Clear</a>@endif
     </div>
     <div class="table-responsive">
         <table class="table data-table">
-            <thead><tr><th>User</th><th>User ID</th><th>{{ $selectedRole ? 'Access Role' : 'Account Type' }}</th><th>Contact</th><th>Address</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Faculty</th><th>Faculty ID</th><th>{{ $selectedRole ? 'Access Role' : 'Account Type' }}</th><th>Contact</th><th>Address</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
             @forelse($users as $user)
                 <tr>
@@ -40,7 +46,7 @@
                         @if($user->login_enabled)
                             <span class="badge-soft success"><i class="fa-solid fa-key me-1"></i>{{ $user->role }}</span>
                         @else
-                            <span class="badge-soft muted"><i class="fa-solid fa-user-tag me-1"></i>User</span>
+                            <span class="badge-soft muted"><i class="fa-solid fa-user-tag me-1"></i>Faculty</span>
                         @endif
                     </td>
                     <td>{{ $user->contact ?: '—' }}</td>
@@ -61,12 +67,12 @@
                             <button class="btn btn-soft btn-icon" title="Edit user" data-bs-toggle="modal" data-bs-target="#editUserModal{{ $user->id }}"><i class="fa-regular fa-pen-to-square"></i></button>
                         @endpermission
                         @permission('users','delete')
-                        <form class="d-inline" method="POST" action="{{ route('users.destroy', $user) }}" data-confirm data-confirm-title="Delete User?" data-confirm-message="This will permanently delete {{ $user->name }}." data-confirm-label="Delete User">@csrf @method('DELETE')<button class="btn btn-soft btn-icon" title="Delete user"><i class="fa-regular fa-trash-can text-danger"></i></button></form>
+                            <form class="d-inline" method="POST" action="{{ route('users.destroy', $user) }}" data-confirm data-confirm-title="Delete Faculty?" data-confirm-message="This will permanently delete {{ $user->name }}." data-confirm-label="Delete Faculty">@csrf @method('DELETE')<button class="btn btn-soft btn-icon" title="Delete faculty"><i class="fa-regular fa-trash-can text-danger"></i></button></form>
                         @endpermission
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="text-center py-5 text-secondary"><i class="fa-solid fa-users fa-2x mb-3 d-block"></i>No {{ $selectedRole ? strtolower($selectedRole).' access accounts' : 'users' }} found.</td></tr>
+                <tr><td colspan="7" class="text-center py-5 text-secondary"><i class="fa-solid fa-users fa-2x mb-3 d-block"></i>No {{ $selectedRole ? strtolower($selectedRole).' access accounts' : 'faculties' }} found.</td></tr>
             @endforelse
             </tbody>
         </table>
@@ -92,7 +98,7 @@
                 <div class="modal-header">
                     <div>
                         <h2 class="modal-title fs-5" id="assignAssetModalTitle">Assign Asset</h2>
-                        <p class="mb-0 mt-1 text-secondary small">Select an available asset for <strong id="assignAssetUser">this user</strong>.</p>
+                        <p class="mb-0 mt-1 text-secondary small">Select an available asset for <strong id="assignAssetUser">this faculty</strong>.</p>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -137,13 +143,27 @@
                     <button type="submit" class="btn btn-primary" @disabled($availableAssets->isEmpty())>
                         <i class="fa-solid fa-link me-2"></i>Assign Asset
                     </button>
-                </div>
+                    </div>
             </form>
         </div>
     </div>
 </div>
 @endpermission
+
+@permission('users','import')
+    @include('partials.user-import-modal')
+@endpermission
 @endsection
+
+@if(app(\App\Services\PermissionService::class)->allows('users','import') && (session('openUserImportModal') || $errors->userImport->any()))
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('userImportModal')).show();
+});
+</script>
+@endpush
+@endif
 
 @push('scripts')
 <script>
