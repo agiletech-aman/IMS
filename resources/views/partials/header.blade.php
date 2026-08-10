@@ -15,7 +15,7 @@
                 autocomplete="off"
                 maxlength="100"
             >
-            <kbd title="Press Ctrl or ⌘ and K">⌘ K</kbd>
+            
             <div class="global-search-results" id="globalSearchResults" role="listbox" hidden></div>
         </div>
     </div>
@@ -23,7 +23,6 @@
         <button class="icon-btn" id="fullscreenToggle" aria-label="Toggle Fullscreen">
             <i class="fa-solid fa-expand"></i>
         </button>
-        <button class="icon-btn" id="themeToggle" aria-label="Toggle color theme"><i class="fa-regular fa-moon"></i></button>
         @if($permissionService->allows('notifications'))
         <div class="dropdown">
             <button class="icon-btn position-relative" data-bs-toggle="dropdown" aria-label="Notifications">

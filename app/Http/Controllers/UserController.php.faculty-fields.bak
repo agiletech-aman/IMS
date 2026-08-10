@@ -52,7 +52,7 @@ public function index(Request $request): View
     |
     */
 
-    $query = User::query()->with('department')
+    $query = User::query()
         ->where(
             'login_enabled',
             (bool) $selectedRole
@@ -195,11 +195,6 @@ public function index(Request $request): View
         'users' => $users,
 
         'roles' => User::ROLES,
-
-        'departments' => \App\Models\Department::query()
-            ->where('status', 'Active')
-            ->orderBy('name')
-            ->get(['id','name']),
 
         'selectedRole' => $selectedRole,
 
@@ -467,105 +462,23 @@ public function index(Request $request): View
 
     private function rules(?int $userId = null): array
     {
-        $loginEnabled = request()->boolean('login_enabled');
-
         return [
             'name' => ['required', 'string', 'max:255'],
-
-            'email' => [
-                $loginEnabled ? 'required' : 'nullable',
-                'nullable',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($userId),
-            ],
-
-            'contact' => [
-                'nullable',
-                'string',
-                'max:30',
-            ],
-
-            /*
-            |--------------------------------------------------------------------------
-            | Faculty fields
-            |--------------------------------------------------------------------------
-            */
-
-            'department_id' => [
-                $loginEnabled ? 'nullable' : 'required',
-                'nullable',
-                'exists:departments,id',
-            ],
-
-            'fb_type' => [
-                $loginEnabled ? 'nullable' : 'required',
-                'nullable',
-                Rule::in(['New', 'Old']),
-            ],
-
-            'room_number' => [
-                $loginEnabled ? 'nullable' : 'required',
-                'nullable',
-                'string',
-                'max:100',
-            ],
-
-            'remark' => [
-                'nullable',
-                'string',
-                'max:2000',
-            ],
-
-            /*
-            |--------------------------------------------------------------------------
-            | Login account fields
-            |--------------------------------------------------------------------------
-            */
-
-            'address' => [
-                'nullable',
-                'string',
-                'max:2000',
-            ],
-
-            'image' => [
-                'nullable',
-                'image',
-                'mimes:jpg,jpeg,png,webp',
-                'max:2048',
-            ],
-
-            'login_enabled' => [
-                'nullable',
-                'boolean',
-            ],
-
-            'role' => [
-                'required_if:login_enabled,1',
-                'nullable',
-                Rule::in(User::ROLES),
-            ],
-
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
+            'contact' => ['nullable', 'string', 'max:30'],
+            'address' => ['nullable', 'string', 'max:2000'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'login_enabled' => ['nullable', 'boolean'],
+            'role' => ['required_if:login_enabled,1', 'nullable', Rule::in(User::ROLES)],
             'password' => [
-                $userId === null
-                    ? 'required_if:login_enabled,1'
-                    : 'nullable',
+                $userId === null ? 'required_if:login_enabled,1' : 'nullable',
                 'nullable',
                 'string',
                 'min:8',
                 'max:255',
             ],
-
-            'status' => [
-                'required',
-                Rule::in([
-                    'Active',
-                    'Inactive',
-                ]),
-            ],
+            'status' => ['required', Rule::in(['Active', 'Inactive'])],
         ];
     }
 }
-
 

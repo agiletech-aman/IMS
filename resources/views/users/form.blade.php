@@ -1,31 +1,531 @@
 @php
-    $editing = isset($user) && $user;
-    $modalId = $editing ? 'editUserModal'.$user->id : 'createUserModal';
-    $action = $editing ? route('users.update', $user) : route('users.store');
-    $value = fn ($field, $default = '') => old($field, $editing ? $user->{$field} : $default);
-    $isLoginAccount = $editing ? $user->login_enabled : (bool) $selectedRole;
+    $isEdit = isset($user) && $user;
+    $isAccessAccount = (bool) $selectedRole;
+
+    $modalId = $isEdit
+        ? 'editUserModal'.$user->id
+        : 'createUserModal';
+
+    $formAction = $isEdit
+        ? route('users.update', $user)
+        : route('users.store');
 @endphp
-<div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content panel">
-        <div class="modal-header" style="border-color:var(--border-color)"><div><h2 class="modal-title fs-6">{{ $editing ? 'Edit' : 'Add' }} {{ $isLoginAccount ? ($selectedRole ?: $user->role).' Access Account' : 'User' }}</h2><small class="text-secondary">{{ $isLoginAccount ? 'This account can sign in to the dashboard.' : 'Manage user details and asset assignment.' }}</small></div><button class="btn-close" data-bs-dismiss="modal"></button></div>
-        <form method="POST" action="{{ $action }}" enctype="multipart/form-data">@csrf @if($editing) @method('PUT') @endif
-            <input type="hidden" name="login_enabled" value="{{ $isLoginAccount ? '1' : '0' }}">
-            <div class="modal-body p-4"><div class="row g-3">
-                <div class="col-md-8"><label class="form-label">Name *</label><input class="form-control" name="name" value="{{ $value('name') }}" placeholder="Enter full name" required></div>
-                <div class="col-md-4"><label class="form-label">User ID</label><input class="form-control" value="{{ $editing ? $user->unique_id : 'USR-Auto' }}" readonly><small class="text-secondary">Generated automatically</small></div>
-                <div class="col-md-6"><label class="form-label">Email *</label><input class="form-control" type="email" name="email" value="{{ $value('email') }}" placeholder="name@company.com" required></div>
-                <div class="col-md-6"><label class="form-label">Contact</label><input class="form-control" name="contact" value="{{ $value('contact') }}" placeholder="Enter phone number"></div>
-                <div class="col-12"><label class="form-label">Address</label><textarea class="form-control" name="address" rows="3" placeholder="Enter complete address">{{ $value('address') }}</textarea></div>
-                <div class="col-md-6"><label class="form-label">Profile Image {{ $editing ? '(leave blank to keep current)' : '' }}</label><input class="form-control" type="file" name="image" accept=".jpg,.jpeg,.png,.webp,image/*"><small class="text-secondary">JPG, PNG or WebP up to 2 MB</small></div>
-                @if($isLoginAccount)
-                    <div class="col-md-3"><label class="form-label">Access Role *</label><select class="form-select" name="role" required>@foreach($roles as $role)<option value="{{ $role }}" @selected($value('role', $selectedRole ?: 'Viewer') === $role)>{{ $role }}</option>@endforeach</select></div>
-                    <div class="col-md-3"><label class="form-label">Login Password {{ $editing ? '' : '*' }}</label><input class="form-control" type="password" name="password" minlength="8" placeholder="{{ $editing ? 'Leave blank to keep' : 'Minimum 8 characters' }}" @required(!$editing) autocomplete="new-password"></div>
-                @else
-                    <input type="hidden" name="role" value="Viewer">
+
+<div
+    class="modal fade"
+    id="{{ $modalId }}"
+    tabindex="-1"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+        <div class="modal-content">
+
+            <form
+                method="POST"
+                action="{{ $formAction }}"
+                enctype="multipart/form-data"
+            >
+
+                @csrf
+
+                @if($isEdit)
+                    @method('PUT')
                 @endif
-                <div class="{{ $isLoginAccount ? 'col-md-6' : 'col-md-6' }}"><label class="form-label">Status *</label><select class="form-select" name="status" required><option value="Active" @selected($value('status', 'Active') === 'Active')>Active</option><option value="Inactive" @selected($value('status', 'Active') === 'Inactive')>Inactive</option></select></div>
-            </div></div>
-            <div class="modal-footer" style="border-color:var(--border-color)"><button type="button" class="btn btn-soft" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">{{ $editing ? 'Save Changes' : ($isLoginAccount ? 'Create Access Account' : 'Add User') }}</button></div>
-        </form>
-    </div></div>
+
+
+                <input
+                    type="hidden"
+                    name="login_enabled"
+                    value="{{ $isAccessAccount ? 1 : 0 }}"
+                >
+
+
+                @if(!$isAccessAccount)
+                    <input
+                        type="hidden"
+                        name="status"
+                        value="Active"
+                    >
+                @endif
+
+
+                <div class="modal-header">
+
+                    <div>
+
+                        <h2 class="modal-title fs-5">
+
+                            @if($isAccessAccount)
+
+                                {{ $isEdit ? 'Edit' : 'Add' }}
+                                {{ $selectedRole }}
+                                Access Account
+
+                            @else
+
+                                {{ $isEdit ? 'Edit Faculty' : 'Add Faculty' }}
+
+                            @endif
+
+                        </h2>
+
+
+                        <p class="mb-0 mt-1 text-secondary small">
+
+                            @if($isAccessAccount)
+
+                                This account can sign in to the dashboard.
+
+                            @else
+
+                                Manage faculty details and asset assignment information.
+
+                            @endif
+
+                        </p>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                    ></button>
+
+                </div>
+
+
+                <div class="modal-body">
+
+                    @if(!$isAccessAccount)
+
+                        {{-- =================================================
+                             FACULTY FORM
+                        ================================================== --}}
+
+                        <div class="row g-3">
+
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    User Name *
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="name"
+                                    class="form-control"
+                                    value="{{ old('name', $user?->name) }}"
+                                    placeholder="Enter full name"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    Deptt. *
+                                </label>
+
+                                <select
+                                    name="department_id"
+                                    class="form-select"
+                                    required
+                                >
+
+                                    <option value="">
+                                        Select Department
+                                    </option>
+
+                                    @foreach($departments as $department)
+
+                                        <option
+                                            value="{{ $department->id }}"
+                                            @selected(
+                                                old(
+                                                    'department_id',
+                                                    $user?->department_id
+                                                ) == $department->id
+                                            )
+                                        >
+                                            {{ $department->name }}
+                                        </option>
+
+                                    @endforeach
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    New / Old FB *
+                                </label>
+
+                                <select
+                                    name="fb_type"
+                                    class="form-select"
+                                    required
+                                >
+
+                                    <option value="">
+                                        Select
+                                    </option>
+
+                                    <option
+                                        value="New"
+                                        @selected(
+                                            old(
+                                                'fb_type',
+                                                $user?->fb_type
+                                            ) === 'New'
+                                        )
+                                    >
+                                        New
+                                    </option>
+
+                                    <option
+                                        value="Old"
+                                        @selected(
+                                            old(
+                                                'fb_type',
+                                                $user?->fb_type
+                                            ) === 'Old'
+                                        )
+                                    >
+                                        Old
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    Room Number *
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="room_number"
+                                    class="form-control"
+                                    value="{{ old('room_number', $user?->room_number) }}"
+                                    placeholder="Enter room number"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    Phone Number
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="contact"
+                                    class="form-control"
+                                    value="{{ old('contact', $user?->contact) }}"
+                                    placeholder="Enter phone number"
+                                >
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    Email
+                                </label>
+
+                                <input
+                                    type="email"
+                                    name="email"
+                                    class="form-control"
+                                    value="{{ old('email', $user?->email) }}"
+                                    placeholder="name@company.com"
+                                >
+
+                            </div>
+
+
+                            <div class="col-12">
+
+                                <label class="form-label">
+                                    Remark
+                                </label>
+
+                                <textarea
+                                    name="remark"
+                                    class="form-control"
+                                    rows="3"
+                                    placeholder="Enter remark"
+                                >{{ old('remark', $user?->remark) }}</textarea>
+
+                            </div>
+
+                        </div>
+
+
+                    @else
+
+                        {{-- =================================================
+                             ROLE BASED ACCESS ACCOUNT FORM
+                        ================================================== --}}
+
+                        <div class="row g-3">
+
+
+                            <div class="col-md-8">
+
+                                <label class="form-label">
+                                    Name *
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="name"
+                                    class="form-control"
+                                    value="{{ old('name', $user?->name) }}"
+                                    placeholder="Enter full name"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label class="form-label">
+                                    User ID
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ $user?->unique_id ?: 'USR-Auto' }}"
+                                    disabled
+                                >
+
+                                <small class="text-secondary">
+                                    Generated automatically
+                                </small>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    Email *
+                                </label>
+
+                                <input
+                                    type="email"
+                                    name="email"
+                                    class="form-control"
+                                    value="{{ old('email', $user?->email) }}"
+                                    placeholder="name@company.com"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    Contact
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="contact"
+                                    class="form-control"
+                                    value="{{ old('contact', $user?->contact) }}"
+                                    placeholder="Enter phone number"
+                                >
+
+                            </div>
+
+
+                            <div class="col-12">
+
+                                <label class="form-label">
+                                    Address
+                                </label>
+
+                                <textarea
+                                    name="address"
+                                    class="form-control"
+                                    rows="3"
+                                    placeholder="Enter complete address"
+                                >{{ old('address', $user?->address) }}</textarea>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    Profile Image
+                                </label>
+
+                                <input
+                                    type="file"
+                                    name="image"
+                                    class="form-control"
+                                    accept=".jpg,.jpeg,.png,.webp"
+                                >
+
+                                <small class="text-secondary">
+                                    JPG, PNG or WebP up to 2 MB
+                                </small>
+
+                            </div>
+
+
+                            <div class="col-md-3">
+
+                                <label class="form-label">
+                                    Access Role *
+                                </label>
+
+                                <select
+                                    name="role"
+                                    class="form-select"
+                                    required
+                                >
+
+                                    <option
+                                        value="{{ $selectedRole }}"
+                                        selected
+                                    >
+                                        {{ $selectedRole }}
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-md-3">
+
+                                <label class="form-label">
+                                    Login Password
+                                    {{ !$isEdit ? '*' : '' }}
+                                </label>
+
+                                <input
+                                    type="password"
+                                    name="password"
+                                    class="form-control"
+                                    placeholder="{{ $isEdit ? 'Leave blank to keep current' : 'Minimum 8 characters' }}"
+                                    {{ !$isEdit ? 'required' : '' }}
+                                >
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    Status *
+                                </label>
+
+                                <select
+                                    name="status"
+                                    class="form-select"
+                                    required
+                                >
+
+                                    <option
+                                        value="Active"
+                                        @selected(
+                                            old(
+                                                'status',
+                                                $user?->status ?? 'Active'
+                                            ) === 'Active'
+                                        )
+                                    >
+                                        Active
+                                    </option>
+
+                                    <option
+                                        value="Inactive"
+                                        @selected(
+                                            old(
+                                                'status',
+                                                $user?->status
+                                            ) === 'Inactive'
+                                        )
+                                    >
+                                        Inactive
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    @endif
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-soft"
+                        data-bs-dismiss="modal"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+
+                        @if($isAccessAccount)
+
+                            {{ $isEdit
+                                ? 'Update Access Account'
+                                : 'Create Access Account'
+                            }}
+
+                        @else
+
+                            {{ $isEdit
+                                ? 'Update Faculty'
+                                : 'Add Faculty'
+                            }}
+
+                        @endif
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
 </div>

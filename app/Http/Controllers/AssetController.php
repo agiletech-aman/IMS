@@ -17,25 +17,216 @@ use Illuminate\View\View;
 
 class AssetController extends Controller
 {
-public function index(Request $request): View
-    {
-        $query = Asset::with(['type', 'brand', 'department']);
-        if ($search = trim((string) $request->query('search'))) {
-            $query->where(fn ($q) => $q->where('asset_tag', 'like', "%{$search}%")
-                ->orWhere('name', 'like', "%{$search}%")->orWhere('serial_number', 'like', "%{$search}%")
-                ->orWhere('fr_number', 'like', "%{$search}%"));
-        }
 
-        return view('assets.index', [
-            'assets' => $query->latest()->paginate(10)->withQueryString(),
-            'stats' => [
-                'total' => Asset::count(),
-                'assigned' => Asset::whereNotNull('assigned_to')->count(),
-                'stock' => Asset::where('status', 'In Stock')->count(),
-                'maintenance' => Asset::where('status', 'Under Maintenance')->count(),
-            ],
+
+public function index(Request $request)
+{
+    $query = Asset::query()
+        ->with([
+            'type',
+            'department',
         ]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Search
+    |--------------------------------------------------------------------------
+    */
+
+    if ($request->filled('search')) {
+
+        $search = trim($request->search);
+
+        $query->where(function ($q) use ($search) {
+
+            $q->where('name', 'like', "%{$search}%")
+                ->orWhere('asset_tag', 'like', "%{$search}%")
+                ->orWhere('serial_number', 'like', "%{$search}%")
+                ->orWhere('fr_number', 'like', "%{$search}%");
+
+        });
+
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Asset Type
+    |--------------------------------------------------------------------------
+    */
+
+    if ($request->filled('type')) {
+
+        $query->where(
+            'asset_type_id',
+            $request->type
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Department
+    |--------------------------------------------------------------------------
+    */
+
+    if ($request->filled('department')) {
+
+        $query->where(
+            'department_id',
+            $request->department
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Status
+    |--------------------------------------------------------------------------
+    */
+
+    if ($request->filled('status')) {
+
+        $query->where(
+            'status',
+            $request->status
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Installation Date
+    |--------------------------------------------------------------------------
+    */
+
+    if ($request->filled('date_from')) {
+
+        $query->whereDate(
+            'installation_date',
+            '>=',
+            $request->date_from
+        );
+
+    }
+
+
+    if ($request->filled('date_to')) {
+
+        $query->whereDate(
+            'installation_date',
+            '<=',
+            $request->date_to
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sorting
+    |--------------------------------------------------------------------------
+    */
+
+    $allowedSorts = [
+        'name',
+        'serial_number',
+        'installation_date',
+        'created_at',
+    ];
+
+
+    $sort = in_array(
+        $request->sort,
+        $allowedSorts,
+        true
+    )
+        ? $request->sort
+        : 'created_at';
+
+
+    $direction = $request->direction === 'asc'
+        ? 'asc'
+        : 'desc';
+
+
+    $query->orderBy(
+        $sort,
+        $direction
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pagination
+    |--------------------------------------------------------------------------
+    */
+
+$perPage = (int) $request->input('per_page', 10);
+
+if (!in_array($perPage, [10, 25, 50, 100], true)) {
+    $perPage = 10;
+}
+
+$assets = $query
+    ->paginate($perPage)
+    ->withQueryString();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Filter dropdown data
+    |--------------------------------------------------------------------------
+    */
+
+    $assetTypes = AssetType::query()
+        ->orderBy('name')
+        ->get();
+
+
+    $departments = Department::query()
+        ->orderBy('name')
+        ->get();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Stats
+    |--------------------------------------------------------------------------
+    */
+
+    $stats = [
+        'total' => Asset::count(),
+
+        'assigned' => Asset::whereNotNull(
+            'assigned_to'
+        )->count(),
+
+        'stock' => Asset::where(
+            'status',
+            'In Stock'
+        )->count(),
+
+        'maintenance' => Asset::where(
+            'status',
+            'Under Maintenance'
+        )->count(),
+    ];
+
+
+    return view(
+        'assets.index',
+        compact(
+            'assets',
+            'stats',
+            'assetTypes',
+            'departments'
+        )
+    );
+}
 
     public function create(): View
     {

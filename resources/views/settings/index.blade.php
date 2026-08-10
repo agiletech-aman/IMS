@@ -16,7 +16,7 @@
         $canViewAdvanced ? ['smtp','fa-envelope','SMTP Settings'] : null,
         $canViewAdvanced ? ['notifications','fa-bell','Notification Settings'] : null,
         // $canViewAdvanced ? ['security','fa-shield-halved','Security Settings'] : null,
-        $canViewBasic ? ['theme','fa-palette','Theme Settings'] : null,
+        //$canViewBasic ? ['theme','fa-palette','Theme Settings'] : null,
     ]));
     $requestedTab = session('activeSettingsTab');
     $activeTab = collect($settingsTabs)->contains(fn($tab) => $tab[0] === $requestedTab)
@@ -43,8 +43,7 @@
                     <div class="col-md-6"><label class="form-label">Application Name *</label><input class="form-control" name="application_name" value="{{ old('application_name',$settings->application_name) }}" required></div>
                     <div class="col-md-6"><label class="form-label">Default Language *</label><select class="form-select" name="language" required><option value="en" @selected($settings->language==='en')>English (India)</option><option value="hi" @selected($settings->language==='hi')>Hindi</option></select></div>
                     <div class="col-md-6"><label class="form-label">Time Zone *</label><select class="form-select" name="timezone" required>@foreach(['Asia/Kolkata'=>'Asia/Kolkata (UTC +05:30)','UTC'=>'UTC','Asia/Dubai'=>'Asia/Dubai (UTC +04:00)','Europe/London'=>'Europe/London','America/New_York'=>'America/New York'] as $value=>$label)<option value="{{ $value }}" @selected($settings->timezone===$value)>{{ $label }}</option>@endforeach</select></div>
-                    <div class="col-md-3"><label class="form-label">Date Format *</label><select class="form-select" name="date_format" required><option value="d M Y" @selected($settings->date_format==='d M Y')>DD MMM YYYY</option><option value="d/m/Y" @selected($settings->date_format==='d/m/Y')>DD/MM/YYYY</option><option value="Y-m-d" @selected($settings->date_format==='Y-m-d')>YYYY-MM-DD</option></select></div>
-                    <div class="col-md-3"><label class="form-label">Currency *</label><select class="form-select" name="currency" required>@foreach(['INR'=>'INR (₹)','USD'=>'USD ($)','EUR'=>'EUR (€)'] as $value=>$label)<option value="{{ $value }}" @selected($settings->currency===$value)>{{ $label }}</option>@endforeach</select></div>
+                    <div class="col-md-6"><label class="form-label">Date Format *</label><select class="form-select" name="date_format" required><option value="d M Y" @selected($settings->date_format==='d M Y')>DD MMM YYYY</option><option value="d/m/Y" @selected($settings->date_format==='d/m/Y')>DD/MM/YYYY</option><option value="Y-m-d" @selected($settings->date_format==='Y-m-d')>YYYY-MM-DD</option></select></div>
                 </div>@if($canUpdateBasic)<button class="btn btn-primary mt-4"><i class="fa-solid fa-floppy-disk me-2"></i>Save General Settings</button>@endif</form></div>
             </div>
 
@@ -238,8 +237,8 @@
 <script>
 (()=>{ 
  const readOnlyGroups={
-  basic: {!! json_encode(!$canUpdateBasic) !!},
-  advanced: {!! json_encode(!$canUpdateAdvanced) !!}
+  basic: @json(!$canUpdateBasic),
+  advanced: @json(!$canUpdateAdvanced)
  };
  if(readOnlyGroups.basic)document.querySelectorAll('#general form input,#general form select,#general form textarea,#company form input,#company form select,#company form textarea,#theme form input,#theme form select,#theme form textarea').forEach(field=>field.disabled=true);
  if(readOnlyGroups.advanced)document.querySelectorAll('#smtp form input,#smtp form select,#smtp form textarea,#notifications form input,#notifications form select,#notifications form textarea,#security form input,#security form select,#security form textarea').forEach(field=>field.disabled=true);

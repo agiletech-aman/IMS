@@ -4,36 +4,6 @@
 @php
     $permissionService = app(\App\Services\PermissionService::class);
     $isSuperAdmin = session('static_auth_user.role') === 'Administrator';
-
-    $auditModuleMap = [
-        'departments' => 'Departments',
-        'sub_departments' => 'Sub Departments',
-        'types' => 'Types',
-        'brands' => 'Brands',
-        'assets' => 'Assets',
-        'users' => 'Users',
-        'reports' => 'Reports',
-        'audit_logs' => 'Audit Logs',
-        'backup' => 'Backup & Recovery',
-        'roles_permissions' => 'Roles & Permissions',
-        'settings' => 'Settings',
-    ];
-
-    $auditModules = collect(config('sidebar', []))
-        ->flatMap(fn ($group) => $group['items'] ?? [])
-        ->filter(function ($item) use ($permissionService) {
-            $permissionModule = $item[5] ?? null;
-            return $permissionModule && $permissionService->allows($permissionModule);
-        })
-        ->map(function ($item) use ($auditModuleMap) {
-            $permissionModule = $item[5];
-            return [
-                'value' => $auditModuleMap[$permissionModule] ?? $item[2],
-                'label' => $auditModuleMap[$permissionModule] ?? $item[2],
-            ];
-        })
-        ->unique('value')
-        ->values();
 @endphp
 <div class="page-heading">
     <div><p class="eyebrow">Enterprise workspace</p><h1>Audit Logs</h1><p>Complete activity history for assets, users, masters, vendors, complaints, alerts, reports, and settings.</p></div>
@@ -84,13 +54,10 @@
                 </div>
                 <div class="col-md-4 col-lg-2">
                     <label class="form-label">Module</label>
-
                     <select class="form-select" name="module">
                         <option value="">All modules</option>
-                        @foreach($auditModules as $auditModule)
-                            <option value="{{ $auditModule['value'] }}" @selected(request('module') === $auditModule['value'])>
-                                {{ $auditModule['label'] }}
-                            </option>
+                        @foreach($modules as $module)
+                            <option value="{{ $module }}" @selected(request('module') === $module)>{{ $module }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -204,4 +171,3 @@
 .audit-json{margin:0;max-height:320px;overflow:auto;padding:1rem;border:1px solid var(--border-color);border-radius:12px;background:var(--body-bg);color:var(--text-color);font-size:.78rem;white-space:pre-wrap;word-break:break-word}
 </style>
 @endsection
-

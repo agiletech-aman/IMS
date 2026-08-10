@@ -189,6 +189,12 @@ body:not(.auth-body) .btn-primary:hover{border-color:#29479b;background:linear-g
 .dashboard-heading~.row .badge-soft:not(.success):not(.warning):not(.danger):not(.muted){background:#e4f9f8;color:#078f8d}
 .timeline-dot{outline-color:#0abfbd;background:#0abfbd}
 .notification-dot{background:#0abfbd}
+.app-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
 .app-footer{border-top-color:rgba(49,82,172,.1);background:rgba(255,255,255,.45)}
 [data-theme=dark] .dashboard-heading{border-color:rgba(10,191,189,.15);background:linear-gradient(120deg,rgba(10,191,189,.08),rgba(49,82,172,.12))}
 [data-theme=dark] .dashboard-heading h1,[data-theme=dark] #dashboardStats .stat-copy strong,[data-theme=dark] .dashboard-heading~.row .panel-header h2{color:var(--text-primary)}

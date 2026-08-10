@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
-use App\Models\AssetAssignmentHistory;
 use App\Models\User;
 use App\Services\NotificationService;
 use App\Services\AuditLogger;
@@ -52,7 +51,7 @@ public function index(Request $request): View
     |
     */
 
-    $query = User::query()->with('department')
+    $query = User::query()
         ->where(
             'login_enabled',
             (bool) $selectedRole
@@ -196,11 +195,6 @@ public function index(Request $request): View
 
         'roles' => User::ROLES,
 
-        'departments' => \App\Models\Department::query()
-            ->where('status', 'Active')
-            ->orderBy('name')
-            ->get(['id','name']),
-
         'selectedRole' => $selectedRole,
 
         'availableAssets' => Asset::with(
@@ -318,15 +312,6 @@ public function index(Request $request): View
             'assigned_to' => $user->name,
             'status' => $asset->status === 'In Stock' ? 'Active' : $asset->status,
         ]);
-
-        AssetAssignmentHistory::create([
-            'user_id' => $user->id,
-            'asset_id' => $asset->id,
-            'assigned_at' => now(),
-            'assigned_by' => session('static_auth_user.name')
-                ?? session('static_auth_user.email')
-                ?? 'System',
-        ]);
         $this->audit->record(
             'ASSIGN',
             'Assets',
@@ -347,103 +332,6 @@ public function index(Request $request): View
         return back()->with('success', "{$asset->asset_tag} assigned to {$user->name} successfully.");
     }
 
-
-    public function assetHistory(User $user): View
-    {
-        $historyQuery = AssetAssignmentHistory::query()
-            ->with(['asset.type', 'asset.department'])
-            ->where('user_id', $user->id);
-
-        $history = (clone $historyQuery)
-            ->orderByDesc('assigned_at')
-            ->paginate(10)
-            ->withQueryString();
-
-        $firstAssignment = (clone $historyQuery)
-            ->orderBy('assigned_at')
-            ->first();
-
-        $latestAssignment = (clone $historyQuery)
-            ->orderByDesc('assigned_at')
-            ->first();
-
-        $currentAssignments = (clone $historyQuery)
-            ->whereNull('unassigned_at')
-            ->orderByDesc('assigned_at')
-            ->get();
-
-        $totalAssignments = (clone $historyQuery)->count();
-
-        return view('users.asset-history', compact(
-            'user',
-            'history',
-            'firstAssignment',
-            'latestAssignment',
-            'currentAssignments',
-            'totalAssignments'
-        ));
-    }
-
-
-    public function exportAssetHistory(User $user)
-    {
-        $history = AssetAssignmentHistory::query()
-            ->with(['asset.type', 'asset.department'])
-            ->where('user_id', $user->id)
-            ->orderBy('assigned_at')
-            ->get();
-
-        $filename = ($user->unique_id ?: 'user')
-            . '-asset-history-'
-            . now()->format('Y-m-d-His')
-            . '.csv';
-
-        return response()->streamDownload(function () use ($user, $history) {
-
-            $handle = fopen('php://output', 'w');
-
-            fwrite($handle, "\xEF\xBB\xBF");
-
-            fputcsv($handle, [
-                'Faculty ID',
-                'Faculty Name',
-                'Email',
-                'Asset Tag',
-                'Asset Name',
-                'Asset Type',
-                'Serial Number',
-                'Department',
-                'Assigned At',
-                'Unassigned At',
-                'Assigned By',
-                'Unassigned By',
-                'Remarks',
-            ]);
-
-            foreach ($history as $item) {
-                fputcsv($handle, [
-                    $user->unique_id,
-                    $user->name,
-                    $user->email,
-                    $item->asset?->asset_tag,
-                    $item->asset?->name,
-                    $item->asset?->type?->name,
-                    $item->asset?->serial_number,
-                    $item->asset?->department?->name,
-                    $item->assigned_at?->format('d M Y h:i A'),
-                    $item->unassigned_at?->format('d M Y h:i A') ?? 'Current',
-                    $item->assigned_by,
-                    $item->unassigned_by,
-                    $item->remarks,
-                ]);
-            }
-
-            fclose($handle);
-
-        }, $filename, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-        ]);
-    }
     public function destroy(User $user): RedirectResponse
     {
         $imagePath = $user->image_path;
@@ -467,105 +355,22 @@ public function index(Request $request): View
 
     private function rules(?int $userId = null): array
     {
-        $loginEnabled = request()->boolean('login_enabled');
-
         return [
             'name' => ['required', 'string', 'max:255'],
-
-            'email' => [
-                $loginEnabled ? 'required' : 'nullable',
-                'nullable',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($userId),
-            ],
-
-            'contact' => [
-                'nullable',
-                'string',
-                'max:30',
-            ],
-
-            /*
-            |--------------------------------------------------------------------------
-            | Faculty fields
-            |--------------------------------------------------------------------------
-            */
-
-            'department_id' => [
-                $loginEnabled ? 'nullable' : 'required',
-                'nullable',
-                'exists:departments,id',
-            ],
-
-            'fb_type' => [
-                $loginEnabled ? 'nullable' : 'required',
-                'nullable',
-                Rule::in(['New', 'Old']),
-            ],
-
-            'room_number' => [
-                $loginEnabled ? 'nullable' : 'required',
-                'nullable',
-                'string',
-                'max:100',
-            ],
-
-            'remark' => [
-                'nullable',
-                'string',
-                'max:2000',
-            ],
-
-            /*
-            |--------------------------------------------------------------------------
-            | Login account fields
-            |--------------------------------------------------------------------------
-            */
-
-            'address' => [
-                'nullable',
-                'string',
-                'max:2000',
-            ],
-
-            'image' => [
-                'nullable',
-                'image',
-                'mimes:jpg,jpeg,png,webp',
-                'max:2048',
-            ],
-
-            'login_enabled' => [
-                'nullable',
-                'boolean',
-            ],
-
-            'role' => [
-                'required_if:login_enabled,1',
-                'nullable',
-                Rule::in(User::ROLES),
-            ],
-
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
+            'contact' => ['nullable', 'string', 'max:30'],
+            'address' => ['nullable', 'string', 'max:2000'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'login_enabled' => ['nullable', 'boolean'],
+            'role' => ['required_if:login_enabled,1', 'nullable', Rule::in(User::ROLES)],
             'password' => [
-                $userId === null
-                    ? 'required_if:login_enabled,1'
-                    : 'nullable',
+                $userId === null ? 'required_if:login_enabled,1' : 'nullable',
                 'nullable',
                 'string',
                 'min:8',
                 'max:255',
             ],
-
-            'status' => [
-                'required',
-                Rule::in([
-                    'Active',
-                    'Inactive',
-                ]),
-            ],
+            'status' => ['required', Rule::in(['Active', 'Inactive'])],
         ];
     }
 }
-
-

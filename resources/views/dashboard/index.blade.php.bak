@@ -39,8 +39,8 @@
     </div>
 </div>
 
-<div class="dashboard-stats-grid mb-4">
-    @foreach(collect($stats)->reject(fn ($stat) => in_array($stat['label'], ['Active Vendors', 'Unread Alerts'])) as $stat)
+<div class="row row-cols-2 row-cols-md-3 row-cols-xl-6 g-3 mb-4">
+    @foreach($stats as $stat)
         @include('partials.stat-card',[
             'icon'=>$stat['icon'],
             'label'=>$stat['label'],
@@ -171,30 +171,6 @@
 </div>@endif
 
 <style>
-.dashboard-stats-grid{
-    display:grid;
-    grid-template-columns:repeat(5,minmax(0,1fr));
-    gap:1rem;
-}
-
-@media(max-width:1199px){
-    .dashboard-stats-grid{
-        grid-template-columns:repeat(3,minmax(0,1fr));
-    }
-}
-
-@media(max-width:767px){
-    .dashboard-stats-grid{
-        grid-template-columns:repeat(2,minmax(0,1fr));
-    }
-}
-
-@media(max-width:480px){
-    .dashboard-stats-grid{
-        grid-template-columns:1fr;
-    }
-}
-
 .period-switch .period-btn{display:grid;place-items:center;text-decoration:none}
 .dashboard-empty{min-height:72px!important;justify-content:center!important;gap:9px!important;color:var(--text-muted);border:0!important}
 .dashboard-empty i{color:var(--accent-color);font-size:18px}
@@ -238,4 +214,3 @@
 })();
 </script>
 @endpush
-

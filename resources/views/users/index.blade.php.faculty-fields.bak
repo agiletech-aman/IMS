@@ -570,34 +570,43 @@
         <table class="table data-table">
 
             <thead>
-    <tr>
 
-        @if(!$selectedRole)
+                <tr>
 
-            <th>S.No.</th>
-            <th>User Name</th>
-            <th>Deptt.</th>
-            <th>New / Old FB</th>
-            <th>Room Number</th>
-            <th>Phone Number</th>
-            <th>Email</th>
-            <th>Remark</th>
-            <th>Actions</th>
+                    <th>
+                        Faculty
+                    </th>
 
-        @else
+                    <th>
+                        Faculty ID
+                    </th>
 
-            <th>User</th>
-            <th>User ID</th>
-            <th>Access Role</th>
-            <th>Contact</th>
-            <th>Address</th>
-            <th>Status</th>
-            <th>Actions</th>
+                    <th>
+                        {{ $selectedRole
+                            ? 'Access Role'
+                            : 'Account Type'
+                        }}
+                    </th>
 
-        @endif
+                    <th>
+                        Contact
+                    </th>
 
-    </tr>
-</thead>
+                    <th>
+                        Address
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        Actions
+                    </th>
+
+                </tr>
+
+            </thead>
 
 
             <tbody>
@@ -605,104 +614,6 @@
                 @forelse($users as $user)
 
                     <tr>
-
-                        @if(!$selectedRole)
-
-                            <td>
-                                {{ $users->firstItem() + $loop->index }}
-                            </td>
-
-                            <td>
-                                <strong>{{ $user->name }}</strong>
-                            </td>
-
-                            <td>
-                                {{ $user->department?->name ?: '—' }}
-                            </td>
-
-                            <td>
-                                {{ $user->fb_type ?: '—' }}
-                            </td>
-
-                            <td>
-                                {{ $user->room_number ?: '—' }}
-                            </td>
-
-                            <td>
-                                {{ $user->contact ?: '—' }}
-                            </td>
-
-                            <td>
-                                {{ $user->email ?: '—' }}
-                            </td>
-
-                            <td title="{{ $user->remark }}">
-                                {{ Str::limit($user->remark, 40) ?: '—' }}
-                            </td>
-
-                            <td class="text-nowrap">
-
-                                <a
-                                    href="{{ route('users.asset-history', $user) }}"
-                                    class="btn btn-soft btn-icon"
-                                    title="View details & asset history"
-                                >
-                                    <i class="fa-regular fa-eye"></i>
-                                </a>
-
-                                @permission('users','assign')
-                                    <button
-                                        class="btn btn-soft btn-icon assign-asset-button"
-                                        type="button"
-                                        title="Assign asset"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#assignAssetModal"
-                                        data-user-name="{{ $user->name }}"
-                                        data-action="{{ route('users.assign-asset',$user) }}"
-                                        @disabled($availableAssets->isEmpty())
-                                    >
-                                        <i class="fa-solid fa-laptop-file"></i>
-                                    </button>
-                                @endpermission
-
-                                @permission('users','update')
-                                    <button
-                                        class="btn btn-soft btn-icon"
-                                        type="button"
-                                        title="Edit faculty"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#editUserModal{{ $user->id }}"
-                                    >
-                                        <i class="fa-regular fa-pen-to-square"></i>
-                                    </button>
-                                @endpermission
-
-                                @permission('users','delete')
-                                    <form
-                                        class="d-inline"
-                                        method="POST"
-                                        action="{{ route('users.destroy',$user) }}"
-                                        data-confirm
-                                        data-confirm-title="Delete Faculty?"
-                                        data-confirm-message="This will permanently delete {{ $user->name }}."
-                                        data-confirm-label="Delete Faculty"
-                                    >
-                                        @csrf
-                                        @method('DELETE')
-
-                                        <button
-                                            class="btn btn-soft btn-icon"
-                                            type="submit"
-                                            title="Delete faculty"
-                                        >
-                                            <i class="fa-regular fa-trash-can text-danger"></i>
-                                        </button>
-                                    </form>
-                                @endpermission
-
-                            </td>
-
-                        @else
 
                         {{-- FACULTY --}}
 
@@ -958,8 +869,6 @@
                             @endpermission
 
                         </td>
-
-                        @endif
 
                     </tr>
 
@@ -1545,4 +1454,3 @@ document.addEventListener(
 @endpush
 
 @endif
-

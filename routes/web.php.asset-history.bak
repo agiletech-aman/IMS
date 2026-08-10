@@ -139,8 +139,6 @@ Route::middleware(EnsureStaticAuthenticated::class)->group(function () {
         ->name('notifications.preferences');
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->middleware($permission('notifications', 'update'))->name('notifications.read');
     Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->middleware($permission('notifications', 'delete'))->name('notifications.destroy');
-    Route::get('/users/{user}/asset-history', [UserController::class, 'assetHistory'])->middleware($permission('users'))->name('users.asset-history');
-    Route::get('/users/{user}/asset-history/export', [UserController::class, 'exportAssetHistory'])->middleware($permission('users', 'export'))->name('users.asset-history.export');
     Route::post('/users/{user}/assign-asset', [UserController::class, 'assignAsset'])->middleware($permission('users', 'assign'))->name('users.assign-asset');
     Route::get('users/export', [UserImportExportController::class, 'exportCsv'])->middleware($permission('users', 'import'))->name('users.export');
     Route::get('users/import-sample', [UserImportExportController::class, 'importSampleCsv'])->middleware($permission('users', 'import'))->name('users.import-sample');
@@ -195,4 +193,3 @@ Route::middleware(EnsureStaticAuthenticated::class)->group(function () {
         Route::delete('/settings/administrators/{admin}', [AdminController::class, 'destroy'])->middleware($permission('administrators', 'delete'))->name('settings.admins.destroy');
     });
 });
-

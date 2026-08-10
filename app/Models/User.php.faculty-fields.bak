@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,10 +21,6 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'remark',
-        'room_number',
-        'fb_type',
-        'department_id',
         'unique_id',
         'name',
         'email',
@@ -62,11 +56,4 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-
-    public function department(): BelongsTo
-    {
-        return $this->belongsTo(Department::class);
-    }
 }
-
-
