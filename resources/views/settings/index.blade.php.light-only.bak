@@ -242,9 +242,11 @@
  };
  if(readOnlyGroups.basic)document.querySelectorAll('#general form input,#general form select,#general form textarea,#company form input,#company form select,#company form textarea,#theme form input,#theme form select,#theme form textarea').forEach(field=>field.disabled=true);
  if(readOnlyGroups.advanced)document.querySelectorAll('#smtp form input,#smtp form select,#smtp form textarea,#notifications form input,#notifications form select,#notifications form textarea,#security form input,#security form select,#security form textarea').forEach(field=>field.disabled=true);
- 
+ const form=document.getElementById('themeSettingsForm');
+ const resolve=theme=>theme==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):theme;
+ form?.querySelectorAll('input[name="default_theme"]').forEach(input=>input.addEventListener('change',()=>{document.documentElement.dataset.theme=resolve(input.value);window.dispatchEvent(new CustomEvent('themechange'))}));
+ form?.addEventListener('submit',()=>{const theme=form.querySelector('input[name="default_theme"]:checked')?.value||'light';localStorage.setItem('IIM-theme',theme)});
 })();
 </script>
 @endpush
-
 

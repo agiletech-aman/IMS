@@ -39,7 +39,6 @@ class SettingsController extends Controller
             'language' => ['required', Rule::in(['en', 'hi'])],
             'timezone' => ['required', 'timezone:all'],
             'date_format' => ['required', Rule::in(['d M Y', 'd/m/Y', 'Y-m-d'])],
-            'currency' => ['required', Rule::in(['INR', 'USD', 'EUR'])],
         ]);
         SystemSetting::current()->update($data);
 

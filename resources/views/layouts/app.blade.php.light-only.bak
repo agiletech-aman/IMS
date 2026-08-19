@@ -8,10 +8,10 @@
     <title>@yield('title', 'Dashboard') | {{ $systemSettings?->application_name ?? 'Agile Tech Solutions IIM' }}</title>
     <script>
         (() => {
-            const savedTheme = 'light';
+            const savedTheme = localStorage.getItem('IIM-theme');
             const defaultTheme = @json($systemSettings?->default_theme ?? 'light');
             const preferredTheme = (savedTheme || defaultTheme) === 'system'
-                ? ('light')
+                ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
                 : (savedTheme || defaultTheme);
             document.documentElement.dataset.theme = preferredTheme;
         })();
@@ -108,5 +108,4 @@
 </body>
 
 </html>
-
 

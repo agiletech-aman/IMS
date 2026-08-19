@@ -15,12 +15,10 @@ window.IIM.toast=(message,type='info',title=null,options={})=>{
 window.showToast=window.IIM.toast;
 
 document.addEventListener('DOMContentLoaded',()=>{
- localStorage.removeItem('IIM-theme');
- document.documentElement.dataset.theme='light';
- const root=document.documentElement,body=document.body;
- 
- 
- 
+ const root=document.documentElement,body=document.body,toggle=document.getElementById('themeToggle');
+ const syncIcon=()=>{if(toggle)toggle.innerHTML=root.dataset.theme==='dark'?'<i class="fa-regular fa-sun"></i>':'<i class="fa-regular fa-moon"></i>'};
+ syncIcon();
+ toggle?.addEventListener('click',()=>{root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';localStorage.setItem('IIM-theme',root.dataset.theme);syncIcon();window.dispatchEvent(new CustomEvent('themechange'))});
  document.getElementById('sidebarToggle')?.addEventListener('click',()=>{body.classList.toggle(innerWidth<992?'sidebar-open':'sidebar-collapsed');localStorage.setItem('IIM-sidebar',body.classList.contains('sidebar-collapsed')?'collapsed':'open')});
  document.getElementById('sidebarBackdrop')?.addEventListener('click',()=>body.classList.remove('sidebar-open'));
  if(innerWidth>=992&&localStorage.getItem('IIM-sidebar')==='collapsed')body.classList.add('sidebar-collapsed');
@@ -238,6 +236,3 @@ document.addEventListener('DOMContentLoaded',()=>{
  if(currentLink)rememberPage(currentLink);
  renderRecent();
 });
-
-
-
