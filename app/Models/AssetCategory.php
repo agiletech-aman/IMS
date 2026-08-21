@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CentreScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AssetCategory extends Model
 {
-    protected $fillable = ['name', 'code', 'description', 'status'];
+    use CentreScoped;
+
+    protected $fillable = ['name', 'code', 'description', 'status', 'centre'];
 
     public function types(): HasMany
     {

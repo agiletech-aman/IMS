@@ -26,6 +26,150 @@
     <link href="{{ \App\Support\PublicUrl::asset('static/css/app.css') }}?v={{ filemtime(public_path('static/css/app.css')) }}" rel="stylesheet">
 </head>
 
+<style>
+/* =========================================
+   Centre Filter
+========================================= */
+
+.centre-filter-dropdown {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+}
+
+.centre-filter-btn {
+    height: 42px;
+    min-width: 155px;
+    padding: 0 13px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+
+    background: #ffffff;
+    color: #334155;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.centre-filter-btn:hover {
+    background: #f8fafc;
+    border-color: #06b6d4;
+    color: #0f172a;
+}
+
+.centre-filter-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.12);
+}
+
+.centre-filter-btn .fa-location-dot {
+    color: #06b6d4;
+    font-size: 14px;
+}
+
+.centre-filter-btn .fa-chevron-down {
+    margin-left: 2px;
+    font-size: 9px;
+    color: #64748b;
+}
+
+
+/* Dropdown */
+
+.centre-filter-dropdown .dropdown-menu {
+    min-width: 190px;
+
+    margin-top: 8px !important;
+    padding: 7px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 11px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 10px 25px rgba(15, 23, 42, 0.10),
+        0 2px 6px rgba(15, 23, 42, 0.05);
+}
+
+.centre-filter-dropdown .dropdown-item {
+    display: flex;
+    align-items: center;
+
+    padding: 9px 11px;
+
+    border-radius: 8px;
+
+    color: #475569;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    transition: all 0.15s ease;
+}
+
+.centre-filter-dropdown .dropdown-item:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.centre-filter-dropdown .dropdown-item i {
+    width: 18px;
+    text-align: center;
+    color: #64748b;
+}
+
+.centre-filter-dropdown .dropdown-item:hover i {
+    color: #06b6d4;
+}
+
+
+/* Active Centre */
+
+.centre-filter-dropdown .dropdown-item.active {
+    background: #ecfeff;
+    color: #0891b2;
+    font-weight: 600;
+}
+
+.centre-filter-dropdown .dropdown-item.active i {
+    color: #06b6d4;
+}
+
+
+/* Mobile */
+
+@media (max-width: 768px) {
+
+    .centre-filter-btn {
+        min-width: 42px;
+        width: 42px;
+        padding: 0;
+    }
+
+    .centre-filter-btn span,
+    .centre-filter-btn .fa-chevron-down {
+        display: none;
+    }
+
+    .centre-filter-dropdown .dropdown-menu {
+        min-width: 180px;
+    }
+}
+</style>
+
+
 <body class="{{ request()->is('login', 'forgot-password', 'reset-password') ? 'auth-body' : '' }}">
     @if(request()->is('login', 'forgot-password', 'reset-password'))
     @yield('content')

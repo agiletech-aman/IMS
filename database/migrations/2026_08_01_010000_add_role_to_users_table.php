@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role', 30)->default('Viewer')->after('status')->index();
+            $table->string('role', 30)->nullable()->after('status')->index();
         });
     }
 

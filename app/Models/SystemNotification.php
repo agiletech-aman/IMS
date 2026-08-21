@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CentreScoped;
 use Illuminate\Database\Eloquent\Model;
 
 class SystemNotification extends Model
 {
+    use CentreScoped;
+
     protected $fillable = [
         'event_type',
         'title',

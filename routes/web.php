@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AccessAccountController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AssetImportExportController;
 use App\Http\Controllers\AssetMasterController;
@@ -20,18 +21,37 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserImportExportController;
 use App\Http\Controllers\VendorController;
 use App\Http\Middleware\EnsureAdministrator;
+use App\Http\Middleware\EnsureCentreSelected;
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsureStaticAuthenticated;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
 
+Route::middleware(EnsureStaticAuthenticated::class)->group(function () {
+
+    Route::get('/centre/switch/{centre}', function ($centre) {
+
+        abort_unless(filled(session('static_auth_user.admin_id')), 403);
+
+        abort_unless(
+            in_array($centre, ['all', 'noida', 'lucknow'], true),
+            404
+        );
+
+        app(\App\Services\CentreContextService::class)->set($centre);
+
+        return redirect()->back();
+
+    })->name('centre.switch');
+
+});
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
 Route::view('/forgot-password', 'auth.forgot-password')->name('password.request');
 Route::view('/reset-password', 'auth.reset-password')->name('password.reset');
 
-Route::middleware(EnsureStaticAuthenticated::class)->group(function () {
+Route::middleware([EnsureStaticAuthenticated::class, EnsureCentreSelected::class])->group(function () {
     $permission = fn (string $module, string $action = 'view') => EnsurePermission::class.":{$module},{$action}";
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -139,16 +159,21 @@ Route::middleware(EnsureStaticAuthenticated::class)->group(function () {
         ->name('notifications.preferences');
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->middleware($permission('notifications', 'update'))->name('notifications.read');
     Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->middleware($permission('notifications', 'delete'))->name('notifications.destroy');
-    Route::get('/users/{user}/asset-history', [UserController::class, 'assetHistory'])->middleware($permission('users'))->name('users.asset-history');
-    Route::get('/users/{user}/asset-history/export', [UserController::class, 'exportAssetHistory'])->middleware($permission('users', 'export'))->name('users.asset-history.export');
-    Route::post('/users/{user}/assign-asset', [UserController::class, 'assignAsset'])->middleware($permission('users', 'assign'))->name('users.assign-asset');
-    Route::get('users/export', [UserImportExportController::class, 'exportCsv'])->middleware($permission('users', 'import'))->name('users.export');
-    Route::get('users/import-sample', [UserImportExportController::class, 'importSampleCsv'])->middleware($permission('users', 'import'))->name('users.import-sample');
-    Route::post('users/import', [UserImportExportController::class, 'importCsv'])->middleware($permission('users', 'import'))->name('users.import');
-    Route::get('/users', [UserController::class, 'index'])->middleware($permission('users'))->name('users.index');
-    Route::post('/users', [UserController::class, 'store'])->middleware($permission('users', 'create'))->name('users.store');
-    Route::match(['put', 'patch'], '/users/{user}', [UserController::class, 'update'])->middleware($permission('users', 'update'))->name('users.update');
-    Route::delete('/users/{user}', [UserController::class, 'destroy'])->middleware($permission('users', 'delete'))->name('users.destroy');
+    Route::get('/users/{user}/asset-history', [UserController::class, 'assetHistory'])->middleware($permission('faculty'))->name('users.asset-history');
+    Route::get('/users/{user}/asset-history/export', [UserController::class, 'exportAssetHistory'])->middleware($permission('faculty', 'export'))->name('users.asset-history.export');
+    Route::post('/users/{user}/assign-asset', [UserController::class, 'assignAsset'])->middleware($permission('faculty', 'assign'))->name('users.assign-asset');
+    Route::get('users/export', [UserImportExportController::class, 'exportCsv'])->middleware($permission('faculty', 'import'))->name('users.export');
+    Route::get('users/import-sample', [UserImportExportController::class, 'importSampleCsv'])->middleware($permission('faculty', 'import'))->name('users.import-sample');
+    Route::post('users/import', [UserImportExportController::class, 'importCsv'])->middleware($permission('faculty', 'import'))->name('users.import');
+    Route::get('/users', [UserController::class, 'index'])->middleware($permission('faculty'))->name('users.index');
+    Route::post('/users', [UserController::class, 'store'])->middleware($permission('faculty', 'create'))->name('users.store');
+    Route::match(['put', 'patch'], '/users/{user}', [UserController::class, 'update'])->middleware($permission('faculty', 'update'))->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->middleware($permission('faculty', 'delete'))->name('users.destroy');
+
+    Route::get('/access-accounts', [AccessAccountController::class, 'index'])->name('access-accounts.index');
+    Route::post('/access-accounts', [AccessAccountController::class, 'store'])->name('access-accounts.store');
+    Route::match(['put', 'patch'], '/access-accounts/{accessAccount}', [AccessAccountController::class, 'update'])->name('access-accounts.update');
+    Route::delete('/access-accounts/{accessAccount}', [AccessAccountController::class, 'destroy'])->name('access-accounts.destroy');
     Route::get('/roles-permissions', [RolePermissionController::class, 'index'])->middleware($permission('roles_permissions'))->name('roles-permissions.index');
     Route::post('/roles-permissions', [RolePermissionController::class, 'update'])->middleware($permission('roles_permissions', 'update'))->name('roles-permissions.update');
     Route::get('/vendors', [VendorController::class, 'index'])->middleware($permission('vendors'))->name('vendors.index');

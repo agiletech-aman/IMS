@@ -9,6 +9,7 @@ use App\Models\AssetType;
 use App\Models\Brand;
 use App\Models\Complaint;
 use App\Models\Department;
+use App\Models\Faculty;
 use App\Models\NotificationPreference;
 use App\Models\SystemNotification;
 use App\Models\SmtpSetting;
@@ -49,6 +50,7 @@ class AppServiceProvider extends ServiceProvider
             Brand::class,
             Complaint::class,
             Department::class,
+            Faculty::class,
             SubDepartment::class,
             User::class,
             Vendor::class,

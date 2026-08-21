@@ -97,7 +97,7 @@ $brand = Brand::where('name', 'Lenovo')->firstOrFail();
         ])->assertRedirect();
         $category = AssetCategory::where('name', 'Hardware')->firstOrFail();
         $this->post(route('asset-management.types.store'), [
-            'asset_category_id' => $category->id, 'name' => 'Laptop', 'code' => 'MANUAL', 'status' => 'Active',
+            'name' => 'Laptop', 'code' => 'MANUAL', 'status' => 'Active',
         ])->assertRedirect();
 
         $this->assertDatabaseHas('departments', ['name' => 'Operations', 'code' => 'DT-001']);

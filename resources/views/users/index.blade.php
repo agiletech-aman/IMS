@@ -1,17 +1,17 @@
 @extends('layouts.app')
 
-@section('title','Faculties')
+@section('title','Users')
 
 @section('content')
 
 @include('partials.page-header',[
     'title' => $selectedRole
         ? $selectedRole.' Access Accounts'
-        : 'Faculties',
+        : 'Users',
 
     'description' => $selectedRole
         ? 'Manage dashboard login accounts assigned to the '.$selectedRole.' role.'
-        : 'Manage faculties and their assigned assets.'
+        : 'Manage users and their assigned assets.'
 ])
 
 
@@ -224,7 +224,7 @@
 
         'label' => $selectedRole
             ? 'Login Accounts'
-            : 'Faculties',
+            : 'Users',
 
         'value' => number_format(
             $stats['total']
@@ -273,7 +273,7 @@
 
                 {{ $selectedRole
                     ? 'dashboard accounts'
-                    : 'faculties'
+                    : 'users'
                 }}
 
                 available
@@ -299,7 +299,7 @@
 
                 {{ $selectedRole
                     ? 'Add Access Account'
-                    : 'Add Faculty'
+                    : 'Add User'
                 }}
 
             </button>
@@ -446,7 +446,7 @@
                         id="userSearch"
                         type="search"
                         value="{{ request('search') }}"
-                        placeholder="Search name, email, contact or faculty ID..."
+                        placeholder="Search name, email, contact or user ID..."
                         autocomplete="off"
                     >
 
@@ -669,7 +669,7 @@
                                     <button
                                         class="btn btn-soft btn-icon"
                                         type="button"
-                                        title="Edit faculty"
+                                        title="Edit user"
                                         data-bs-toggle="modal"
                                         data-bs-target="#editUserModal{{ $user->id }}"
                                     >
@@ -683,9 +683,9 @@
                                         method="POST"
                                         action="{{ route('users.destroy',$user) }}"
                                         data-confirm
-                                        data-confirm-title="Delete Faculty?"
+                                        data-confirm-title="Delete User?"
                                         data-confirm-message="This will permanently delete {{ $user->name }}."
-                                        data-confirm-label="Delete Faculty"
+                                        data-confirm-label="Delete User"
                                     >
                                         @csrf
                                         @method('DELETE')
@@ -693,7 +693,7 @@
                                         <button
                                             class="btn btn-soft btn-icon"
                                             type="submit"
-                                            title="Delete faculty"
+                                            title="Delete user"
                                         >
                                             <i class="fa-regular fa-trash-can text-danger"></i>
                                         </button>
@@ -704,7 +704,7 @@
 
                         @else
 
-                        {{-- FACULTY --}}
+                        {{-- USERS --}}
 
                         <td>
 
@@ -830,7 +830,7 @@
 
                                     <i class="fa-solid fa-user-tag me-1"></i>
 
-                                    Faculty
+                                    User
 
                                 </span>
 
@@ -936,9 +936,9 @@
                                         $user
                                     ) }}"
                                     data-confirm
-                                    data-confirm-title="Delete Faculty?"
+                                    data-confirm-title="Delete User?"
                                     data-confirm-message="This will permanently delete {{ $user->name }}."
-                                    data-confirm-label="Delete Faculty"
+                                    data-confirm-label="Delete User"
                                 >
 
                                     @csrf
@@ -948,7 +948,7 @@
                                     <button
                                         class="btn btn-soft btn-icon"
                                         type="submit"
-                                        title="Delete faculty"
+                                        title="Delete user"
                                     >
                                         <i class="fa-regular fa-trash-can text-danger"></i>
                                     </button>
@@ -979,7 +979,7 @@
                             {{
                                 $selectedRole
                                     ? strtolower($selectedRole).' access accounts'
-                                    : 'faculties'
+                                    : 'users'
                             }}
                             found.
 
@@ -1101,7 +1101,7 @@
                             Select an available asset for
 
                             <strong id="assignAssetUser">
-                                this faculty
+                                this user
                             </strong>.
 
                         </p>

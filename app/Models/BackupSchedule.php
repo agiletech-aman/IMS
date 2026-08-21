@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CentreScoped;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BackupSchedule extends Model
 {
+    use CentreScoped;
+
     protected $fillable = [
         'name', 'backup_type', 'frequency', 'run_at', 'day_of_week',
         'day_of_month', 'retention_type', 'retention_value', 'enabled',

@@ -2,18 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CentreScoped;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AssetType extends Model
 {
-    protected $fillable = ['asset_category_id', 'name', 'code', 'description', 'status'];
+    use CentreScoped;
 
-    public function category(): BelongsTo
-    {
-        return $this->belongsTo(AssetCategory::class, 'asset_category_id');
-    }
+    protected $fillable = ['name', 'code', 'description', 'status'];
 
     public function assets(): HasMany
     {

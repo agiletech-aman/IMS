@@ -6,9 +6,19 @@ use Illuminate\Support\Facades\DB;
 
 class UniqueCodeGenerator
 {
-    public static function generate(string $key, string $prefix, string $table, string $column): string
+    /**
+     * Generate a unique code from a shared sequence.
+     *
+     * @param  string       $key     Sequence key in code_sequences table.
+     * @param  string       $prefix  Code prefix, e.g. 'ID'.
+     * @param  array|string $tables  One table name, or an array of table names to check uniqueness across.
+     * @param  string       $column  Column name to check (same in all tables).
+     */
+    public static function generate(string $key, string $prefix, array|string $tables, string $column): string
     {
-        return DB::transaction(function () use ($key, $prefix, $table, $column): string {
+        $tables = is_array($tables) ? $tables : [$tables];
+
+        return DB::transaction(function () use ($key, $prefix, $tables, $column): string {
             DB::table('code_sequences')->insertOrIgnore([
                 'key' => $key,
                 'next_number' => 1,
@@ -20,7 +30,7 @@ class UniqueCodeGenerator
             $number = (int) $sequence->next_number;
             $code = $prefix.'-'.str_pad((string) $number, 3, '0', STR_PAD_LEFT);
 
-            while (DB::table($table)->where($column, $code)->exists()) {
+            while (self::existsInAnyTable($tables, $column, $code)) {
                 $number++;
                 $code = $prefix.'-'.str_pad((string) $number, 3, '0', STR_PAD_LEFT);
             }
@@ -32,5 +42,16 @@ class UniqueCodeGenerator
 
             return $code;
         }, 3);
+    }
+
+    private static function existsInAnyTable(array $tables, string $column, string $code): bool
+    {
+        foreach ($tables as $table) {
+            if (DB::table($table)->where($column, $code)->exists()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

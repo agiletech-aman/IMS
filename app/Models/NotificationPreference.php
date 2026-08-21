@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CentreScoped;
 use Illuminate\Database\Eloquent\Model;
 
 class NotificationPreference extends Model
 {
+    use CentreScoped;
+
     public const DEFAULTS = [
         'amc_expiry' => ['AMC expiry alert', 30],
         'warranty_expiry' => ['Warranty expiry alert', 30],
@@ -22,6 +25,7 @@ class NotificationPreference extends Model
 
     protected $fillable = [
         'event_type',
+        'centre',
         'label',
         'in_app_enabled',
         'email_enabled',
@@ -39,8 +43,11 @@ class NotificationPreference extends Model
 
     public static function seedDefaults(): void
     {
+        $centre = session('selected_centre', 'lucknow');
+        $centre = in_array($centre, ['noida', 'lucknow'], true) ? $centre : 'lucknow';
+
         foreach (self::DEFAULTS as $eventType => [$label, $daysBefore]) {
-            self::firstOrCreate(['event_type' => $eventType], [
+            self::firstOrCreate(['event_type' => $eventType, 'centre' => $centre], [
                 'label' => $label,
                 'in_app_enabled' => true,
                 'email_enabled' => true,

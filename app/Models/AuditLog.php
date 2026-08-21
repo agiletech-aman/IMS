@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CentreScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class AuditLog extends Model
 {
+    use CentreScoped;
+
     protected $fillable = [
+        'centre',
         'actor_name',
         'actor_email',
         'actor_role',

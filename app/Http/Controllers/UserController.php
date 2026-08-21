@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use App\Models\AssetAssignmentHistory;
+use App\Models\Faculty;
 use App\Models\User;
+use App\Services\CentreContextService;
 use App\Services\NotificationService;
 use App\Services\AuditLogger;
 use App\Support\UniqueCodeGenerator;
@@ -20,292 +22,113 @@ class UserController extends Controller
     public function __construct(
         private readonly NotificationService $notifications,
         private readonly AuditLogger $audit,
-    ) {
+        private readonly CentreContextService $centreContext,
+    ) {}
+
+    public function index(Request $request): View
+    {
+        $query = Faculty::query()->with('department');
+        $this->centreContext->apply($query);
+
+        $statsQuery = Faculty::query();
+        $this->centreContext->apply($statsQuery);
+
+        if ($search = trim((string) $request->query('search'))) {
+            $query->where(function ($builder) use ($search): void {
+                $builder
+                    ->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('unique_id', 'like', "%{$search}%")
+                    ->orWhere('contact', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%");
+            });
+        }
+
+        $status = (string) $request->query('status');
+        if (in_array($status, ['Active', 'Inactive'], true)) {
+            $query->where('status', $status);
+        }
+
+        $perPage = (int) $request->query('per_page', 10);
+        if (!in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
+
+        $users = $query->latest()->paginate($perPage)->withQueryString();
+
+        return view('users.index', [
+            'users' => $users,
+            'roles' => User::ROLES,
+            'departments' => \App\Models\Department::query()
+                ->where('status', 'Active')
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'selectedRole' => null,
+            'availableAssets' => Asset::with('type:id,name')
+                ->whereNull('assigned_to')
+                ->orderBy('name')
+                ->orderBy('asset_tag')
+                ->get(['id', 'asset_tag', 'name', 'asset_type_id', 'status']),
+            'stats' => [
+                'total' => (clone $statsQuery)->count(),
+                'active' => (clone $statsQuery)->where('status', 'Active')->count(),
+                'inactive' => (clone $statsQuery)->where('status', 'Inactive')->count(),
+            ],
+        ]);
     }
 
-public function index(Request $request): View
-{
-    /*
-    |--------------------------------------------------------------------------
-    | Role
-    |--------------------------------------------------------------------------
-    */
-
-    $requestedRole = (string) $request->query('role');
-
-    $selectedRole = in_array(
-        $requestedRole,
-        User::ROLES,
-        true
-    )
-        ? $requestedRole
-        : null;
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Base Query
-    |--------------------------------------------------------------------------
-    |
-    | No role selected = Faculty / non-login users
-    | Role selected    = dashboard login accounts
-    |
-    */
-
-    $query = User::query()->with('department')
-        ->where(
-            'login_enabled',
-            (bool) $selectedRole
-        )
-        ->when(
-            $selectedRole,
-            fn ($builder) =>
-                $builder->where(
-                    'role',
-                    $selectedRole
-                )
-        );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Stats Query
-    |--------------------------------------------------------------------------
-    */
-
-    $statsQuery = User::query()
-        ->where(
-            'login_enabled',
-            (bool) $selectedRole
-        )
-        ->when(
-            $selectedRole,
-            fn ($builder) =>
-                $builder->where(
-                    'role',
-                    $selectedRole
-                )
-        );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Search
-    |--------------------------------------------------------------------------
-    */
-
-    if ($search = trim(
-        (string) $request->query('search')
-    )) {
-
-        $query->where(function ($builder) use ($search): void {
-
-            $builder
-                ->where(
-                    'name',
-                    'like',
-                    "%{$search}%"
-                )
-                ->orWhere(
-                    'email',
-                    'like',
-                    "%{$search}%"
-                )
-                ->orWhere(
-                    'unique_id',
-                    'like',
-                    "%{$search}%"
-                )
-                ->orWhere(
-                    'contact',
-                    'like',
-                    "%{$search}%"
-                )
-                ->orWhere(
-                    'address',
-                    'like',
-                    "%{$search}%"
-                );
-
-        });
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Status Filter
-    |--------------------------------------------------------------------------
-    */
-
-    $status = (string) $request->query('status');
-
-    if (in_array(
-        $status,
-        ['Active', 'Inactive'],
-        true
-    )) {
-
-        $query->where(
-            'status',
-            $status
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Per Page
-    |--------------------------------------------------------------------------
-    */
-
-    $perPage = (int) $request->query(
-        'per_page',
-        10
-    );
-
-    if (!in_array(
-        $perPage,
-        [10, 25, 50, 100],
-        true
-    )) {
-        $perPage = 10;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Users
-    |--------------------------------------------------------------------------
-    */
-
-    $users = $query
-        ->latest()
-        ->paginate($perPage)
-        ->withQueryString();
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | View
-    |--------------------------------------------------------------------------
-    */
-
-    return view('users.index', [
-
-        'users' => $users,
-
-        'roles' => User::ROLES,
-
-        'departments' => \App\Models\Department::query()
-            ->where('status', 'Active')
-            ->orderBy('name')
-            ->get(['id','name']),
-
-        'selectedRole' => $selectedRole,
-
-        'availableAssets' => Asset::with(
-            'type:id,name'
-        )
-            ->whereNull('assigned_to')
-            ->orderBy('name')
-            ->orderBy('asset_tag')
-            ->get([
-                'id',
-                'asset_tag',
-                'name',
-                'asset_type_id',
-                'status',
-            ]),
-
-        'stats' => [
-
-            'total' =>
-                (clone $statsQuery)
-                    ->count(),
-
-            'active' =>
-                (clone $statsQuery)
-                    ->where(
-                        'status',
-                        'Active'
-                    )
-                    ->count(),
-
-            'inactive' =>
-                (clone $statsQuery)
-                    ->where(
-                        'status',
-                        'Inactive'
-                    )
-                    ->count(),
-
-        ],
-
-    ]);
-}
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate($this->rules());
-        $data['unique_id'] = UniqueCodeGenerator::generate('users', 'USR', 'users', 'unique_id');
-        $data['login_enabled'] = $request->boolean('login_enabled');
-        $data['role'] = $data['login_enabled'] ? $data['role'] : 'Viewer';
-        $data['password'] = $data['login_enabled'] ? $data['password'] : Str::password(32);
-
+        $data['unique_id'] = UniqueCodeGenerator::generate('people', 'ID', ['users', 'faculties'], 'unique_id');
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('users', 'public');
         }
 
         unset($data['image']);
-        $user = User::create($data);
+        $user = Faculty::create($data);
         $this->notifications->send(
             'user_created',
-            $user->login_enabled ? 'New access account created' : 'New user created',
-            $user->login_enabled
-                ? "{$user->name} ({$user->unique_id}) was given {$user->role} dashboard access."
-                : "{$user->name} ({$user->unique_id}) was added as a non-login asset user.",
+            'New user created',
+            "{$user->name} ({$user->unique_id}) was added as a non-login asset user.",
             'info',
             'Users',
             ['user_id' => $user->id],
         );
 
-        return back()->with(
-            'success',
-            $user->login_enabled
-                ? "{$user->role} dashboard access account created successfully."
-                : 'User created successfully.',
-        );
+        return back()->with('success', 'User created successfully.');
     }
 
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(Request $request, int $user): RedirectResponse
     {
-        $data = $request->validate($this->rules($user->id));
-        $data['login_enabled'] = $request->boolean('login_enabled');
-        $data['role'] = $data['login_enabled'] ? $data['role'] : 'Viewer';
+        $account = Faculty::findOrFail($user);
+
+        $data = $request->validate($this->rules($account->id));
         if (blank($data['password'] ?? null)) {
             unset($data['password']);
         }
 
         if ($request->hasFile('image')) {
-            if ($user->image_path) {
-                Storage::disk('public')->delete($user->image_path);
+            if ($account->image_path) {
+                Storage::disk('public')->delete($account->image_path);
             }
 
             $data['image_path'] = $request->file('image')->store('users', 'public');
         }
 
         unset($data['image']);
-        $user->update($data);
+        $account->update($data);
 
         return back()->with('success', 'User updated successfully.');
     }
 
-    public function assignAsset(Request $request, User $user): RedirectResponse
+    public function assignAsset(Request $request, Faculty $user): RedirectResponse
     {
         $data = $request->validate([
             'asset_type_id' => ['required', 'exists:asset_types,id'],
             'asset_id' => [
                 'required',
-                Rule::exists('assets', 'id')->where(fn ($query) => $query
+                Rule::exists('assets', 'id')->where(fn($query) => $query
                     ->whereNull('assigned_to')
                     ->where('asset_type_id', $request->integer('asset_type_id'))),
             ],
@@ -320,7 +143,7 @@ public function index(Request $request): View
         ]);
 
         AssetAssignmentHistory::create([
-            'user_id' => $user->id,
+            'faculty_id' => $user->id,
             'asset_id' => $asset->id,
             'assigned_at' => now(),
             'assigned_by' => session('static_auth_user.name')
@@ -347,31 +170,16 @@ public function index(Request $request): View
         return back()->with('success', "{$asset->asset_tag} assigned to {$user->name} successfully.");
     }
 
-
-    public function assetHistory(User $user): View
+    public function assetHistory(Faculty $user): View
     {
         $historyQuery = AssetAssignmentHistory::query()
             ->with(['asset.type', 'asset.department'])
-            ->where('user_id', $user->id);
+            ->where('faculty_id', $user->id);
 
-        $history = (clone $historyQuery)
-            ->orderByDesc('assigned_at')
-            ->paginate(10)
-            ->withQueryString();
-
-        $firstAssignment = (clone $historyQuery)
-            ->orderBy('assigned_at')
-            ->first();
-
-        $latestAssignment = (clone $historyQuery)
-            ->orderByDesc('assigned_at')
-            ->first();
-
-        $currentAssignments = (clone $historyQuery)
-            ->whereNull('unassigned_at')
-            ->orderByDesc('assigned_at')
-            ->get();
-
+        $history = (clone $historyQuery)->orderByDesc('assigned_at')->paginate(10)->withQueryString();
+        $firstAssignment = (clone $historyQuery)->orderBy('assigned_at')->first();
+        $latestAssignment = (clone $historyQuery)->orderByDesc('assigned_at')->first();
+        $currentAssignments = (clone $historyQuery)->whereNull('unassigned_at')->orderByDesc('assigned_at')->get();
         $totalAssignments = (clone $historyQuery)->count();
 
         return view('users.asset-history', compact(
@@ -384,40 +192,24 @@ public function index(Request $request): View
         ));
     }
 
-
-    public function exportAssetHistory(User $user)
+    public function exportAssetHistory(Faculty $user)
     {
         $history = AssetAssignmentHistory::query()
             ->with(['asset.type', 'asset.department'])
-            ->where('user_id', $user->id)
+            ->where('faculty_id', $user->id)
             ->orderBy('assigned_at')
             ->get();
 
-        $filename = ($user->unique_id ?: 'user')
-            . '-asset-history-'
-            . now()->format('Y-m-d-His')
-            . '.csv';
+        $filename = ($user->unique_id ?: 'user') . '-asset-history-' . now()->format('Y-m-d-His') . '.csv';
 
         return response()->streamDownload(function () use ($user, $history) {
-
             $handle = fopen('php://output', 'w');
-
             fwrite($handle, "\xEF\xBB\xBF");
 
             fputcsv($handle, [
-                'Faculty ID',
-                'Faculty Name',
-                'Email',
-                'Asset Tag',
-                'Asset Name',
-                'Asset Type',
-                'Serial Number',
-                'Department',
-                'Assigned At',
-                'Unassigned At',
-                'Assigned By',
-                'Unassigned By',
-                'Remarks',
+                'Faculty ID', 'Faculty Name', 'Email', 'Asset Tag', 'Asset Name',
+                'Asset Type', 'Serial Number', 'Department', 'Assigned At',
+                'Unassigned At', 'Assigned By', 'Unassigned By', 'Remarks',
             ]);
 
             foreach ($history as $item) {
@@ -439,12 +231,10 @@ public function index(Request $request): View
             }
 
             fclose($handle);
-
-        }, $filename, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-        ]);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
-    public function destroy(User $user): RedirectResponse
+
+    public function destroy(Faculty $user): RedirectResponse
     {
         $imagePath = $user->image_path;
         $userName = $user->name;
@@ -454,6 +244,7 @@ public function index(Request $request): View
         if ($imagePath) {
             Storage::disk('public')->delete($imagePath);
         }
+
         $this->notifications->send(
             'user_deleted',
             'User deleted',
@@ -467,105 +258,17 @@ public function index(Request $request): View
 
     private function rules(?int $userId = null): array
     {
-        $loginEnabled = request()->boolean('login_enabled');
-
         return [
             'name' => ['required', 'string', 'max:255'],
-
-            'email' => [
-                $loginEnabled ? 'required' : 'nullable',
-                'nullable',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($userId),
-            ],
-
-            'contact' => [
-                'nullable',
-                'string',
-                'max:30',
-            ],
-
-            /*
-            |--------------------------------------------------------------------------
-            | Faculty fields
-            |--------------------------------------------------------------------------
-            */
-
-            'department_id' => [
-                $loginEnabled ? 'nullable' : 'required',
-                'nullable',
-                'exists:departments,id',
-            ],
-
-            'fb_type' => [
-                $loginEnabled ? 'nullable' : 'required',
-                'nullable',
-                Rule::in(['New', 'Old']),
-            ],
-
-            'room_number' => [
-                $loginEnabled ? 'nullable' : 'required',
-                'nullable',
-                'string',
-                'max:100',
-            ],
-
-            'remark' => [
-                'nullable',
-                'string',
-                'max:2000',
-            ],
-
-            /*
-            |--------------------------------------------------------------------------
-            | Login account fields
-            |--------------------------------------------------------------------------
-            */
-
-            'address' => [
-                'nullable',
-                'string',
-                'max:2000',
-            ],
-
-            'image' => [
-                'nullable',
-                'image',
-                'mimes:jpg,jpeg,png,webp',
-                'max:2048',
-            ],
-
-            'login_enabled' => [
-                'nullable',
-                'boolean',
-            ],
-
-            'role' => [
-                'required_if:login_enabled,1',
-                'nullable',
-                Rule::in(User::ROLES),
-            ],
-
-            'password' => [
-                $userId === null
-                    ? 'required_if:login_enabled,1'
-                    : 'nullable',
-                'nullable',
-                'string',
-                'min:8',
-                'max:255',
-            ],
-
-            'status' => [
-                'required',
-                Rule::in([
-                    'Active',
-                    'Inactive',
-                ]),
-            ],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('faculties', 'email')->ignore($userId)],
+            'contact' => ['nullable', 'string', 'max:30'],
+            'department_id' => ['nullable', 'exists:departments,id'],
+            'fb_type' => ['string', 'max:30'],
+            'room_number' => ['nullable', 'string', 'max:100'],
+            'remark' => ['nullable', 'string', 'max:2000'],
+            'address' => ['nullable', 'string', 'max:2000'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'status' => ['required', Rule::in(['Active', 'Inactive'])],
         ];
     }
 }
-
-

@@ -410,13 +410,6 @@
                         </th>
 
 
-                    @elseif($module === 'types')
-
-                        <th>
-                            Category
-                        </th>
-
-
                     @elseif($module === 'brands')
 
                         <th>
@@ -537,13 +530,6 @@
 
                             <td>
                                 {{ $record->department?->name ?: '—' }}
-                            </td>
-
-
-                        @elseif($module === 'types')
-
-                            <td>
-                                {{ $record->category?->name ?: '—' }}
                             </td>
 
 
@@ -837,7 +823,7 @@
 
                                 @elseif($module === 'types')
 
-                                    name, category, status, description
+                                    name, status, description
 
 
                                 @elseif($module === 'brands')

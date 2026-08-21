@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Faculty;
+use App\Models\Department;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\NotificationService;
@@ -18,15 +20,19 @@ class UserImportExportController extends Controller
     public function __construct(
         private readonly AuditLogger $audit,
         private readonly NotificationService $notifications,
-    ) {
-    }
+    ) {}
 
-    public function importSampleCsv(): BinaryFileResponse
+    public function importSampleCsv(Request $request): BinaryFileResponse
     {
-        $filename = 'users_import_sample.xlsx';
-        $tmpPath = storage_path('app/'.$filename);
+        $internalTeam = $request->filled('role');
+        $filename = $internalTeam ? 'internal_team_import_sample.xlsx' : 'users_import_sample.xlsx';
+        $tmpPath = storage_path('app/' . $filename);
 
-        UserCsv::exportStyledImportSample($tmpPath);
+        if ($internalTeam) {
+            UserCsv::exportStyledInternalTeamSample($tmpPath);
+        } else {
+            UserCsv::exportStyledImportSample($tmpPath);
+        }
         $this->audit->record('DOWNLOAD', 'Users', 'User import sample was downloaded.');
 
         return response()->download($tmpPath)->deleteFileAfterSend(true);
@@ -34,15 +40,15 @@ class UserImportExportController extends Controller
 
     public function exportCsv(): BinaryFileResponse
     {
-        $filename = 'users_export_'.date('Ymd_His').'.xlsx';
-        $tmpPath = storage_path('app/'.$filename);
+        $filename = 'users_export_' . date('Ymd_His') . '.xlsx';
+        $tmpPath = storage_path('app/' . $filename);
 
         UserCsv::exportStyledExcel($tmpPath);
         $this->audit->record(
             'EXPORT',
             'Users',
             'User directory was exported to Excel.',
-            metadata: ['record_count' => User::count(), 'format' => 'xlsx'],
+            metadata: ['record_count' => Faculty::count(), 'format' => 'xlsx'],
         );
 
         return response()->download($tmpPath)->deleteFileAfterSend(true);
@@ -74,7 +80,8 @@ class UserImportExportController extends Controller
         }
 
         $file = $request->file('csv');
-        $parsed = UserCsv::parseFile($file->getRealPath());
+        $internalTeam = $request->filled('role');
+        $parsed = UserCsv::parseFile($file->getRealPath(), $internalTeam);
         $rows = $parsed['rows'] ?? [];
         $parseErrors = $parsed['errors'] ?? [];
 
@@ -117,7 +124,7 @@ class UserImportExportController extends Controller
         }
 
         foreach ($rows as $rowNumber => $row) {
-            $rowErrors = $this->validateRow($row);
+            $rowErrors = $this->validateRow($row, $internalTeam);
 
             if ($rowErrors !== []) {
                 $errors[] = [
@@ -130,7 +137,7 @@ class UserImportExportController extends Controller
             }
 
             $email = trim((string) ($row['email'] ?? ''));
-            if (User::where('email', $email)->exists()) {
+            if (($internalTeam ? User::where('email', $email) : Faculty::where('email', $email))->exists()) {
                 $errors[] = [
                     'row' => $rowNumber,
                     'user' => trim((string) ($row['name'] ?? '')) ?: 'Unnamed user',
@@ -140,44 +147,54 @@ class UserImportExportController extends Controller
                 continue;
             }
 
-            $loginEnabled = in_array(Str::lower(trim((string) ($row['login_enabled'] ?? ''))), ['yes', '1', 'true'], true);
-            $loginEnabled = blank($row['login_enabled'] ?? null) ? true : $loginEnabled;
-            $defaultRole = trim((string) $request->input('role')) ?: 'Viewer';
-            if (! in_array($defaultRole, User::ROLES, true)) {
-                $defaultRole = 'Viewer';
-            }
-            $role = trim((string) ($row['role'] ?? '')) ?: $defaultRole;
-
-            if ($loginEnabled && ! in_array($role, User::ROLES, true)) {
-                $role = $defaultRole;
-            }
-
             $status = trim((string) ($row['status'] ?? ''));
             $status = in_array($status, ['Active', 'Inactive'], true) ? $status : 'Active';
 
-            $user = User::create([
-                'unique_id' => UniqueCodeGenerator::generate('users', 'USR', 'users', 'unique_id'),
+            if ($internalTeam) {
+                $role = trim((string) ($row['role'] ?? '')) ?: trim((string) $request->input('role'));
+                User::create([
+                    'unique_id' => UniqueCodeGenerator::generate('people', 'ID', ['users', 'faculties'], 'unique_id'),
+                    'name' => trim((string) ($row['name'] ?? '')),
+                    'email' => $email,
+                    'contact' => trim((string) ($row['contact'] ?? '')) ?: null,
+                    'address' => trim((string) ($row['address'] ?? '')) ?: null,
+                    'status' => $status,
+                    'role' => $role,
+                    'login_enabled' => true,
+                    'password' => Str::password(32),
+                ]);
+
+                $importCount++;
+                continue;
+            }
+            $departmentValue = trim((string) ($row['department'] ?? ''));
+            $department = Department::query()
+                ->where('name', $departmentValue)
+                ->orWhere('code', $departmentValue)
+                ->first();
+
+            $user = Faculty::create([
+                'unique_id' => UniqueCodeGenerator::generate('faculties', 'FAC', 'faculties', 'unique_id'),
                 'name' => trim((string) ($row['name'] ?? '')),
                 'email' => $email,
                 'contact' => trim((string) ($row['contact'] ?? '')) ?: null,
                 'address' => trim((string) ($row['address'] ?? '')) ?: null,
+                'department_id' => $department?->id,
+                'fb_type' => trim((string) ($row['fb_type'] ?? '')) ?: null,
+                'room_number' => trim((string) ($row['room_number'] ?? '')) ?: null,
+                'remark' => trim((string) ($row['remark'] ?? '')) ?: null,
                 'status' => $status,
-                'role' => $role,
-                'login_enabled' => $loginEnabled,
-                'password' => $loginEnabled ? Str::password(32) : Str::password(32),
             ]);
             $importCount++;
 
-            if ($loginEnabled) {
-                $this->notifications->send(
-                    'user_created',
-                    'New access account created',
-                    "{$user->name} ({$user->unique_id}) was given {$role} dashboard access.",
-                    'info',
-                    'Users',
-                    ['user_id' => $user->id],
-                );
-            }
+            $this->notifications->send(
+                'user_created',
+                'New user created',
+                "{$user->name} ({$user->unique_id}) was added to the user directory.",
+                'info',
+                'Users',
+                ['user_id' => $user->id],
+            );
         }
 
         $response = back()->with('userImportErrors', $errors)
@@ -189,7 +206,7 @@ class UserImportExportController extends Controller
         $this->audit->record(
             'IMPORT',
             'Users',
-            "User import completed with {$importCount} inserted and ".count($errors).' failed rows.',
+            "User import completed with {$importCount} inserted and " . count($errors) . ' failed rows.',
             result: $errors === [] ? 'Success' : 'Failed',
             metadata: ['inserted' => $importCount, 'failed' => count($errors)],
         );
@@ -197,7 +214,7 @@ class UserImportExportController extends Controller
         if ($errors !== []) {
             return $response->with(
                 'warning',
-                count($errors).' row(s) could not be imported. Please check the row-wise errors.'
+                count($errors) . ' row(s) could not be imported. Please check the row-wise errors.'
             );
         }
 
@@ -207,7 +224,7 @@ class UserImportExportController extends Controller
         );
     }
 
-    private function validateRow(array $row): array
+    private function validateRow(array $row, bool $internalTeam = false): array
     {
         $errors = [];
 
@@ -227,9 +244,31 @@ class UserImportExportController extends Controller
             $errors[] = "Invalid status: {$status}";
         }
 
-        $role = trim((string) ($row['role'] ?? ''));
-        if ($role !== '' && ! in_array($role, User::ROLES, true)) {
-            $errors[] = "Invalid role: {$role}";
+        if ($internalTeam) {
+            $role = trim((string) ($row['role'] ?? '')) ?: trim((string) request()->input('role'));
+            if (! in_array($role, User::ROLES, true)) {
+                $errors[] = 'A valid Internal Team role is required.';
+            }
+
+            return $errors;
+        }
+
+        $department = trim((string) ($row['department'] ?? ''));
+        if ($department === '') {
+            $errors[] = 'department is required.';
+        } elseif (! Department::where('status', 'Active')
+            ->where(function ($query) use ($department): void {
+                $query->where('name', $department)->orWhere('code', $department);
+            })
+            ->exists()) {
+            $errors[] = "Department not found or inactive: {$department}";
+        }
+
+        $fbType = trim((string) ($row['fb_type'] ?? ''));
+        if ($fbType === '') {
+            $errors[] = 'FB type is required.';
+        } elseif (mb_strlen($fbType) > 30) {
+            $errors[] = 'FB type must not be longer than 30 characters.';
         }
 
         return $errors;

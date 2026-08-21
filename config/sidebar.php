@@ -15,15 +15,23 @@ return [
     ],
 
     [
-        'id' => 'userManagement',
+        'id' => 'usersDirectory',
         'label' => 'User Management',
+        'icon' => 'fa-users',
+        'items' => [
+            ['users*', 'fa-users', 'Users', 'users.index', [], 'faculty'],
+        ],
+    ],
+
+    [
+        'id' => 'userManagement',
+        'label' => 'Access Accounts',
         'icon' => 'fa-user-gear',
         'items' => [
-            ['users*', 'fa-users', 'Faculty', 'users.index', [], 'users'],
-            ['users*', 'fa-user-tie', 'Asset Manager', 'users.index', ['role' => 'Asset Manager'], 'users'],
-            ['users*', 'fa-user-ninja', 'Sub admin', 'users.index', ['role' => 'Sub admin'], 'users'],
-            ['users*', 'fa-user-shield', 'Auditor', 'users.index', ['role' => 'Auditor'], 'users'],
-            ['users*', 'fa-user-lock', 'Viewer', 'users.index', ['role' => 'Viewer'], 'users'],
+            ['access-accounts*', 'fa-user-tie', 'Asset Manager', 'access-accounts.index', ['role' => 'Asset Manager'], 'access_accounts_asset_manager'],
+            ['access-accounts*', 'fa-user-ninja', 'Sub admin', 'access-accounts.index', ['role' => 'Sub admin'], 'access_accounts_sub_admin'],
+            ['access-accounts*', 'fa-user-shield', 'Auditor', 'access-accounts.index', ['role' => 'Auditor'], 'access_accounts_auditor'],
+            ['access-accounts*', 'fa-user-lock', 'Viewer', 'access-accounts.index', ['role' => 'Viewer'], 'access_accounts_viewer'],
         ],
     ],
 

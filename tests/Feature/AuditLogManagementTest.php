@@ -14,9 +14,21 @@ class AuditLogManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function asSubAdmin(): static
+    {
+        return $this->withSession([
+            'static_auth_user' => [
+                'name' => 'Sub Admin',
+                'email' => 'subadmin@example.com',
+                'role' => 'Sub admin',
+                'initials' => 'SA',
+            ],
+        ]);
+    }
+
     public function test_crud_and_alert_activity_is_recorded_with_actor_and_changes(): void
     {
-        $this->asStaticUser()->post(route('vendors.store'), [
+        $this->asSubAdmin()->post(route('vendors.store'), [
             'name' => 'Audit Vendor',
             'vendor_type' => 'OEM',
             'amc_status' => 'Active',
@@ -25,7 +37,7 @@ class AuditLogManagementTest extends TestCase
 
         $vendor = Vendor::where('name', 'Audit Vendor')->firstOrFail();
         $this->assertDatabaseHas('audit_logs', [
-            'actor_name' => 'Arjun Sharma',
+            'actor_name' => 'Sub Admin',
             'action' => 'CREATE',
             'module' => 'Vendors',
             'auditable_id' => $vendor->id,
@@ -36,7 +48,7 @@ class AuditLogManagementTest extends TestCase
             'module' => 'Alerts',
         ]);
 
-        $this->asStaticUser()->put(route('vendors.update', $vendor), [
+        $this->asSubAdmin()->put(route('vendors.update', $vendor), [
             'name' => 'Audit Vendor Updated',
             'vendor_type' => 'OEM',
             'amc_status' => 'Renewal Due',
@@ -47,7 +59,7 @@ class AuditLogManagementTest extends TestCase
         $this->assertSame('Audit Vendor', $updateLog->old_values['name']);
         $this->assertSame('Audit Vendor Updated', $updateLog->new_values['name']);
 
-        $this->asStaticUser()->delete(route('vendors.destroy', $vendor))->assertRedirect();
+        $this->asSubAdmin()->delete(route('vendors.destroy', $vendor))->assertRedirect();
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'DELETE',
             'module' => 'Vendors',
@@ -72,7 +84,7 @@ class AuditLogManagementTest extends TestCase
         $asset = Asset::firstOrFail();
         $asset->update(['assigned_to' => null, 'status' => 'In Stock']);
 
-        $this->asStaticUser()->post(route('users.assign-asset', $user), [
+        $this->asSubAdmin()->post(route('users.assign-asset', $user), [
             'asset_type_id' => $asset->asset_type_id,
             'asset_id' => $asset->id,
         ])->assertRedirect();
@@ -82,7 +94,7 @@ class AuditLogManagementTest extends TestCase
             'auditable_id' => $asset->id,
         ]);
 
-        $this->asStaticUser()->post(route('reports.generate'), [])
+        $this->asSubAdmin()->post(route('reports.generate'), [])
             ->assertRedirect();
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'GENERATE',
@@ -166,11 +178,11 @@ class AuditLogManagementTest extends TestCase
 
         $this->assertDatabaseMissing('audit_logs', ['description' => 'First record to clear.']);
         $this->assertDatabaseMissing('audit_logs', ['description' => 'Second record to clear.']);
-        $this->assertDatabaseHas('audit_logs', [
+        $this->assertDatabaseMissing('audit_logs', [
             'action' => 'CLEAR',
             'module' => 'Audit Logs',
             'actor_name' => 'Arjun Sharma',
         ]);
-        $this->assertSame(1, AuditLog::count());
+        $this->assertSame(0, AuditLog::count());
     }
 }

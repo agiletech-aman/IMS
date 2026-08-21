@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CentreScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BackupLog extends Model
 {
+    use CentreScoped;
+
     protected $fillable = ['backup_id', 'level', 'event', 'message', 'context'];
 
     protected function casts(): array

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CentreScoped;
 use Illuminate\Database\Eloquent\Model;
 
 class SystemSetting extends Model
 {
+    use CentreScoped;
+
     protected $fillable = [
         'application_name',
         'language',

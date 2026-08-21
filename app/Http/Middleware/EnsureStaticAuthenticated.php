@@ -47,6 +47,7 @@ class EnsureStaticAuthenticated
                 'name' => $account->name,
                 'email' => $account->email,
                 'role' => $account->role,
+                'centre' => $account->centre,
                 'image_path' => $account->image_path,
             ]));
         }

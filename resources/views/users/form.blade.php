@@ -64,7 +64,7 @@
 
                             @else
 
-                                {{ $isEdit ? 'Edit Faculty' : 'Add Faculty' }}
+                                {{ $isEdit ? 'Edit User' : 'Add User' }}
 
                             @endif
 
@@ -79,7 +79,7 @@
 
                             @else
 
-                                Manage faculty details and asset assignment information.
+                                Manage user details and asset assignment information.
 
                             @endif
 
@@ -103,7 +103,7 @@
                     @if(!$isAccessAccount)
 
                         {{-- =================================================
-                             FACULTY FORM
+                             USER FORM
                         ================================================== --}}
 
                         <div class="row g-3">
@@ -167,7 +167,7 @@
                             <div class="col-md-6">
 
                                 <label class="form-label">
-                                    New / Old FB *
+                                    Feedback Type *
                                 </label>
 
                                 <select
@@ -293,7 +293,6 @@
                                 <label class="form-label">
                                     Name *
                                 </label>
-
                                 <input
                                     type="text"
                                     name="name"
@@ -302,26 +301,6 @@
                                     placeholder="Enter full name"
                                     required
                                 >
-
-                            </div>
-
-
-                            <div class="col-md-4">
-
-                                <label class="form-label">
-                                    User ID
-                                </label>
-
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    value="{{ $user?->unique_id ?: 'USR-Auto' }}"
-                                    disabled
-                                >
-
-                                <small class="text-secondary">
-                                    Generated automatically
-                                </small>
 
                             </div>
 
@@ -512,8 +491,8 @@
                         @else
 
                             {{ $isEdit
-                                ? 'Update Faculty'
-                                : 'Add Faculty'
+                                ? 'Update User'
+                                : 'Add User'
                             }}
 
                         @endif

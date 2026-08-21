@@ -26,6 +26,9 @@ class AdminManagementTest extends TestCase
             ->assertSessionHas('static_auth_user.role', 'Administrator');
 
         $this->assertNotNull($admin->fresh()->last_login_at);
+        $this->assertDatabaseMissing('audit_logs', [
+            'actor_email' => 'admin@nexacore.com',
+        ]);
     }
 
     public function test_administrators_can_be_created_updated_and_deleted_from_settings(): void

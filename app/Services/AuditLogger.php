@@ -44,7 +44,12 @@ class AuditLogger
                 ? $request->session()->get('static_auth_user', [])
                 : [];
 
+            if (($actor['role'] ?? null) === 'Administrator') {
+                return null;
+            }
+
             return AuditLog::create([
+                'centre' => $actor['centre'] ?? $this->selectedCentre($request),
                 'actor_name' => $actor['name'] ?? 'System',
                 'actor_email' => $actor['email'] ?? null,
                 'actor_role' => $actor['role'] ?? null,
@@ -119,5 +124,14 @@ class AuditLogger
                 return $value;
             })
             ->all();
+    }
+
+    private function selectedCentre(?\Illuminate\Http\Request $request): string
+    {
+        $centre = $request?->hasSession()
+            ? $request->session()->get('selected_centre', 'lucknow')
+            : 'lucknow';
+
+        return in_array($centre, ['noida', 'lucknow'], true) ? $centre : 'lucknow';
     }
 }

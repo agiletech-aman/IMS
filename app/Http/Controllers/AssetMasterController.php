@@ -941,37 +941,7 @@ class AssetMasterController extends Controller
         array $data
     ): ?array
     {
-        $categoryName = trim(
-            (string) (
-                $data['category']
-                ?? ''
-            )
-        );
-
-
-        if ($categoryName === '') {
-            return null;
-        }
-
-
-        $category = AssetCategory::query()
-            ->whereRaw(
-                'LOWER(name) = ?',
-                [strtolower($categoryName)]
-            )
-            ->first();
-
-
-        if (!$category) {
-            return null;
-        }
-
-
         return $common + [
-
-            'asset_category_id' =>
-                $category->id,
-
             'description' =>
                 $this->nullableString(
                     $data['description']
@@ -1015,7 +985,6 @@ class AssetMasterController extends Controller
             'types' => [
                 'name',
                 'code',
-                'category',
                 'status',
                 'description',
                 'assets',
@@ -1078,7 +1047,6 @@ class AssetMasterController extends Controller
             'types' => [
                 $record->name,
                 $record->code,
-                $record->category?->name,
                 $record->status,
                 $record->description,
                 $record->assets_count,
@@ -1199,9 +1167,6 @@ class AssetMasterController extends Controller
                 'description' =>
                     'Define asset types used throughout the inventory.',
                 'icon' => 'fa-shapes',
-                'with' => [
-                    'category',
-                ],
                 'counts' => [
                     'assets',
                 ],
@@ -1257,16 +1222,6 @@ class AssetMasterController extends Controller
             'sub-departments' => [
                 'department_id' =>
                     Department::orderBy('name')
-                        ->pluck(
-                            'name',
-                            'id'
-                        ),
-            ],
-
-
-            'types' => [
-                'asset_category_id' =>
-                    AssetCategory::orderBy('name')
                         ->pluck(
                             'name',
                             'id'
@@ -1340,12 +1295,6 @@ class AssetMasterController extends Controller
 
             'types' =>
                 $common + [
-
-                    'asset_category_id' => [
-                        'required',
-                        'exists:asset_categories,id',
-                    ],
-
                     'description' => [
                         'nullable',
                         'string',

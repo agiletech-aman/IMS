@@ -54,13 +54,15 @@ class AuthController extends Controller
                 ->first();
 
         if (! $account || (! $admin && ! Hash::check($credentials['password'], $account->password))) {
-            $this->audit->record(
-                'LOGIN FAILED',
-                'Authentication',
-                "Invalid login attempt for {$credentials['email']}.",
-                result: 'Blocked',
-                metadata: ['attempted_email' => $credentials['email']],
-            );
+            if (! Admin::where('email', $credentials['email'])->exists()) {
+                $this->audit->record(
+                    'LOGIN FAILED',
+                    'Authentication',
+                    "Invalid login attempt for {$credentials['email']}.",
+                    result: 'Blocked',
+                    metadata: ['attempted_email' => $credentials['email']],
+                );
+            }
 
             return back()
                 ->withErrors(['email' => 'Invalid email or password.'])
@@ -77,6 +79,7 @@ class AuthController extends Controller
                 'role' => 'Administrator',
                 'initials' => $this->initials($admin->name),
                 'image_path' => $admin->image_path,
+                'centre' => null,
             ]
             : [
                 'admin_id' => null,
@@ -86,9 +89,13 @@ class AuthController extends Controller
                 'role' => $account->role,
                 'initials' => $this->initials($account->name),
                 'image_path' => $account->image_path,
+                'centre' => $account->centre,
             ];
 
         $request->session()->put('static_auth_user', $authenticatedUser);
+        if ($admin) {
+            $request->session()->forget('selected_centre');
+        }
         if ($admin) {
             $admin->update(['last_login_at' => now()]);
         }
@@ -141,7 +148,8 @@ class AuthController extends Controller
             'categories' => 'asset-management.categories.index',
             'types' => 'asset-management.types.index',
             'brands' => 'asset-management.brands.index',
-            'users' => 'users.index',
+            'faculty' => 'users.index',
+            'access_accounts' => 'access-accounts.index',
             'vendors' => 'vendors.index',
             'notifications' => 'notifications.index',
             'reports' => 'reports.index',

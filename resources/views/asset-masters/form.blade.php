@@ -13,8 +13,6 @@
                 <div class="col-md-5"><label class="form-label">Code</label><input class="form-control" value="{{ $editing ? $record->code : $prefix.'-Auto' }}" readonly><small class="text-secondary">Generated automatically</small></div>
                 @if($module === 'sub-departments')
                     <div class="col-12"><label class="form-label">Department *</label><select class="form-select" name="department_id" required><option value="">Select department</option>@foreach($options['department_id'] as $id=>$label)<option value="{{ $id }}" @selected((string)$value('department_id') === (string)$id)>{{ $label }}</option>@endforeach</select></div>
-                @elseif($module === 'types')
-                    <div class="col-12"><label class="form-label">Category *</label><select class="form-select" name="asset_category_id" required><option value="">Select category</option>@foreach($options['asset_category_id'] as $id=>$label)<option value="{{ $id }}" @selected((string)$value('asset_category_id') === (string)$id)>{{ $label }}</option>@endforeach</select></div>
                 @elseif($module === 'brands')
                     <div class="col-md-6"><label class="form-label">Country</label><input class="form-control" name="country" value="{{ $value('country') }}" placeholder="Enter country name"></div>
                     <div class="col-md-6"><label class="form-label">Support Contact</label><input class="form-control" name="support_contact" value="{{ $value('support_contact') }}" placeholder="Enter email or phone number"></div>

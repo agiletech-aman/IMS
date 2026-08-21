@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Faculty Asset History')
+@section('title', 'User Asset History')
 
 @section('content')
 
 @include('partials.page-header', [
     'title' => $user->name,
-    'description' => 'Faculty profile, current assets and complete assignment history.'
+    'description' => 'User profile, current assets and complete assignment history.'
 ])
 
 <style>

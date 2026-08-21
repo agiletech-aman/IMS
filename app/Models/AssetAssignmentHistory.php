@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AssetAssignmentHistory extends Model
 {
     protected $fillable = [
-        'user_id',
+        'faculty_id',
         'asset_id',
         'assigned_at',
         'unassigned_at',
@@ -22,9 +22,9 @@ class AssetAssignmentHistory extends Model
         'unassigned_at' => 'datetime',
     ];
 
-    public function user(): BelongsTo
+    public function faculty(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Faculty::class);
     }
 
     public function asset(): BelongsTo

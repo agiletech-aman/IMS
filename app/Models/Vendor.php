@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CentreScoped;
 use Illuminate\Database\Eloquent\Model;
 
 class Vendor extends Model
 {
+    use CentreScoped;
+
     protected $fillable = [
+        'centre',
         'code',
         'name',
         'vendor_type',

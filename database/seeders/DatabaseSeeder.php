@@ -33,8 +33,8 @@ class DatabaseSeeder extends Seeder
 
         $hardware = AssetCategory::firstOrCreate(['code' => 'CAT-HW'], ['name' => 'Hardware', 'description' => 'End-user computing devices', 'status' => 'Active']);
         $infrastructure = AssetCategory::firstOrCreate(['code' => 'CAT-INF'], ['name' => 'Infrastructure', 'description' => 'Core server and network assets', 'status' => 'Active']);
-        $laptop = AssetType::firstOrCreate(['code' => 'TYPE-LT'], ['asset_category_id' => $hardware->id, 'name' => 'Laptop', 'status' => 'Active']);
-        AssetType::firstOrCreate(['code' => 'TYPE-SV'], ['asset_category_id' => $infrastructure->id, 'name' => 'Server', 'status' => 'Active']);
+        $laptop = AssetType::firstOrCreate(['code' => 'TYPE-LT'], ['name' => 'Laptop', 'status' => 'Active']);
+        AssetType::firstOrCreate(['code' => 'TYPE-SV'], ['name' => 'Server', 'status' => 'Active']);
         $apple = Brand::firstOrCreate(['code' => 'BR-APPLE'], ['name' => 'Apple', 'country' => 'United States', 'status' => 'Active']);
         Brand::firstOrCreate(['code' => 'BR-DELL'], ['name' => 'Dell', 'country' => 'United States', 'status' => 'Active']);
 
