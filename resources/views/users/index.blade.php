@@ -4,6 +4,21 @@
 
 @section('content')
 
+@php
+    $accessAccountModules = [
+        'Asset Manager' => 'access_accounts_asset_manager',
+        'Sub admin' => 'access_accounts_sub_admin',
+        'Auditor' => 'access_accounts_auditor',
+        'Viewer' => 'access_accounts_viewer',
+    ];
+    $accessAccountModule = $accessAccountModules[$selectedRole] ?? null;
+    $isAccessAccountDirectory = $accessAccountModule !== null;
+    $directoryRoute = $isAccessAccountDirectory
+        ? 'access-accounts.index'
+        : 'users.index';
+    $permissionModule = $accessAccountModule ?? 'users';
+@endphp
+
 @include('partials.page-header',[
     'title' => $selectedRole
         ? $selectedRole.' Access Accounts'
@@ -284,7 +299,7 @@
 
         {{-- ADD BUTTON --}}
 
-        @permission('users','create')
+        @permission($permissionModule, 'create')
 
             <button
                 class="btn btn-primary"
@@ -322,7 +337,7 @@
 
             <form
                 method="GET"
-                action="{{ route('users.index') }}"
+                action="{{ route($directoryRoute) }}"
                 class="user-entry-control"
             >
 
@@ -412,7 +427,7 @@
 
             <form
                 method="GET"
-                action="{{ route('users.index') }}"
+                action="{{ route($directoryRoute) }}"
                 id="userFilterForm"
                 class="user-filter-form"
             >
@@ -498,7 +513,7 @@
 
                 <a
                     href="{{ route(
-                        'users.index',
+                        $directoryRoute,
                         array_filter([
                             'role' => $selectedRole,
                             'per_page' => request(
@@ -519,6 +534,7 @@
 
             {{-- EXPORT --}}
 
+            @if(! $isAccessAccountDirectory)
             @permission('users','export')
 
                 <a
@@ -537,10 +553,12 @@
                 </a>
 
             @endpermission
+            @endif
 
 
             {{-- IMPORT --}}
 
+            @if(! $isAccessAccountDirectory)
             @permission('users','import')
 
                 <button
@@ -555,6 +573,7 @@
                 </button>
 
             @endpermission
+            @endif
 
         </div>
 
@@ -875,46 +894,12 @@
 
                         <td class="text-nowrap">
 
-
-
-                            {{-- VIEW PROFILE & ASSET HISTORY --}}
-
-                            <a
-                                href="{{ route('users.asset-history', $user) }}"
-                                class="btn btn-soft btn-icon"
-                                title="View details & asset history"
-                            >
-                                <i class="fa-regular fa-eye"></i>
-                            </a>
-
-                            {{-- ASSIGN --}}
-
-                            @permission('users','assign')
-
-                                <button
-                                    class="btn btn-soft btn-icon assign-asset-button"
-                                    type="button"
-                                    title="Assign asset"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#assignAssetModal"
-                                    data-user-name="{{ $user->name }}"
-                                    data-action="{{ route('users.assign-asset',$user) }}"
-                                    @disabled($availableAssets->isEmpty())
-                                >
-                                    <i class="fa-solid fa-laptop-file"></i>
-                                </button>
-
-                            @endpermission
-
-
-                            {{-- EDIT --}}
-
-                            @permission('users','update')
+                            @permission($permissionModule, 'update')
 
                                 <button
                                     class="btn btn-soft btn-icon"
                                     type="button"
-                                    title="Edit user"
+                                    title="Edit access account"
                                     data-bs-toggle="modal"
                                     data-bs-target="#editUserModal{{ $user->id }}"
                                 >
@@ -923,22 +908,22 @@
 
                             @endpermission
 
-
-                            {{-- DELETE --}}
-
-                            @permission('users','delete')
+                            @permission($permissionModule, 'delete')
 
                                 <form
                                     class="d-inline"
                                     method="POST"
                                     action="{{ route(
-                                        'users.destroy',
-                                        $user
+                                        'access-accounts.destroy',
+                                        [
+                                            'accessAccount' => $user,
+                                            'role' => $selectedRole,
+                                        ]
                                     ) }}"
                                     data-confirm
-                                    data-confirm-title="Delete User?"
-                                    data-confirm-message="This will permanently delete {{ $user->name }}."
-                                    data-confirm-label="Delete User"
+                                    data-confirm-title="Delete Access Account?"
+                                    data-confirm-message="This will permanently delete {{ $user->name }}'s dashboard access account."
+                                    data-confirm-label="Delete Access Account"
                                 >
 
                                     @csrf
@@ -948,7 +933,7 @@
                                     <button
                                         class="btn btn-soft btn-icon"
                                         type="submit"
-                                        title="Delete user"
+                                        title="Delete access account"
                                     >
                                         <i class="fa-regular fa-trash-can text-danger"></i>
                                     </button>
@@ -1032,7 +1017,7 @@
      CREATE
 ========================================================= --}}
 
-@permission('users','create')
+@permission($permissionModule, 'create')
 
     @include('users.form',[
         'user' => null
@@ -1045,7 +1030,7 @@
      EDIT
 ========================================================= --}}
 
-@permission('users','update')
+@permission($permissionModule, 'update')
 
     @foreach($users as $user)
 
@@ -1062,6 +1047,7 @@
      ASSIGN ASSET MODAL
 ========================================================= --}}
 
+@if(! $isAccessAccountDirectory)
 @permission('users','assign')
 
 <div
@@ -1277,17 +1263,20 @@
 </div>
 
 @endpermission
+@endif
 
 
 {{-- =========================================================
      IMPORT
 ========================================================= --}}
 
+@if(! $isAccessAccountDirectory)
 @permission('users','import')
 
     @include('partials.user-import-modal')
 
 @endpermission
+@endif
 
 
 @endsection
@@ -1387,6 +1376,7 @@ document.addEventListener('DOMContentLoaded', function () {
     |--------------------------------------------------------------------------
     */
 
+    @if(! $isAccessAccountDirectory)
     @permission('users','assign')
 
     document
@@ -1496,6 +1486,7 @@ document.addEventListener('DOMContentLoaded', function () {
         );
 
     @endpermission
+    @endif
 
 });
 </script>
@@ -1508,7 +1499,8 @@ document.addEventListener('DOMContentLoaded', function () {
 ========================================================= --}}
 
 @if(
-    app(\App\Services\PermissionService::class)
+    ! $isAccessAccountDirectory
+    && app(\App\Services\PermissionService::class)
         ->allows('users','import')
     &&
     (
@@ -1545,4 +1537,3 @@ document.addEventListener(
 @endpush
 
 @endif
-

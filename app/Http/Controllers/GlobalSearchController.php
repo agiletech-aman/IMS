@@ -55,8 +55,11 @@ class GlobalSearchController extends Controller
         if ($this->permissions->allows('users')) {
             foreach ($this->users($query) as $user) {
                 $parameters = ['search' => $user->unique_id];
+                $route = 'users.index';
+
                 if ($user->login_enabled) {
                     $parameters['role'] = $user->role;
+                    $route = 'access-accounts.index';
                 }
 
                 $results[] = [
@@ -64,7 +67,7 @@ class GlobalSearchController extends Controller
                     'icon' => 'user',
                     'title' => $user->name,
                     'description' => collect([$user->unique_id, $user->email])->filter()->join(' · '),
-                    'url' => route('users.index', $parameters),
+                    'url' => route($route, $parameters),
                 ];
             }
         }

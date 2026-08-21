@@ -27,6 +27,8 @@ class User extends Authenticatable
         'email',
         'contact',
         'address',
+        'image_path',
+        'centre',
         'status',
         'role',
         'login_enabled',

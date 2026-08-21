@@ -14,6 +14,8 @@ class NotificationPreference extends Model
         'warranty_expiry' => ['Warranty expiry alert', 30],
         'user_created' => ['New user alert', null],
         'user_deleted' => ['Deleted user alert', null],
+        'access_account_created' => ['New access account alert', null],
+        'access_account_deleted' => ['Deleted access account alert', null],
         'asset_assigned' => ['Asset assignment alert', null],
         'report_generated' => ['Report generation alert', null],
         'vendor_changed' => ['Vendor / OEM alert', null],
