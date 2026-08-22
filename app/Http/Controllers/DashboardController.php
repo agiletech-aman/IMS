@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\SystemNotification;
 use App\Models\User;
 use App\Models\Vendor;
+use App\Services\CentreContextService;
 use App\Services\PermissionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request, PermissionService $permissions): View
+    public function index(Request $request, PermissionService $permissions, CentreContextService $centreContext): View
     {
         $filters = $request->validate([
             'period' => ['nullable', Rule::in(['day', 'week', 'month'])],
@@ -75,8 +76,8 @@ $categoryDistribution = $visibility['assets'] ? Asset::query()
             ];
         }
         if ($visibility['users']) {
-            $stats[] = ['icon' => 'fa-users', 'label' => 'Users', 'value' => User::where('login_enabled', false)->count(), 'class' => ''];
-            $stats[] = ['icon' => 'fa-key', 'label' => 'Access Accounts', 'value' => User::where('login_enabled', true)->count(), 'class' => 'info'];
+            $stats[] = ['icon' => 'fa-users', 'label' => 'Users', 'value' => $centreContext->apply(User::where('login_enabled', false))->count(), 'class' => ''];
+            $stats[] = ['icon' => 'fa-key', 'label' => 'Access Accounts', 'value' => $centreContext->apply(User::where('login_enabled', true))->count(), 'class' => 'info'];
         }
         if ($visibility['vendors']) {
             $stats[] = ['icon' => 'fa-handshake', 'label' => 'Active Vendors', 'value' => Vendor::where('status', 'Active')->count(), 'class' => 'success'];
