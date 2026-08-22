@@ -49,7 +49,7 @@ class NotificationPreference extends Model
         $centre = in_array($centre, ['noida', 'lucknow'], true) ? $centre : 'lucknow';
 
         foreach (self::DEFAULTS as $eventType => [$label, $daysBefore]) {
-            self::firstOrCreate(['event_type' => $eventType, 'centre' => $centre], [
+            self::createOrFirst(['event_type' => $eventType, 'centre' => $centre], [
                 'label' => $label,
                 'in_app_enabled' => true,
                 'email_enabled' => true,
