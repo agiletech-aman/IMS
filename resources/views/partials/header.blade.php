@@ -261,7 +261,7 @@
 
                 <span class="profile-copy"> 
                     <strong>{{ $staticUser['name'] }}</strong> 
-                    <small>{{ $staticUser['role'] }}</small> 
+                    <small>{{ \App\Support\RoleLabel::display($staticUser['role'] ?? null) }}</small> 
                 </span> 
 
                 <i class="fa-solid fa-chevron-down"></i> 

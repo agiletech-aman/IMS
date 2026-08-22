@@ -194,7 +194,7 @@ Route::middleware([EnsureStaticAuthenticated::class, EnsureCentreSelected::class
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->middleware($permission('audit_logs'))->name('audit-logs.index');
     Route::get('/audit-logs/export', [AuditLogController::class, 'export'])->middleware($permission('audit_logs', 'export'))->name('audit-logs.export');
     Route::delete('/audit-logs', [AuditLogController::class, 'clear'])->middleware(EnsureAdministrator::class)->name('audit-logs.clear');
-    Route::middleware([EnsureAdministrator::class, $permission('backup')])->prefix('backup')->name('backup.')->group(function () use ($permission) {
+    Route::middleware([$permission('backup')])->prefix('backup')->name('backup.')->group(function () use ($permission) {
         Route::get('/', [BackupController::class, 'index'])->name('index');
         Route::post('/', [BackupController::class, 'store'])->middleware($permission('backup', 'create'))->name('store');
         Route::post('/schedules', [BackupScheduleController::class, 'store'])->middleware($permission('backup', 'update'))->name('schedules.store');

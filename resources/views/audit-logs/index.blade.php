@@ -148,7 +148,7 @@
                 @endphp
                 <tr>
                     <td><strong>{{ $log->created_at->format($systemSettings?->date_format ?? 'd M Y') }}</strong><small class="d-block text-secondary">{{ $log->created_at->format('h:i:s A') }}</small></td>
-                    <td><strong>{{ $log->actor_name }}</strong><small class="d-block text-secondary">{{ $log->actor_role ?: ($log->actor_email ?: 'Automated process') }}</small></td>
+                    <td><strong>{{ $log->actor_name }}</strong><small class="d-block text-secondary">{{ $log->actor_role ? \App\Support\RoleLabel::display($log->actor_role) : ($log->actor_email ?: 'Automated process') }}</small></td>
                     <td><span class="badge-soft {{ $actionClass }}">{{ $log->action }}</span></td>
                     <td>{{ $log->module }}</td>
                     <td>{{ $log->description }}</td>

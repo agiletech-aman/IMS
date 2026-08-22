@@ -21,11 +21,11 @@
 
 @include('partials.page-header',[
     'title' => $selectedRole
-        ? $selectedRole.' Access Accounts'
+        ? \App\Support\RoleLabel::display($selectedRole).' Access Accounts'
         : 'Users',
 
     'description' => $selectedRole
-        ? 'Manage dashboard login accounts assigned to the '.$selectedRole.' role.'
+        ? 'Manage dashboard login accounts assigned to the '.\App\Support\RoleLabel::display($selectedRole).' role.'
         : 'Manage users and their assigned assets.'
 ])
 
@@ -839,7 +839,7 @@
 
                                     <i class="fa-solid fa-key me-1"></i>
 
-                                    {{ $user->role }}
+                                    {{ \App\Support\RoleLabel::display($user->role) }}
 
                                 </span>
 

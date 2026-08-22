@@ -21,7 +21,7 @@
             <button class="panel role-card role-selector h-100 w-100 text-start {{ $loop->first ? 'is-selected' : '' }}" type="button" data-role-target="rolePanel{{ $loop->index }}">
                 <div class="panel-body d-flex gap-3">
                     <span class="stat-icon"><i class="fa-solid {{ $icon }}"></i></span>
-                    <div class="flex-grow-1"><h6 class="mb-1">{{ $role }}</h6><p class="small text-secondary mb-3">{{ $description }}</p><span class="badge-soft {{ $class }}"><i class="fa-solid fa-shield-halved me-1"></i>Database permissions</span></div>
+                    <div class="flex-grow-1"><h6 class="mb-1">{{ \App\Support\RoleLabel::display($role) }}</h6><p class="small text-secondary mb-3">{{ $description }}</p><span class="badge-soft {{ $class }}"><i class="fa-solid fa-shield-halved me-1"></i>Database permissions</span></div>
                 </div>
             </button>
         </div>
@@ -33,7 +33,7 @@
     @foreach($roles as $role)
         <div class="panel role-permission-panel {{ $loop->first ? '' : 'd-none' }}" id="rolePanel{{ $loop->index }}">
             <div class="panel-header">
-                <div><h2>{{ $role }} Permissions</h2><p>Changes apply to all active {{ $role }} login accounts immediately</p></div>
+                <div><h2>{{ \App\Support\RoleLabel::display($role) }} Permissions</h2><p>Changes apply to all active {{ \App\Support\RoleLabel::display($role) }} login accounts immediately</p></div>
                 @if($canUpdatePermissions)
                     <button class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Permissions</button>
                 @else
