@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\CentreScoped;
+use App\Services\CentreContextService;
 use Illuminate\Database\Eloquent\Model;
 
 class NotificationPreference extends Model
@@ -45,8 +46,7 @@ class NotificationPreference extends Model
 
     public static function seedDefaults(): void
     {
-        $centre = session('selected_centre', 'lucknow');
-        $centre = in_array($centre, ['noida', 'lucknow'], true) ? $centre : 'lucknow';
+        $centre = app(CentreContextService::class)->selected() ?? 'lucknow';
 
         foreach (self::DEFAULTS as $eventType => [$label, $daysBefore]) {
             self::createOrFirst(['event_type' => $eventType, 'centre' => $centre], [
