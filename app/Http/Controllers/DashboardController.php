@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Admin;
 use App\Models\Asset;
 use App\Models\AuditLog;
 use App\Models\SystemNotification;
@@ -77,7 +76,7 @@ $categoryDistribution = $visibility['assets'] ? Asset::query()
         }
         if ($visibility['users']) {
             $stats[] = ['icon' => 'fa-users', 'label' => 'Users', 'value' => User::where('login_enabled', false)->count(), 'class' => ''];
-            $stats[] = ['icon' => 'fa-key', 'label' => 'Access Accounts', 'value' => User::where('login_enabled', true)->count() + Admin::count(), 'class' => 'info'];
+            $stats[] = ['icon' => 'fa-key', 'label' => 'Access Accounts', 'value' => User::where('login_enabled', true)->count(), 'class' => 'info'];
         }
         if ($visibility['vendors']) {
             $stats[] = ['icon' => 'fa-handshake', 'label' => 'Active Vendors', 'value' => Vendor::where('status', 'Active')->count(), 'class' => 'success'];
