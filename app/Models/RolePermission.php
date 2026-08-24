@@ -14,10 +14,10 @@ class RolePermission extends Model
     public const MODULES = [
         'dashboard' => ['label' => 'Dashboard', 'icon' => 'fa-chart-pie', 'actions' => ['view']],
         'assets' => ['label' => 'Assets', 'icon' => 'fa-laptop-file', 'actions' => self::ACTIONS],
-        'departments' => ['label' => 'Departments', 'icon' => 'fa-building', 'actions' => ['view', 'create', 'update', 'delete']],
-        'sub_departments' => ['label' => 'Sub Departments', 'icon' => 'fa-sitemap', 'actions' => ['view', 'create', 'update', 'delete']],
-        'types' => ['label' => 'Asset Types', 'icon' => 'fa-shapes', 'actions' => ['view', 'create', 'update', 'delete']],
-'brands' => ['label' => 'Brands', 'icon' => 'fa-copyright', 'actions' => ['view', 'create', 'update', 'delete']],
+        'departments' => ['label' => 'Departments', 'icon' => 'fa-building', 'actions' => ['view', 'create', 'update', 'delete', 'import', 'export']],
+        'sub_departments' => ['label' => 'Sub Departments', 'icon' => 'fa-sitemap', 'actions' => ['view', 'create', 'update', 'delete', 'import', 'export']],
+        'types' => ['label' => 'Asset Types', 'icon' => 'fa-shapes', 'actions' => ['view', 'create', 'update', 'delete', 'import', 'export']],
+'brands' => ['label' => 'Brands', 'icon' => 'fa-copyright', 'actions' => ['view', 'create', 'update', 'delete', 'import', 'export']],
         'faculty' => ['label' => 'User Directory', 'icon' => 'fa-id-badge', 'actions' => ['view', 'create', 'update', 'delete', 'assign', 'import', 'export']],
         'access_accounts_asset_manager' => ['label' => 'Asset Manager', 'icon' => 'fa-user-tie', 'actions' => ['view', 'create', 'update', 'delete', 'import', 'export']],
         'access_accounts_sub_admin' => ['label' => 'Sub admin', 'icon' => 'fa-user-ninja', 'actions' => ['view', 'create', 'update', 'delete', 'import', 'export']],
@@ -62,4 +62,5 @@ class RolePermission extends Model
         ];
     }
 }
+
 
