@@ -191,8 +191,10 @@ Route::middleware([EnsureStaticAuthenticated::class, EnsureCentreSelected::class
     Route::get('/reports', [ReportController::class, 'index'])->middleware($permission('reports'))->name('reports.index');
     Route::post('/reports/generate', [ReportController::class, 'generate'])->middleware($permission('reports', 'create'))->name('reports.generate');
     Route::get('/reports/export', [ReportController::class, 'export'])->middleware($permission('reports', 'export'))->name('reports.export');
+    Route::get('/reports/export-xlsx', [ReportController::class, 'exportXlsx'])->middleware($permission('reports', 'export'))->name('reports.export.xlsx');
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->middleware($permission('audit_logs'))->name('audit-logs.index');
     Route::get('/audit-logs/export', [AuditLogController::class, 'export'])->middleware($permission('audit_logs', 'export'))->name('audit-logs.export');
+    Route::get('/audit-logs/export-xlsx', [AuditLogController::class, 'exportXlsx'])->middleware($permission('audit_logs', 'export'))->name('audit-logs.export.xlsx');
     Route::delete('/audit-logs', [AuditLogController::class, 'clear'])->middleware(EnsureAdministrator::class)->name('audit-logs.clear');
     Route::middleware([$permission('backup')])->prefix('backup')->name('backup.')->group(function () use ($permission) {
         Route::get('/', [BackupController::class, 'index'])->name('index');

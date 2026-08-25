@@ -65,7 +65,12 @@
 <div class="panel">
     <div class="panel-header">
         <div><h2>Filtered Asset Report</h2><p>{{ number_format($assets->total()) }} matching records</p></div>
-        @permission('reports','export')<a class="btn btn-soft" href="{{ route('reports.export', request()->except(['page','generated'])) }}"><i class="fa-solid fa-file-csv me-2 text-success"></i>Export CSV</a>@endpermission
+        @permission('reports','export')
+            <div class="d-flex gap-2">
+                <a class="btn btn-soft" href="{{ route('reports.export', request()->except(['page','generated'])) }}"><i class="fa-solid fa-file-csv me-2 text-success"></i>Export CSV</a>
+                <a class="btn btn-soft" href="{{ route('reports.export.xlsx', request()->except(['page','generated'])) }}"><i class="fa-solid fa-file-excel me-2 text-success"></i>Export XLSX</a>
+            </div>
+        @endpermission
     </div>
     <div class="table-responsive">
         <table class="table data-table report-results-table">

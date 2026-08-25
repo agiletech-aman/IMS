@@ -5,20 +5,24 @@ namespace App\Services;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use RuntimeException;
 use Symfony\Component\Process\Process;
 use Throwable;
 
 class DatabaseBackupService
 {
+    public function __construct(private readonly CentreContextService $centreContext) {}
+
     public function export(string $destination): string
     {
         $connection = DB::connection();
         $driver = $connection->getDriverName();
+        $centre = $this->centreContext->selected();
 
         if (in_array($driver, ['mysql', 'mariadb'], true) && $this->mysqlDumpAvailable()) {
             try {
-                $this->exportWithMysqlDump($destination);
+                $this->exportWithMysqlDump($destination, $centre);
 
                 return 'mysqldump';
             } catch (Throwable $exception) {
@@ -26,7 +30,7 @@ class DatabaseBackupService
             }
         }
 
-        $this->exportWithPhp($connection, $destination);
+        $this->exportWithPhp($connection, $destination, $centre);
 
         return 'php';
     }
@@ -59,7 +63,18 @@ class DatabaseBackupService
         }
     }
 
-    private function exportWithMysqlDump(string $destination): void
+    private function exportWithMysqlDump(string $destination, ?string $centre): void
+    {
+        if ($centre === null) {
+            $this->exportWithMysqlDumpWhole($destination);
+
+            return;
+        }
+
+        $this->exportWithMysqlDumpForCentre($destination, $centre);
+    }
+
+    private function exportWithMysqlDumpWhole(string $destination): void
     {
         $config = DB::connection()->getConfig();
         $database = (string) $config['database'];
@@ -93,7 +108,90 @@ class DatabaseBackupService
         }
     }
 
-    private function exportWithPhp(ConnectionInterface $connection, string $destination): void
+    /**
+     * Dumps schema for every table, then dumps data table-by-table so that
+     * centre-scoped tables can be restricted to the selected centre while
+     * tables without a centre column (shared/reference data) still export
+     * in full.
+     */
+    private function exportWithMysqlDumpForCentre(string $destination, string $centre): void
+    {
+        $config = DB::connection()->getConfig();
+        $database = (string) $config['database'];
+        $binary = (string) config('backup.mysqldump_binary', 'mysqldump');
+        $env = ['MYSQL_PWD' => (string) ($config['password'] ?? '')];
+        $baseArgs = [
+            '--host='.(string) ($config['host'] ?? '127.0.0.1'),
+            '--port='.(string) ($config['port'] ?? '3306'),
+            '--user='.(string) ($config['username'] ?? ''),
+            '--skip-comments',
+            '--default-character-set=utf8mb4',
+        ];
+
+        $tables = $this->tables(DB::connection());
+        $centreTables = $this->centreScopedTables($tables);
+
+        $schemaCommand = array_merge([$binary], $baseArgs, [
+            '--no-data',
+            '--result-file='.$destination,
+        ], array_map(
+            fn (string $table) => "--ignore-table={$database}.{$table}",
+            $this->excludedTables(),
+        ), [$database]);
+
+        $schemaProcess = new Process($schemaCommand, base_path(), $env);
+        $schemaProcess->setTimeout(600);
+        $schemaProcess->run();
+
+        if (! $schemaProcess->isSuccessful()) {
+            File::delete($destination);
+            $error = trim($schemaProcess->getErrorOutput()) ?: 'mysqldump did not produce a schema file.';
+            throw new RuntimeException('mysqldump failed: '.mb_strimwidth($error, 0, 500));
+        }
+
+        $handle = fopen($destination, 'ab');
+        if ($handle === false) {
+            throw new RuntimeException('Unable to append to the database export file.');
+        }
+
+        try {
+            foreach ($tables as $table) {
+                $dataCommand = array_merge([$binary], $baseArgs, [
+                    '--single-transaction',
+                    '--quick',
+                    '--no-create-info',
+                    '--skip-add-locks',
+                ]);
+
+                if (in_array($table, $centreTables, true)) {
+                    $dataCommand[] = "--where=centre = '{$centre}'";
+                }
+
+                $dataCommand[] = $database;
+                $dataCommand[] = $table;
+
+                $dataProcess = new Process($dataCommand, base_path(), $env);
+                $dataProcess->setTimeout(3600);
+                $dataProcess->run();
+
+                if (! $dataProcess->isSuccessful()) {
+                    $error = trim($dataProcess->getErrorOutput()) ?: "mysqldump failed while exporting table {$table}.";
+                    throw new RuntimeException('mysqldump failed: '.mb_strimwidth($error, 0, 500));
+                }
+
+                fwrite($handle, $dataProcess->getOutput()."\n");
+            }
+        } finally {
+            fclose($handle);
+        }
+
+        if (! is_file($destination) || filesize($destination) === 0) {
+            File::delete($destination);
+            throw new RuntimeException('mysqldump did not produce an output file.');
+        }
+    }
+
+    private function exportWithPhp(ConnectionInterface $connection, string $destination, ?string $centre): void
     {
         $handle = fopen($destination, 'wb');
         if ($handle === false) {
@@ -107,12 +205,20 @@ class DatabaseBackupService
                 ? "PRAGMA foreign_keys=OFF;\nBEGIN TRANSACTION;\n\n"
                 : "SET FOREIGN_KEY_CHECKS=0;\n\n");
 
-            foreach ($this->tables($connection) as $table) {
+            $tables = $this->tables($connection);
+            $centreTables = $this->centreScopedTables($tables);
+
+            foreach ($tables as $table) {
                 $identifier = $this->quoteIdentifier($table, $connection->getDriverName());
                 $schema = $this->createStatement($connection, $table);
                 fwrite($handle, "DROP TABLE IF EXISTS {$identifier};\n{$schema};\n\n");
 
-                foreach ($connection->table($table)->cursor() as $row) {
+                $query = $connection->table($table);
+                if ($centre !== null && in_array($table, $centreTables, true)) {
+                    $query->where('centre', $centre);
+                }
+
+                foreach ($query->cursor() as $row) {
                     $values = (array) $row;
                     if ($values === []) {
                         continue;
@@ -140,6 +246,15 @@ class DatabaseBackupService
         if (! is_file($destination) || filesize($destination) === 0) {
             throw new RuntimeException('The PHP database exporter produced an empty file.');
         }
+    }
+
+    /** @param string[] $tables */
+    private function centreScopedTables(array $tables): array
+    {
+        return array_values(array_filter(
+            $tables,
+            fn (string $table) => Schema::hasColumn($table, 'centre'),
+        ));
     }
 
     private function tables(ConnectionInterface $connection): array

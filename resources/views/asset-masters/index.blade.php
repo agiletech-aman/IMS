@@ -137,6 +137,66 @@
     color: #3f5cc4;
 }
 
+.master-import-info {
+    padding: 16px;
+    border: 1px solid #e3eaf1;
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.master-import-info-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.master-import-info-label i {
+    color: #3f5cc4;
+}
+
+.master-import-columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.master-import-chip {
+    padding: 3px 10px;
+    border: 1px solid #d8e2eb;
+    border-radius: 999px;
+    background: #fff;
+    color: #3f5cc4;
+    font-size: 12.5px;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+}
+
+.master-import-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed #d8e2eb;
+    width: 100%;
+    color: #3f5cc4;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.master-import-download i {
+    font-size: 13px;
+}
+
+.master-import-download:hover {
+    color: #2e4494;
+    text-decoration: underline;
+}
+
 @media (max-width: 992px) {
     .master-table-toolbar {
         flex-wrap: wrap;
@@ -803,41 +863,52 @@
                         </div>
 
 
-                        <div class="alert alert-light border mt-3 mb-0">
+                        @php
 
-                            <strong>
-                                Expected CSV columns:
-                            </strong>
+                            $sampleColumns = match ($module) {
+                                'departments' => ['name', 'status', 'description'],
+                                'sub-departments' => ['name', 'department', 'status', 'description'],
+                                'types' => ['name', 'status', 'description'],
+                                'brands' => ['name', 'country', 'support_contact', 'status'],
+                                'categories' => ['name', 'status', 'description'],
+                                default => [],
+                            };
 
-                            <div class="mt-1">
+                            $sampleCsv = implode(',', $sampleColumns);
 
-                                @if($module === 'departments')
-
-                                    name, status, description
-
-
-                                @elseif($module === 'sub-departments')
-
-                                    name, department, status, description
+                        @endphp
 
 
-                                @elseif($module === 'types')
+                        <div class="master-import-info mt-3">
 
-                                    name, status, description
+                            <div class="master-import-info-label">
+                                <i class="fa-solid fa-circle-info"></i>
 
+                                Expected CSV columns
+                            </div>
 
-                                @elseif($module === 'brands')
+                            <div class="master-import-columns">
 
-                                    name, country, support_contact, status
+                                @foreach($sampleColumns as $column)
 
+                                    <span class="master-import-chip">
+                                        {{ $column }}
+                                    </span>
 
-                                @elseif($module === 'categories')
-
-                                    name, status, description
-
-                                @endif
+                                @endforeach
 
                             </div>
+
+
+                            <a
+                                href="data:text/csv;charset=utf-8,{{ rawurlencode($sampleCsv) }}"
+                                download="{{ $module }}-sample.csv"
+                                class="master-import-download"
+                            >
+                                <i class="fa-solid fa-download"></i>
+
+                                Download sample format
+                            </a>
 
                         </div>
 

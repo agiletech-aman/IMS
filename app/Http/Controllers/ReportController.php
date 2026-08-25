@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ExportsCentreSplitExcel;
 use App\Models\Asset;
 use App\Models\AssetType;
 use App\Models\Brand;
 use App\Models\Department;
 use App\Models\SubDepartment;
+use App\Services\CentreContextService;
 use App\Services\NotificationService;
 use App\Services\AuditLogger;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,10 +16,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
+    use ExportsCentreSplitExcel;
+
     public function index(Request $request): View
     {
         $hasGenerated = $request->boolean('generated');
@@ -117,6 +123,63 @@ class ReportController extends Controller
             }
             fclose($output);
         }, 'asset-report-'.now()->format('Y-m-d-His').'.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    public function exportXlsx(
+        Request $request,
+        NotificationService $notifications,
+        AuditLogger $audit,
+        CentreContextService $centreContext,
+    ): BinaryFileResponse
+    {
+        $filters = $request->validate($this->rules($request));
+        $assets = $this->reportQuery($filters)->orderBy('asset_tag')->get();
+
+        $notifications->send(
+            'report_generated',
+            'Asset report exported',
+            "Filtered asset report was exported to Excel with {$assets->count()} records.",
+            'info',
+            'Reports',
+            ['filters' => $filters, 'record_count' => $assets->count(), 'format' => 'xlsx'],
+        );
+        $audit->record(
+            'EXPORT',
+            'Reports',
+            "Asset report exported to Excel with {$assets->count()} records.",
+            metadata: ['filters' => $filters, 'record_count' => $assets->count(), 'format' => 'xlsx'],
+        );
+
+        $headings = [
+            'Asset ID', 'Asset Name', 'Type', 'Brand', 'Department',
+            'Sub Department', 'Assigned To', 'Status', 'Warranty Expiry', 'AMC Expiry',
+        ];
+
+        $spreadsheet = $this->centreSplitSpreadsheet(
+            $headings,
+            $assets,
+            $centreContext->selected(),
+            fn (Asset $asset) => $asset->centre,
+            fn (Asset $asset) => [
+                $asset->asset_tag,
+                $asset->name,
+                $asset->type?->name,
+                $asset->brand?->name,
+                $asset->department?->name,
+                $asset->subDepartment?->name,
+                $asset->assigned_to,
+                $asset->status,
+                $asset->warranty_expiry?->format('Y-m-d'),
+                $asset->amc_expiry?->format('Y-m-d'),
+            ],
+        );
+
+        $filename = 'asset-report-'.now()->format('Y-m-d-His').'.xlsx';
+        $tmpPath = storage_path('app/'.$filename);
+
+        (new Xlsx($spreadsheet))->save($tmpPath);
+
+        return response()->download($tmpPath, $filename)->deleteFileAfterSend(true);
     }
 
     private function reportQuery(array $filters): Builder

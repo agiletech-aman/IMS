@@ -2,16 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ExportsCentreSplitExcel;
 use App\Models\AuditLog;
 use App\Services\AuditLogger;
+use App\Services\CentreContextService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AuditLogController extends Controller
 {
+    use ExportsCentreSplitExcel;
+
     private const MODULES = [
         'Administrators',
         'Alerts',
@@ -90,6 +96,50 @@ class AuditLogController extends Controller
             }
             fclose($output);
         }, 'audit-logs-'.now()->format('Y-m-d-His').'.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    public function exportXlsx(Request $request, AuditLogger $audit, CentreContextService $centreContext): BinaryFileResponse
+    {
+        $filters = $request->validate($this->rules());
+        $logs = $this->filteredQuery($filters)->latest()->get();
+        $audit->record(
+            'EXPORT',
+            'Audit Logs',
+            "Audit trail exported to Excel with {$logs->count()} records.",
+            metadata: ['filters' => $filters, 'record_count' => $logs->count(), 'format' => 'xlsx'],
+        );
+
+        $headings = [
+            'Date & Time', 'User', 'Email', 'Role', 'Action', 'Module',
+            'Description', 'IP Address', 'Result', 'Old Values', 'New Values',
+        ];
+
+        $spreadsheet = $this->centreSplitSpreadsheet(
+            $headings,
+            $logs,
+            $centreContext->selected(),
+            fn (AuditLog $log) => $log->centre,
+            fn (AuditLog $log) => [
+                $log->created_at->format('Y-m-d H:i:s'),
+                $log->actor_name,
+                $log->actor_email,
+                $log->actor_role,
+                $log->action,
+                $log->module,
+                $log->description,
+                $log->ip_address,
+                $log->result,
+                $log->old_values ? json_encode($log->old_values, JSON_UNESCAPED_UNICODE) : null,
+                $log->new_values ? json_encode($log->new_values, JSON_UNESCAPED_UNICODE) : null,
+            ],
+        );
+
+        $filename = 'audit-logs-'.now()->format('Y-m-d-His').'.xlsx';
+        $tmpPath = storage_path('app/'.$filename);
+
+        (new Xlsx($spreadsheet))->save($tmpPath);
+
+        return response()->download($tmpPath, $filename)->deleteFileAfterSend(true);
     }
 
     public function clear(AuditLogger $audit): RedirectResponse
