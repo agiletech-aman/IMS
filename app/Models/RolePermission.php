@@ -34,7 +34,7 @@ class RolePermission extends Model
             'actions' => ['view', 'create', 'update', 'delete', 'download', 'verify', 'restore'],
         ],
         'settings' => ['label' => 'Settings Module Access', 'icon' => 'fa-gear', 'actions' => ['view']],
-        'settings_basic' => ['label' => 'Settings: Basic', 'icon' => 'fa-sliders', 'actions' => ['view', 'update']],
+        'settings_basic' => ['label' => 'Settings: Basic', 'icon' => 'fa-sliders', 'actions' => ['view']],
         'settings_advanced' => ['label' => 'Settings: Advanced', 'icon' => 'fa-shield-halved', 'actions' => ['view', 'update']],
         'roles_permissions' => ['label' => 'Roles & Permissions', 'icon' => 'fa-user-shield', 'actions' => ['view', 'update']],
         'administrators' => ['label' => 'Administrators', 'icon' => 'fa-user-gear', 'actions' => ['view', 'create', 'update', 'delete']],
