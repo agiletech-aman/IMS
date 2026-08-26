@@ -178,8 +178,30 @@ class RolePermissionManagementTest extends TestCase
             ->assertSee('SMTP Settings')
             ->assertSee('Notification Settings')
             ->assertSee('Security Settings')
-            ->assertSee('Save General Settings')
+            ->assertDontSee('Save General Settings')
             ->assertSee('Save SMTP Settings');
+
+        $this->roleSession('Sub admin')
+            ->post(route('settings.general.update'), [])
+            ->assertForbidden();
+    }
+
+    public function test_only_super_admin_can_update_basic_settings(): void
+    {
+        $this->roleSession('Administrator')
+            ->post(route('settings.general.update'), [
+                'application_name' => 'IMS',
+                'language' => 'en',
+                'timezone' => 'Asia/Kolkata',
+                'date_format' => 'd M Y',
+            ])
+            ->assertRedirect();
+
+        foreach (['Asset Manager', 'Sub admin', 'Auditor', 'Viewer'] as $role) {
+            $this->roleSession($role)
+                ->post(route('settings.general.update'), [])
+                ->assertForbidden();
+        }
     }
 
     public function test_settings_feature_permission_still_requires_settings_module_access(): void

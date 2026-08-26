@@ -80,7 +80,6 @@
                     <input id="remember" name="remember" type="checkbox" value="1">
                     <span>Remember me</span>
                 </label>
-                <a href="{{ route('password.request') }}">Forgot password?</a>
             </div>
 
             <button type="submit" class="login-submit">
@@ -88,10 +87,6 @@
                 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
             </button>
         </form>
-
-        <p class="login-support">
-            Need help? <a href="mailto:support@agiletech.net.in">Contact support</a>
-        </p>
     </section>
 
     <section class="login-showcase" aria-label="Agile Tech Solutions asset management">
