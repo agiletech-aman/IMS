@@ -25,7 +25,6 @@ class AuditLogController extends Controller
         'Authentication',
         'Brands',
         'Categories',
-        'Complaint Management',
         'Departments',
         'Notification Settings',
         'Reports',

@@ -71,7 +71,7 @@
                         <div class="row g-3">
 
                             <div class="col-md-6">
-                                <label class="form-label">User Name *</label>
+                                <label class="form-label">User Name <span class="text-danger">*</span></label>
                                 <input
                                     type="text"
                                     name="name"
@@ -83,7 +83,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Deptt. *</label>
+                                <label class="form-label">Deptt. <span class="text-danger">*</span></label>
                                 <select name="department_id" class="form-select" required>
                                     <option value="">Select Department</option>
                                     @foreach($departments as $department)
@@ -98,7 +98,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">FB New/Old *</label>
+                                <label class="form-label">FB New/Old</label>
                                 <input
                                     type="text"
                                     name="fb_type"
@@ -107,7 +107,6 @@
                                     autocomplete="off"
                                     placeholder="FB New/Old"
                                     value="{{ old('fb_type', $user?->fb_type) }}"
-                                    required
                                 >
                                 <datalist id="fbTypeOptions">
                                     <option value="New FB">
@@ -154,7 +153,7 @@
                         <div class="row g-3">
 
                             <div class="col-md-8">
-                                <label class="form-label">Name *</label>
+                                <label class="form-label">Name <span class="text-danger">*</span></label>
                                 <input
                                     type="text"
                                     name="name"
@@ -166,7 +165,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Email *</label>
+                                <label class="form-label">Email <span class="text-danger">*</span></label>
                                 <input
                                     type="email"
                                     name="email"
@@ -205,7 +204,7 @@
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label">Access Role *</label>
+                                <label class="form-label">Access Role <span class="text-danger">*</span></label>
                                 <select name="role" class="form-select" required>
                                     <option value="{{ $selectedRole }}" selected>{{ $selectedRole }}</option>
                                 </select>
@@ -213,7 +212,7 @@
 
                             <div class="col-md-3">
                                 <label class="form-label">
-                                    Login Password {{ !$isEdit ? '*' : '' }}
+                                    Login Password @if(!$isEdit)<span class="text-danger">*</span>@endif
                                 </label>
                                 <input
                                     type="password"
@@ -225,7 +224,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Status *</label>
+                                <label class="form-label">Status <span class="text-danger">*</span></label>
                                 <select name="status" class="form-select" required>
                                     <option
                                         value="Active"

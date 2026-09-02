@@ -40,12 +40,13 @@
 </div>
 
 <div class="dashboard-stats-grid mb-4">
-    @foreach(collect($stats)->reject(fn ($stat) => in_array($stat['label'], ['Active Vendors', 'Unread Alerts'])) as $stat)
+    @foreach(collect($stats)->reject(fn ($stat) => $stat['label'] === 'Unread Alerts') as $stat)
         @include('partials.stat-card',[
             'icon'=>$stat['icon'],
             'label'=>$stat['label'],
             'value'=>number_format($stat['value']),
             'class'=>$stat['class'],
+            'href'=>$stat['url'] ?? null,
         ])
     @endforeach
 </div>
@@ -135,9 +136,8 @@
     @endif
 </div>@endif
 
-@if(($visibility['reports'] && $visibility['assets']) || $visibility['vendors'])<div class="row g-3">
-    @if($visibility['reports'] && $visibility['assets'])
-    <div class="col-xl-6">
+@if($visibility['reports'] && $visibility['assets'])<div class="row g-3">
+    <div class="col-12">
         <div class="panel h-100">
             <div class="panel-header"><div><h2>Upcoming AMC & Warranty</h2><p>Coverage expiring within 60 days</p></div><a href="{{ route('reports.index',['warranty'=>'expiring','generated'=>1]) }}" class="small">Coverage report</a></div>
             <div class="panel-body">
@@ -151,23 +151,6 @@
             </div>
         </div>
     </div>
-    @endif
-    @if($visibility['vendors'])
-    <div class="col-xl-6">
-        <div class="panel h-100">
-            <div class="panel-header"><div><h2>Vendor / OEM Renewals</h2><p>Contracts requiring attention</p></div><a href="{{ route('vendors.index') }}" class="small">Manage vendors</a></div>
-            <div class="panel-body">
-                <ul class="list-widget">
-                    @forelse($vendorRenewals as $vendor)
-                        <li><div><strong>{{ $vendor->name }}</strong><small>{{ $vendor->vendor_type }} · {{ $vendor->contract_end?->format('d M Y') ?: 'No contract end date' }}</small></div><span class="badge-soft {{ $vendor->amc_status === 'Expired' ? 'danger' : 'warning' }}">{{ $vendor->amc_status }}</span></li>
-                    @empty
-                        <li class="dashboard-empty"><i class="fa-solid fa-handshake"></i><span>No vendor renewals require attention</span></li>
-                    @endforelse
-                </ul>
-            </div>
-        </div>
-    </div>
-    @endif
 </div>@endif
 
 <style>

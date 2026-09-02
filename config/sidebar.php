@@ -9,6 +9,7 @@ return [
             ['asset-management/departments*', 'fa-building', 'Department', 'asset-management.departments.index', [], 'departments'],
             ['asset-management/sub-departments*', 'fa-sitemap', 'Sub Department', 'asset-management.sub-departments.index', [], 'sub_departments'],
             ['asset-management/types*', 'fa-shapes', 'Type', 'asset-management.types.index', [], 'types'],
+            ['asset-management/sub-types*', 'fa-layer-group', 'Subtype', 'asset-management.sub-types.index', [], 'sub_types'],
             ['asset-management/brands*', 'fa-copyright', 'Brand', 'asset-management.brands.index', [], 'brands'],
             ['assets*', 'fa-list-check', 'Assets', 'assets.index', [], 'assets'],
         ],

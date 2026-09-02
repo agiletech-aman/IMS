@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AssetCategory;
+use App\Models\AssetSubtype;
 use App\Models\AssetType;
 use App\Models\Brand;
 use App\Models\Department;
@@ -837,6 +838,19 @@ class AssetMasterController extends Controller
 
             /*
             |--------------------------------------------------------------------------
+            | Sub Types
+            |--------------------------------------------------------------------------
+            */
+
+            'sub-types' =>
+                $this->subtypeImportData(
+                    $common,
+                    $data
+                ),
+
+
+            /*
+            |--------------------------------------------------------------------------
             | Brands
             |--------------------------------------------------------------------------
             */
@@ -954,6 +968,62 @@ class AssetMasterController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | SUB TYPE IMPORT
+    |--------------------------------------------------------------------------
+    */
+
+    private function subtypeImportData(
+        array $common,
+        array $data
+    ): ?array
+    {
+        $assetTypeName = trim(
+            (string) (
+                $data['asset_type']
+                ?? ''
+            )
+        );
+
+
+        if ($assetTypeName === '') {
+            return null;
+        }
+
+
+        $assetType = AssetType::query()
+            ->whereRaw(
+                'LOWER(name) = ?',
+                [strtolower($assetTypeName)]
+            )
+            ->first();
+
+
+        if (!$assetType) {
+            return null;
+        }
+
+
+        return $common + [
+
+            'asset_type_id' =>
+                $assetType->id,
+            'is_required' =>
+                (bool) filter_var(
+                    $data['is_required'] ?? true,
+                    FILTER_VALIDATE_BOOL,
+                ),
+            'description' =>
+                $this->nullableString(
+                    $data['description']
+                    ?? null
+                ),
+
+        ];
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | EXPORT HEADERS
     |--------------------------------------------------------------------------
     */
@@ -985,6 +1055,15 @@ class AssetMasterController extends Controller
             'types' => [
                 'name',
                 'code',
+                'status',
+                'description',
+                'assets',
+            ],
+
+            'sub-types' => [
+                'name',
+                'code',
+                'asset_type',
                 'status',
                 'description',
                 'assets',
@@ -1047,6 +1126,15 @@ class AssetMasterController extends Controller
             'types' => [
                 $record->name,
                 $record->code,
+                $record->status,
+                $record->description,
+                $record->assets_count,
+            ],
+
+            'sub-types' => [
+                $record->name,
+                $record->code,
+                $record->assetType?->name,
                 $record->status,
                 $record->description,
                 $record->assets_count,
@@ -1173,6 +1261,20 @@ class AssetMasterController extends Controller
             ],
 
 
+            'sub-types' => [
+                'model' => AssetSubtype::class,
+                'prefix' => 'SY',
+                'title' => 'Asset Subtypes',
+                'singular' => 'Subtype',
+                'description' =>
+                    'Define subtypes within each asset type for finer classification.',
+                'icon' => 'fa-layer-group',
+                'with' => [
+                    'assetType',
+                ],
+            ],
+
+
             'brands' => [
                 'model' => Brand::class,
                 'prefix' => 'BD',
@@ -1222,6 +1324,16 @@ class AssetMasterController extends Controller
             'sub-departments' => [
                 'department_id' =>
                     Department::orderBy('name')
+                        ->pluck(
+                            'name',
+                            'id'
+                        ),
+            ],
+
+
+            'sub-types' => [
+                'asset_type_id' =>
+                    AssetType::orderBy('name')
                         ->pluck(
                             'name',
                             'id'
@@ -1295,6 +1407,26 @@ class AssetMasterController extends Controller
 
             'types' =>
                 $common + [
+                    'description' => [
+                        'nullable',
+                        'string',
+                        'max:2000',
+                    ],
+
+                ],
+
+
+            'sub-types' =>
+                $common + [
+
+                    'asset_type_id' => [
+                        'required',
+                        'exists:asset_types,id',
+                    ],
+                    'is_required' => [
+                        'nullable',
+                        'boolean',
+                    ],
                     'description' => [
                         'nullable',
                         'string',

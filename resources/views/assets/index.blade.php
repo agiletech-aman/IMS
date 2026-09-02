@@ -414,7 +414,9 @@
             request('department') ||
             request('status') ||
             request('date_from') ||
-            request('date_to')
+            request('date_to') ||
+            request('assigned') ||
+            request('coverage_due')
         )
 
             <a
@@ -499,13 +501,15 @@
     <div class="table-actions">
 
         @permission('assets','export')
-            <a
-                href="{{ route('assets.export', request()->query()) }}"
+            <button
+                type="button"
                 class="btn btn-soft"
+                data-bs-toggle="modal"
+                data-bs-target="#assetExportModal"
             >
                 <i class="fa-solid fa-file-export me-2"></i>
                 Export
-            </a>
+            </button>
         @endpermission
 
 
@@ -897,14 +901,14 @@
 
 
 {{-- =========================================================
-     IMPORT MODAL
+     IMPORT / EXPORT MODALS
 ========================================================= --}}
 
-@permission('assets','import')
+@if(app(\App\Services\PermissionService::class)->allows('assets','import') || app(\App\Services\PermissionService::class)->allows('assets','export'))
 
     @include('partials.asset-import-modal')
 
-@endpermission
+@endif
 
 
 @endsection

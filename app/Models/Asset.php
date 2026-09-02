@@ -14,6 +14,7 @@ class Asset extends Model
     'asset_tag',
     'name',
     'asset_type_id',
+    'subtype_values',
     'brand_id',
     'department_id',
     'sub_department_id',
@@ -26,11 +27,6 @@ class Asset extends Model
     'amc_expiry',
     'image_path',
     'notes',
-
-    'cpu',
-    'hdd',
-    'ram',
-    'operating_system',
 ];
 
 protected function casts(): array
@@ -38,12 +34,38 @@ protected function casts(): array
         return [
             'installation_date' => 'date',
             'warranty_expiry' => 'date', 'amc_expiry' => 'date',
+            'subtype_values' => 'array',
         ];
     }
 
     public function type(): BelongsTo
     {
         return $this->belongsTo(AssetType::class, 'asset_type_id');
+    }
+
+    /**
+     * Resolve this asset's stored subtype field values (keyed by AssetSubtype id)
+     * into ['label' => subtype name, 'value' => stored value] pairs for display.
+     *
+     * @return array<int, array{label: string, value: string}>
+     */
+    public function subtypeFieldValues(): array
+    {
+        $values = $this->subtype_values ?? [];
+
+        if ($values === []) {
+            return [];
+        }
+
+        $labels = AssetSubtype::whereIn('id', array_keys($values))->pluck('name', 'id');
+
+        return collect($values)
+            ->map(fn ($value, $subtypeId) => [
+                'label' => $labels[$subtypeId] ?? "Field #{$subtypeId}",
+                'value' => $value,
+            ])
+            ->values()
+            ->all();
     }
 
     public function brand(): BelongsTo

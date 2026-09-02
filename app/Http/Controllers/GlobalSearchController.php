@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
-use App\Models\Complaint;
 use App\Models\User;
 use App\Services\PermissionService;
 use Illuminate\Http\JsonResponse;
@@ -36,18 +35,6 @@ class GlobalSearchController extends Controller
                     'title' => "{$asset->asset_tag} · {$asset->name}",
 'description' => collect([$asset->fr_number, $asset->status])->filter()->join(' · '),
                     'url' => route('assets.show', $asset),
-                ];
-            }
-        }
-
-        if ($this->permissions->allows('complaints')) {
-            foreach ($this->tickets($query) as $ticket) {
-                $results[] = [
-                    'type' => 'Tickets',
-                    'icon' => 'ticket',
-                    'title' => "{$ticket->complaint_number} · {$ticket->subject}",
-                    'description' => collect([$ticket->status, $ticket->priority.' priority'])->filter()->join(' · '),
-                    'url' => route('complaints.show', $ticket),
                 ];
             }
         }
@@ -87,19 +74,6 @@ $builder->where('asset_tag', 'like', "%{$query}%")
             ->orderBy('asset_tag')
             ->limit(self::RESULTS_PER_GROUP)
             ->get(['id', 'asset_tag', 'name', 'fr_number', 'status']);
-    }
-
-    private function tickets(string $query)
-    {
-        return Complaint::query()
-            ->where(function ($builder) use ($query): void {
-                $builder->where('complaint_number', 'like', "%{$query}%")
-                    ->orWhere('subject', 'like', "%{$query}%")
-                    ->orWhere('requester_name', 'like', "%{$query}%");
-            })
-            ->latest()
-            ->limit(self::RESULTS_PER_GROUP)
-            ->get(['id', 'complaint_number', 'subject', 'status', 'priority']);
     }
 
     private function users(string $query)

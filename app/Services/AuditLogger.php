@@ -84,7 +84,6 @@ class AuditLogger
             'AssetCategory' => 'Categories',
             'AssetType' => 'Types',
             'Brand' => 'Brands',
-            'Complaint' => 'Complaint Management',
             'Department' => 'Departments',
             'SubDepartment' => 'Sub Departments',
             'User' => 'Users',

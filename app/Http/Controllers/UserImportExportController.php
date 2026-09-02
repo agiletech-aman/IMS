@@ -152,39 +152,60 @@ class UserImportExportController extends Controller
 
             if ($internalTeam) {
                 $role = trim((string) ($row['role'] ?? '')) ?: trim((string) $request->input('role'));
-                User::create([
-                    'unique_id' => UniqueCodeGenerator::generate('people', 'ID', ['users', 'faculties'], 'unique_id'),
-                    'name' => trim((string) ($row['name'] ?? '')),
-                    'email' => $email,
-                    'contact' => trim((string) ($row['contact'] ?? '')) ?: null,
-                    'address' => trim((string) ($row['address'] ?? '')) ?: null,
-                    'status' => $status,
-                    'role' => $role,
-                    'login_enabled' => true,
-                    'password' => Str::password(32),
-                ]);
+
+                try {
+                    User::create([
+                        'unique_id' => UniqueCodeGenerator::generate('people', 'ID', ['users', 'faculties'], 'unique_id'),
+                        'name' => trim((string) ($row['name'] ?? '')),
+                        'email' => $email,
+                        'contact' => trim((string) ($row['contact'] ?? '')) ?: null,
+                        'address' => trim((string) ($row['address'] ?? '')) ?: null,
+                        'status' => $status,
+                        'role' => $role,
+                        'login_enabled' => true,
+                        'password' => Str::password(32),
+                    ]);
+                } catch (\Throwable $e) {
+                    report($e);
+                    $errors[] = [
+                        'row' => $rowNumber,
+                        'user' => trim((string) ($row['name'] ?? '')) ?: 'Unnamed user',
+                        'messages' => ['Could not save this user. Check for a duplicate email or invalid value.'],
+                    ];
+
+                    continue;
+                }
 
                 $importCount++;
                 continue;
             }
             $departmentValue = trim((string) ($row['department'] ?? ''));
-            $department = Department::query()
-                ->where('name', $departmentValue)
-                ->orWhere('code', $departmentValue)
-                ->first();
+            $department = $this->resolveDepartment($departmentValue);
 
-            $user = Faculty::create([
-                'unique_id' => UniqueCodeGenerator::generate('faculties', 'FAC', 'faculties', 'unique_id'),
-                'name' => trim((string) ($row['name'] ?? '')),
-                'email' => $email,
-                'contact' => trim((string) ($row['contact'] ?? '')) ?: null,
-                'address' => trim((string) ($row['address'] ?? '')) ?: null,
-                'department_id' => $department?->id,
-                'fb_type' => trim((string) ($row['fb_type'] ?? '')) ?: null,
-                'room_number' => trim((string) ($row['room_number'] ?? '')) ?: null,
-                'remark' => trim((string) ($row['remark'] ?? '')) ?: null,
-                'status' => $status,
-            ]);
+            try {
+                $user = Faculty::create([
+                    'unique_id' => UniqueCodeGenerator::generate('faculties', 'FAC', 'faculties', 'unique_id'),
+                    'name' => trim((string) ($row['name'] ?? '')),
+                    'email' => $email,
+                    'contact' => trim((string) ($row['contact'] ?? '')) ?: null,
+                    'address' => trim((string) ($row['address'] ?? '')) ?: null,
+                    'department_id' => $department?->id,
+                    'fb_type' => trim((string) ($row['fb_type'] ?? '')) ?: null,
+                    'room_number' => trim((string) ($row['room_number'] ?? '')) ?: null,
+                    'remark' => trim((string) ($row['remark'] ?? '')) ?: null,
+                    'status' => $status,
+                ]);
+            } catch (\Throwable $e) {
+                report($e);
+                $errors[] = [
+                    'row' => $rowNumber,
+                    'user' => trim((string) ($row['name'] ?? '')) ?: 'Unnamed user',
+                    'messages' => ['Could not save this user. Check for a duplicate email or invalid value.'],
+                ];
+
+                continue;
+            }
+
             $importCount++;
 
             $this->notifications->send(
@@ -256,11 +277,7 @@ class UserImportExportController extends Controller
         $department = trim((string) ($row['department'] ?? ''));
         if ($department === '') {
             $errors[] = 'department is required.';
-        } elseif (! Department::where('status', 'Active')
-            ->where(function ($query) use ($department): void {
-                $query->where('name', $department)->orWhere('code', $department);
-            })
-            ->exists()) {
+        } elseif (! $this->resolveDepartment($department)) {
             $errors[] = "Department not found or inactive: {$department}";
         }
 
@@ -272,5 +289,20 @@ class UserImportExportController extends Controller
         }
 
         return $errors;
+    }
+
+    /**
+     * Resolve a department by name or code, scoped to Active records only, with a
+     * deterministic order so validation and creation always resolve the same row.
+     */
+    private function resolveDepartment(string $value): ?Department
+    {
+        return Department::query()
+            ->where('status', 'Active')
+            ->where(function ($query) use ($value): void {
+                $query->where('name', $value)->orWhere('code', $value);
+            })
+            ->orderBy('id')
+            ->first();
     }
 }

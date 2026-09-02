@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
+use App\Models\AssetAssignmentHistory;
+use App\Models\AssetSubtype;
 use App\Models\AssetType;
 use App\Models\Brand;
 use App\Models\Department;
+use App\Models\Faculty;
 use App\Models\SubDepartment;
+use App\Services\NotificationService;
 use App\Support\UniqueCodeGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +21,9 @@ use Illuminate\View\View;
 
 class AssetController extends Controller
 {
+    public function __construct(
+        private readonly NotificationService $notifications,
+    ) {}
 
 
 public function index(Request $request)
@@ -121,6 +128,40 @@ public function index(Request $request)
             '<=',
             $request->date_to
         );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Assignment
+    |--------------------------------------------------------------------------
+    */
+
+    if ($request->filled('assigned')) {
+
+        if ($request->assigned === '1') {
+            $query->whereNotNull('assigned_to')->where('assigned_to', '!=', '');
+        } else {
+            $query->where(function ($q) {
+                $q->whereNull('assigned_to')->orWhere('assigned_to', '');
+            });
+        }
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Coverage Due (30 days)
+    |--------------------------------------------------------------------------
+    */
+
+    if (in_array($request->coverage_due, ['amc', 'warranty'], true)) {
+
+        $column = $request->coverage_due === 'amc' ? 'amc_expiry' : 'warranty_expiry';
+
+        $query->whereBetween($column, [today(), today()->addDays(30)]);
 
     }
 
@@ -236,6 +277,7 @@ $assets = $query
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate($this->rules($request));
+        $data['subtype_values'] = $this->subtypeValues($request);
         $characters = Str::of($data['name'])->ascii()->upper()->replaceMatches('/[^A-Z0-9]/', '')->value();
         $first = $characters[0] ?? 'X';
         $last = $characters !== '' ? $characters[strlen($characters) - 1] : 'X';
@@ -262,7 +304,10 @@ public function show(Asset $asset): View
 
     public function update(Request $request, Asset $asset): RedirectResponse
     {
+        $previousAssignedTo = $asset->assigned_to;
+
         $data = $request->validate($this->rules($request, $asset->id));
+        $data['subtype_values'] = $this->subtypeValues($request);
         if ($request->hasFile('image')) {
             if ($asset->image_path) {
                 Storage::disk('public')->delete($asset->image_path);
@@ -272,7 +317,57 @@ public function show(Asset $asset): View
         unset($data['image']);
         $asset->update($data);
 
+        $this->syncAssignment($asset, $previousAssignedTo);
+
         return redirect()->route('assets.show', $asset)->with('success', 'Asset updated successfully.');
+    }
+
+    /**
+     * When the asset form's "Assigned To" field changes, mirror the same side
+     * effects UserController::assignAsset() applies: close/open the assignment
+     * history trail and notify. A generic UPDATE audit entry (with the
+     * assigned_to diff) is already recorded by AuditObserver on every save.
+     */
+    private function syncAssignment(Asset $asset, ?string $previousAssignedTo): void
+    {
+        $previous = trim((string) $previousAssignedTo);
+        $current = trim((string) $asset->assigned_to);
+
+        if ($previous === $current) {
+            return;
+        }
+
+        $actor = session('static_auth_user.name') ?? session('static_auth_user.email') ?? 'System';
+
+        if ($previous !== '') {
+            AssetAssignmentHistory::where('asset_id', $asset->id)
+                ->whereNull('unassigned_at')
+                ->latest('assigned_at')
+                ->first()
+                ?->update(['unassigned_at' => now(), 'unassigned_by' => $actor]);
+        }
+
+        if ($current === '') {
+            return;
+        }
+
+        if ($faculty = Faculty::where('name', $current)->first()) {
+            AssetAssignmentHistory::create([
+                'faculty_id' => $faculty->id,
+                'asset_id' => $asset->id,
+                'assigned_at' => now(),
+                'assigned_by' => $actor,
+            ]);
+        }
+
+        $this->notifications->send(
+            'asset_assigned',
+            'Asset assigned',
+            "{$asset->asset_tag} — {$asset->name} was assigned to {$current}.",
+            'success',
+            'Assets',
+            ['asset_id' => $asset->id],
+        );
     }
 
     public function destroy(Asset $asset): RedirectResponse
@@ -289,27 +384,25 @@ public function show(Asset $asset): View
     {
 return [
             'types' => AssetType::where('status', 'Active')->orderBy('name')->get(),
+            'subtypes' => AssetSubtype::where('status', 'Active')->orderBy('name')->get(['id', 'asset_type_id', 'name']),
             'brands' => Brand::where('status', 'Active')->orderBy('name')->get(),
             'departments' => Department::where('status', 'Active')->orderBy('name')->get(),
             'subDepartments' => SubDepartment::where('status', 'Active')->orderBy('name')->get(),
+            'users' => Faculty::where('status', 'Active')->orderBy('name')->get(['id', 'name', 'unique_id']),
         ];
     }
 
     private function rules(Request $request, ?int $id = null): array
     {
-return [
+$rules = [
             'name' => ['required', 'string', 'max:255'],
             'asset_type_id' => ['required', 'exists:asset_types,id'],
-            'brand_id' => ['nullable', 'exists:brands,id'],
-            'department_id' => ['nullable', 'exists:departments,id'],
-            'sub_department_id' => ['nullable', Rule::exists('sub_departments', 'id')->where('department_id', $request->input('department_id'))],
-            'serial_number' => ['nullable', 'string', 'max:255', Rule::unique('assets')->ignore($id)],
-            'fr_number' => ['nullable', 'string', 'max:255'],
-            'installation_date' => ['nullable', 'date'],
-            'cpu' => ['nullable', 'string', 'max:255'],
-            'hdd' => ['nullable', 'string', 'max:255'],
-            'ram' => ['nullable', 'string', 'max:255'],
-            'operating_system' => ['nullable', 'string', 'max:255'],
+            'brand_id' => ['required', 'exists:brands,id'],
+            'department_id' => ['required', 'exists:departments,id'],
+            'sub_department_id' => ['required', Rule::exists('sub_departments', 'id')->where('department_id', $request->input('department_id'))],
+            'serial_number' => ['required', 'string', 'max:255', Rule::unique('assets')->ignore($id)],
+            'fr_number' => ['required', 'string', 'max:255'],
+            'installation_date' => ['required', 'date'],
             'assigned_to' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::in(['Active', 'In Stock', 'Under Maintenance', 'Retired'])],
             'warranty_expiry' => ['nullable', 'date'],
@@ -317,5 +410,34 @@ return [
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'notes' => ['nullable', 'string', 'max:5000'],
         ];
+
+        foreach ($this->subtypeIdsForType($request) as $subtypeId) {
+            $subtype = AssetSubtype::find($subtypeId);
+            $rules["subtype_values.{$subtypeId}"] = ($subtype?->is_required ?? true)
+                ? ['required', 'string', 'max:255']
+                : ['nullable', 'string', 'max:255'];
+        }
+
+        return $rules;
+    }
+
+    /**
+     * The subtype field values submitted with the request, filtered down to only
+     * the fields that actually belong to the selected asset type.
+     */
+    private function subtypeValues(Request $request): array
+    {
+        $allowedIds = $this->subtypeIdsForType($request)->map(fn (int $id) => (string) $id);
+
+        return collect($request->input('subtype_values', []))
+            ->only($allowedIds)
+            ->all();
+    }
+
+    private function subtypeIdsForType(Request $request): \Illuminate\Support\Collection
+    {
+        return AssetSubtype::where('asset_type_id', $request->input('asset_type_id'))
+            ->where('status', 'Active')
+            ->pluck('id');
     }
 }

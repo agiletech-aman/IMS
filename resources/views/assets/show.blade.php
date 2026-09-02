@@ -8,9 +8,10 @@
 <div class="detail-list">@foreach([
         'Asset ID'=>$asset->asset_tag,'Type'=>$asset->type?->name,'Brand'=>$asset->brand?->name,
         'Serial Number'=>$asset->serial_number,'FR Number'=>$asset->fr_number,'Department'=>$asset->department?->name,'Sub Department'=>$asset->subDepartment?->name,
-        'Installation Date'=>$asset->installation_date?->format('d M Y'),'CPU'=>$asset->cpu,'HDD'=>$asset->hdd,'RAM'=>$asset->ram,'Operating System'=>$asset->operating_system,
+        'Installation Date'=>$asset->installation_date?->format('d M Y'),
         'Assigned To'=>$asset->assigned_to ?: 'Unassigned','Warranty Expiry'=>$asset->warranty_expiry?->format('d M Y'),'AMC Expiry'=>$asset->amc_expiry?->format('d M Y')
-    ] as $label=>$value)<div class="detail-item"><span>{{ $label }}</span><strong>{{ $value ?: '—' }}</strong></div>@endforeach</div>
-</div></div><div class="col-xl-4"><div class="panel mb-3"><div class="panel-header"><h2>Notes</h2></div><div class="panel-body"><p class="mb-0 text-secondary">{{ $asset->notes ?: 'No notes added.' }}</p></div></div>
+    ] as $label=>$value)<div class="detail-item"><span>{{ $label }}</span><strong>{{ $value ?: '—' }}</strong></div>@endforeach
+@foreach($asset->subtypeFieldValues() as $subtypeField)<div class="detail-item"><span>{{ $subtypeField['label'] }}</span><strong>{{ $subtypeField['value'] ?: '—' }}</strong></div>@endforeach</div>
+</div></div><div class="col-xl-4"><div class="panel mb-3"><div class="panel-header"><h2>Description</h2></div><div class="panel-body"><p class="mb-0 text-secondary">{{ $asset->notes ?: 'No description added.' }}</p></div></div>
 @permission('assets','delete')<div class="panel"><div class="panel-header"><h2>Danger Zone</h2></div><div class="panel-body"><form method="POST" action="{{ route('assets.destroy',$asset) }}" data-confirm data-confirm-title="Delete Asset?" data-confirm-message="This will permanently delete {{ $asset->name }} ({{ $asset->asset_tag }}). This action cannot be undone." data-confirm-label="Delete Asset">@csrf @method('DELETE')<button class="btn btn-outline-danger w-100"><i class="fa-regular fa-trash-can me-2"></i>Delete Asset</button></form></div></div>@endpermission</div></div>
 @endsection

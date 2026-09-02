@@ -13,7 +13,6 @@ use App\Support\UniqueCodeGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -263,7 +262,7 @@ class UserController extends Controller
             'email' => ['nullable', 'email', 'max:255', Rule::unique('faculties', 'email')->ignore($userId)],
             'contact' => ['nullable', 'string', 'max:30'],
             'department_id' => ['nullable', 'exists:departments,id'],
-            'fb_type' => ['string', 'max:30'],
+            'fb_type' => ['nullable', 'string', 'max:30'],
             'room_number' => ['nullable', 'string', 'max:100'],
             'remark' => ['nullable', 'string', 'max:2000'],
             'address' => ['nullable', 'string', 'max:2000'],

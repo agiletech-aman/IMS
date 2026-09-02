@@ -7,7 +7,6 @@ use App\Models\Asset;
 use App\Models\AssetCategory;
 use App\Models\AssetType;
 use App\Models\Brand;
-use App\Models\Complaint;
 use App\Models\Department;
 use App\Models\Faculty;
 use App\Models\NotificationPreference;
@@ -48,7 +47,6 @@ class AppServiceProvider extends ServiceProvider
             AssetCategory::class,
             AssetType::class,
             Brand::class,
-            Complaint::class,
             Department::class,
             Faculty::class,
             SubDepartment::class,

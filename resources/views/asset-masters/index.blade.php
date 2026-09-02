@@ -470,6 +470,13 @@
                         </th>
 
 
+                    @elseif($module === 'sub-types')
+
+                        <th>
+                            Asset Type
+                        </th>
+
+
                     @elseif($module === 'brands')
 
                         <th>
@@ -590,6 +597,13 @@
 
                             <td>
                                 {{ $record->department?->name ?: '—' }}
+                            </td>
+
+
+                        @elseif($module === 'sub-types')
+
+                            <td>
+                                {{ $record->assetType?->name ?: '—' }}
                             </td>
 
 
@@ -869,6 +883,7 @@
                                 'departments' => ['name', 'status', 'description'],
                                 'sub-departments' => ['name', 'department', 'status', 'description'],
                                 'types' => ['name', 'status', 'description'],
+                                'sub-types' => ['name', 'asset_type', 'status', 'description'],
                                 'brands' => ['name', 'country', 'support_contact', 'status'],
                                 'categories' => ['name', 'status', 'description'],
                                 default => [],

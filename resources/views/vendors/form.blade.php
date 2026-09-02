@@ -21,7 +21,7 @@
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-md-8">
-                            <label class="form-label">Company Name *</label>
+                            <label class="form-label">Company Name <span class="text-danger">*</span></label>
                             <input class="form-control" name="name" value="{{ $value('name') }}" placeholder="Enter vendor or OEM name" required>
                         </div>
                         <div class="col-md-4">
@@ -30,7 +30,7 @@
                             <small class="text-secondary">Generated automatically</small>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Type *</label>
+                            <label class="form-label">Type <span class="text-danger">*</span></label>
                             <select class="form-select" name="vendor_type" required>
                                 <option value="">Select type</option>
                                 @foreach(['Vendor','OEM','Vendor & OEM'] as $type)
@@ -43,7 +43,7 @@
                             <input class="form-control" name="category" value="{{ $value('category') }}" placeholder="Hardware, Network, CCTV…">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Account Status *</label>
+                            <label class="form-label">Account Status <span class="text-danger">*</span></label>
                             <select class="form-select" name="status" required>
                                 @foreach(['Active','Inactive'] as $status)
                                     <option @selected($value('status', 'Active') === $status)>{{ $status }}</option>
@@ -75,7 +75,7 @@
 
                         <div class="col-12"><div class="form-section-label">Contract & Performance</div></div>
                         <div class="col-md-4">
-                            <label class="form-label">AMC / Contract Status *</label>
+                            <label class="form-label">AMC / Contract Status <span class="text-danger">*</span></label>
                             <select class="form-select" name="amc_status" required>
                                 @foreach(['Not Applicable','Active','Renewal Due','Expired'] as $amcStatus)
                                     <option @selected($value('amc_status', 'Not Applicable') === $amcStatus)>{{ $amcStatus }}</option>

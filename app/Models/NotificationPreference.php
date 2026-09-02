@@ -20,7 +20,6 @@ class NotificationPreference extends Model
         'asset_assigned' => ['Asset assignment alert', null],
         'report_generated' => ['Report generation alert', null],
         'vendor_changed' => ['Vendor / OEM alert', null],
-        'complaint_changed' => ['Complaint workflow alert', null],
         'backup_completed' => ['Backup completed alert', null],
         'backup_failed' => ['Backup failure alert', null],
         'backup_health' => ['Backup health alert', null],

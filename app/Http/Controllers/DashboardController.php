@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use App\Models\AuditLog;
+use App\Models\Faculty;
 use App\Models\SystemNotification;
 use App\Models\User;
-use App\Models\Vendor;
 use App\Services\CentreContextService;
 use App\Services\PermissionService;
 use Carbon\Carbon;
@@ -31,7 +31,6 @@ class DashboardController extends Controller
         $visibility = [
             'assets' => $permissions->allows('assets'),
             'users' => $permissions->allows('users'),
-            'vendors' => $permissions->allows('vendors'),
             'notifications' => $permissions->allows('notifications'),
             'reports' => $permissions->allows('reports'),
             'audit' => $permissions->allows('audit_logs'),
@@ -67,27 +66,24 @@ $categoryDistribution = $visibility['assets'] ? Asset::query()
         $stats = [];
         if ($visibility['assets']) {
             $stats = [
-                ['icon' => 'fa-cubes', 'label' => 'Total Assets', 'value' => Asset::count(), 'class' => ''],
-                ['icon' => 'fa-circle-check', 'label' => 'Active Assets', 'value' => Asset::where('status', 'Active')->count(), 'class' => 'success'],
-                ['icon' => 'fa-box-open', 'label' => 'In Stock', 'value' => Asset::where('status', 'In Stock')->count(), 'class' => 'info'],
-                ['icon' => 'fa-screwdriver-wrench', 'label' => 'Maintenance', 'value' => Asset::where('status', 'Under Maintenance')->count(), 'class' => 'warning'],
-                ['icon' => 'fa-user-check', 'label' => 'Assigned Assets', 'value' => Asset::whereNotNull('assigned_to')->where('assigned_to', '!=', '')->count(), 'class' => 'success'],
-                ['icon' => 'fa-link-slash', 'label' => 'Unassigned Assets', 'value' => Asset::whereNull('assigned_to')->orWhere('assigned_to', '')->count(), 'class' => 'warning'],
+                ['icon' => 'fa-cubes', 'label' => 'Total Assets', 'value' => Asset::count(), 'class' => '', 'url' => route('assets.index')],
+                ['icon' => 'fa-circle-check', 'label' => 'Active Assets', 'value' => Asset::where('status', 'Active')->count(), 'class' => 'success', 'url' => route('assets.index', ['status' => 'Active'])],
+                ['icon' => 'fa-box-open', 'label' => 'In Stock', 'value' => Asset::where('status', 'In Stock')->count(), 'class' => 'info', 'url' => route('assets.index', ['status' => 'In Stock'])],
+                ['icon' => 'fa-screwdriver-wrench', 'label' => 'Maintenance', 'value' => Asset::where('status', 'Under Maintenance')->count(), 'class' => 'warning', 'url' => route('assets.index', ['status' => 'Under Maintenance'])],
+                ['icon' => 'fa-user-check', 'label' => 'Assigned Assets', 'value' => Asset::whereNotNull('assigned_to')->where('assigned_to', '!=', '')->count(), 'class' => 'success', 'url' => route('assets.index', ['assigned' => '1'])],
+                ['icon' => 'fa-link-slash', 'label' => 'Unassigned Assets', 'value' => Asset::whereNull('assigned_to')->orWhere('assigned_to', '')->count(), 'class' => 'warning', 'url' => route('assets.index', ['assigned' => '0'])],
             ];
         }
         if ($visibility['users']) {
-            $stats[] = ['icon' => 'fa-users', 'label' => 'Users', 'value' => $centreContext->apply(User::where('login_enabled', false))->count(), 'class' => ''];
-            $stats[] = ['icon' => 'fa-key', 'label' => 'Access Accounts', 'value' => $centreContext->apply(User::where('login_enabled', true))->count(), 'class' => 'info'];
-        }
-        if ($visibility['vendors']) {
-            $stats[] = ['icon' => 'fa-handshake', 'label' => 'Active Vendors', 'value' => Vendor::where('status', 'Active')->count(), 'class' => 'success'];
+            $stats[] = ['icon' => 'fa-users', 'label' => 'Users', 'value' => Faculty::count(), 'class' => '', 'url' => route('users.index')];
+            $stats[] = ['icon' => 'fa-key', 'label' => 'Access Accounts', 'value' => $centreContext->apply(User::where('login_enabled', true))->count(), 'class' => 'info', 'url' => route('access-accounts.index')];
         }
         if ($visibility['notifications']) {
-            $stats[] = ['icon' => 'fa-bell', 'label' => 'Unread Alerts', 'value' => SystemNotification::where('in_app_visible', true)->whereNull('read_at')->count(), 'class' => 'danger'];
+            $stats[] = ['icon' => 'fa-bell', 'label' => 'Unread Alerts', 'value' => SystemNotification::where('in_app_visible', true)->whereNull('read_at')->count(), 'class' => 'danger', 'url' => route('notifications.index')];
         }
         if ($visibility['reports'] && $visibility['assets']) {
-            $stats[] = ['icon' => 'fa-shield-halved', 'label' => 'AMC Due (30d)', 'value' => Asset::whereBetween('amc_expiry', [$today, $nextThirtyDays])->count(), 'class' => 'warning'];
-            $stats[] = ['icon' => 'fa-certificate', 'label' => 'Warranty Due (30d)', 'value' => Asset::whereBetween('warranty_expiry', [$today, $nextThirtyDays])->count(), 'class' => 'danger'];
+            $stats[] = ['icon' => 'fa-shield-halved', 'label' => 'AMC Due (30d)', 'value' => Asset::whereBetween('amc_expiry', [$today, $nextThirtyDays])->count(), 'class' => 'warning', 'url' => route('assets.index', ['coverage_due' => 'amc'])];
+            $stats[] = ['icon' => 'fa-certificate', 'label' => 'Warranty Due (30d)', 'value' => Asset::whereBetween('warranty_expiry', [$today, $nextThirtyDays])->count(), 'class' => 'danger', 'url' => route('assets.index', ['coverage_due' => 'warranty'])];
         }
 
         return view('dashboard.index', [
@@ -114,15 +110,6 @@ $categoryDistribution = $visibility['assets'] ? Asset::query()
             'recentAlerts' => $visibility['notifications'] ? SystemNotification::where('in_app_visible', true)->latest()->limit(5)->get() : collect(),
             'recentActivity' => $visibility['audit'] ? AuditLog::latest()->limit(6)->get() : collect(),
             'upcomingExpiries' => $visibility['reports'] && $visibility['assets'] ? $this->upcomingExpiries() : collect(),
-            'vendorRenewals' => $visibility['vendors'] ? Vendor::query()
-                ->where(function ($query) {
-                    $query->whereIn('amc_status', ['Renewal Due', 'Expired'])
-                        ->orWhereBetween('contract_end', [today(), today()->addDays(60)]);
-                })
-                ->orderByRaw('contract_end IS NULL')
-                ->orderBy('contract_end')
-                ->limit(5)
-                ->get() : collect(),
             'activityTotal' => $visibility['audit'] ? AuditLog::whereBetween('created_at', [$from, $to])->count() : 0,
         ]);
     }
@@ -143,8 +130,9 @@ $categoryDistribution = $visibility['assets'] ? Asset::query()
             'week' => now()->subDays(6)->startOfDay(),
             default => now()->startOfMonth(),
         };
+        $to = $period === 'month' ? now()->endOfMonth() : now()->endOfDay();
 
-        return [$from, now()->endOfDay(), $period];
+        return [$from, $to, $period];
     }
 
     private function coverageBuckets(string $column): array

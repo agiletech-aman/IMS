@@ -9,7 +9,6 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BackupScheduleController;
-use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\MediaController;
@@ -81,6 +80,7 @@ Route::middleware([EnsureStaticAuthenticated::class, EnsureCentreSelected::class
             'departments' => 'departments',
             'sub-departments' => 'sub_departments',
             'types' => 'types',
+            'sub-types' => 'sub_types',
             'brands' => 'brands',
         ] as $path => $module) {
 
@@ -139,19 +139,6 @@ Route::middleware([EnsureStaticAuthenticated::class, EnsureCentreSelected::class
                 ->name($path . '.destroy');
         }
     });
-    Route::middleware(EnsureAdministrator::class)->group(function () {
-        Route::view('/inventory', 'inventory.index')->name('inventory.index');
-        Route::view('/software', 'software.index')->name('software.index');
-        Route::view('/amc-warranty', 'amc-warranty.index')->name('amc-warranty.index');
-        Route::view('/tickets', 'tickets.index')->name('tickets.index');
-        Route::view('/tickets/create', 'tickets.create')->name('tickets.create');
-        Route::view('/tickets/{id}', 'tickets.show')->name('tickets.show');
-        Route::view('/servers', 'servers.index')->name('servers.index');
-        Route::view('/network', 'network.index')->name('network.index');
-        Route::view('/ups', 'ups.index')->name('ups.index');
-        Route::view('/cctv', 'cctv.index')->name('cctv.index');
-        Route::view('/video-conference', 'video-conference.index')->name('video-conference.index');
-    });
     Route::get('/notifications', [NotificationController::class, 'index'])->middleware($permission('notifications'))->name('notifications.index');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->middleware($permission('notifications', 'update'))->name('notifications.read-all');
     Route::post('/notifications/preferences', [NotificationController::class, 'updatePreferences'])
@@ -180,14 +167,6 @@ Route::middleware([EnsureStaticAuthenticated::class, EnsureCentreSelected::class
     Route::post('/vendors', [VendorController::class, 'store'])->middleware($permission('vendors', 'create'))->name('vendors.store');
     Route::match(['put', 'patch'], '/vendors/{vendor}', [VendorController::class, 'update'])->middleware($permission('vendors', 'update'))->name('vendors.update');
     Route::delete('/vendors/{vendor}', [VendorController::class, 'destroy'])->middleware($permission('vendors', 'delete'))->name('vendors.destroy');
-    Route::get('/complaints', [ComplaintController::class, 'index'])->middleware($permission('complaints'))->name('complaints.index');
-    Route::get('/complaints/export', [ComplaintController::class, 'export'])->middleware($permission('complaints', 'export'))->name('complaints.export');
-    Route::get('/complaints/create', [ComplaintController::class, 'create'])->middleware($permission('complaints', 'create'))->name('complaints.create');
-    Route::post('/complaints', [ComplaintController::class, 'store'])->middleware($permission('complaints', 'create'))->name('complaints.store');
-    Route::get('/complaints/{complaint}', [ComplaintController::class, 'show'])->middleware($permission('complaints'))->name('complaints.show');
-    Route::patch('/complaints/{complaint}/assign', [ComplaintController::class, 'assign'])->middleware($permission('complaints', 'assign'))->name('complaints.assign');
-    Route::patch('/complaints/{complaint}/status', [ComplaintController::class, 'updateStatus'])->middleware($permission('complaints', 'update'))->name('complaints.status');
-    Route::delete('/complaints/{complaint}', [ComplaintController::class, 'destroy'])->middleware($permission('complaints', 'delete'))->name('complaints.destroy');
     Route::get('/reports', [ReportController::class, 'index'])->middleware($permission('reports'))->name('reports.index');
     Route::post('/reports/generate', [ReportController::class, 'generate'])->middleware($permission('reports', 'create'))->name('reports.generate');
     Route::get('/reports/export', [ReportController::class, 'export'])->middleware($permission('reports', 'export'))->name('reports.export');
