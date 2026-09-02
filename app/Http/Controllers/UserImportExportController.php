@@ -184,7 +184,7 @@ class UserImportExportController extends Controller
 
             try {
                 $user = Faculty::create([
-                    'unique_id' => UniqueCodeGenerator::generate('faculties', 'FAC', 'faculties', 'unique_id'),
+                    'unique_id' => UniqueCodeGenerator::generate('faculties', 'USR', 'faculties', 'unique_id'),
                     'name' => trim((string) ($row['name'] ?? '')),
                     'email' => $email,
                     'contact' => trim((string) ($row['contact'] ?? '')) ?: null,

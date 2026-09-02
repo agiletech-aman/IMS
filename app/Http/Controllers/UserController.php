@@ -79,7 +79,7 @@ class UserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate($this->rules());
-        $data['unique_id'] = UniqueCodeGenerator::generate('people', 'ID', ['users', 'faculties'], 'unique_id');
+        $data['unique_id'] = UniqueCodeGenerator::generate('faculties', 'USR', 'faculties', 'unique_id');
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('users', 'public');
         }
