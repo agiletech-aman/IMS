@@ -23,5 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
                     'session' => 'Your session has expired. Please log in again.',
                 ]);
             }
+
+            // Business-rule aborts (e.g. "select a centre first") carry a
+            // friendly message and should show as a toast, not a debug page.
+            if ($e->getStatusCode() === 422 && $e->getMessage() !== '' && ! $request->expectsJson()) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         });
     })->create();

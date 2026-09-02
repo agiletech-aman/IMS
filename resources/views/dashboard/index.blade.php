@@ -137,7 +137,7 @@
 </div>@endif
 
 @if($visibility['reports'] && $visibility['assets'])<div class="row g-3">
-    <div class="col-12">
+    <div class="col-xl-6">
         <div class="panel h-100">
             <div class="panel-header"><div><h2>Upcoming AMC & Warranty</h2><p>Coverage expiring within 60 days</p></div><a href="{{ route('reports.index',['warranty'=>'expiring','generated'=>1]) }}" class="small">Coverage report</a></div>
             <div class="panel-body">
@@ -146,6 +146,20 @@
                         <li><div><strong>{{ $expiry['asset']->name }}</strong><small>{{ $expiry['asset']->asset_tag }} · {{ $expiry['type'] }} · {{ $expiry['date']->format('d M Y') }}</small></div><span class="badge-soft {{ $expiry['days'] <= 7 ? 'danger' : 'warning' }}">{{ round($expiry['days']) }} days</span></li>
                     @empty
                         <li class="dashboard-empty"><i class="fa-solid fa-shield-halved"></i><span>No coverage expires within 60 days</span></li>
+                    @endforelse
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-6">
+        <div class="panel h-100">
+            <div class="panel-header"><div><h2>Expired Assets</h2><p>Warranty / AMC coverage already expired</p></div><a href="{{ route('reports.index',['warranty'=>'expired','generated'=>1]) }}" class="small">Coverage report</a></div>
+            <div class="panel-body">
+                <ul class="list-widget">
+                    @forelse($expiredCoverage as $expiry)
+                        <li><div><strong>{{ $expiry['asset']->name }}</strong><small>{{ $expiry['asset']->asset_tag }} · {{ $expiry['type'] }} · {{ $expiry['date']->format('d M Y') }}</small></div><span class="badge-soft danger">{{ round($expiry['days']) }} {{ $expiry['days'] == 1 ? 'day' : 'days' }} ago</span></li>
+                    @empty
+                        <li class="dashboard-empty"><i class="fa-solid fa-circle-check"></i><span>No expired coverage</span></li>
                     @endforelse
                 </ul>
             </div>

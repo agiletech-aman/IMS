@@ -80,6 +80,7 @@ class UserController extends Controller
     {
         $data = $request->validate($this->rules());
         $data['unique_id'] = UniqueCodeGenerator::generate('faculties', 'USR', 'faculties', 'unique_id');
+        $data['centre'] = $this->centreContext->requireSelected();
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('users', 'public');
         }

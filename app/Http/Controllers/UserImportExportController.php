@@ -6,6 +6,7 @@ use App\Models\Faculty;
 use App\Models\Department;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\CentreContextService;
 use App\Services\NotificationService;
 use App\Support\UniqueCodeGenerator;
 use App\Support\UserCsv;
@@ -20,6 +21,7 @@ class UserImportExportController extends Controller
     public function __construct(
         private readonly AuditLogger $audit,
         private readonly NotificationService $notifications,
+        private readonly CentreContextService $centreContext,
     ) {}
 
     public function importSampleCsv(Request $request): BinaryFileResponse
@@ -79,8 +81,26 @@ class UserImportExportController extends Controller
                 ->with('openUserImportModal', true);
         }
 
-        $file = $request->file('csv');
         $internalTeam = $request->filled('role');
+
+        if (! $internalTeam) {
+            try {
+                $importCentre = $this->centreContext->requireSelected();
+            } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+                $this->audit->record(
+                    'IMPORT',
+                    'Users',
+                    'User import was rejected because no centre was selected.',
+                    result: 'Failed',
+                );
+
+                return back()
+                    ->with('error', $e->getMessage())
+                    ->with('openUserImportModal', true);
+            }
+        }
+
+        $file = $request->file('csv');
         $parsed = UserCsv::parseFile($file->getRealPath(), $internalTeam);
         $rows = $parsed['rows'] ?? [];
         $parseErrors = $parsed['errors'] ?? [];
@@ -189,6 +209,7 @@ class UserImportExportController extends Controller
                     'email' => $email,
                     'contact' => trim((string) ($row['contact'] ?? '')) ?: null,
                     'address' => trim((string) ($row['address'] ?? '')) ?: null,
+                    'centre' => $importCentre,
                     'department_id' => $department?->id,
                     'fb_type' => trim((string) ($row['fb_type'] ?? '')) ?: null,
                     'room_number' => trim((string) ($row['room_number'] ?? '')) ?: null,

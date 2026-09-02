@@ -110,6 +110,7 @@ $categoryDistribution = $visibility['assets'] ? Asset::query()
             'recentAlerts' => $visibility['notifications'] ? SystemNotification::where('in_app_visible', true)->latest()->limit(5)->get() : collect(),
             'recentActivity' => $visibility['audit'] ? AuditLog::latest()->limit(6)->get() : collect(),
             'upcomingExpiries' => $visibility['reports'] && $visibility['assets'] ? $this->upcomingExpiries() : collect(),
+            'expiredCoverage' => $visibility['reports'] && $visibility['assets'] ? $this->expiredCoverage() : collect(),
             'activityTotal' => $visibility['audit'] ? AuditLog::whereBetween('created_at', [$from, $to])->count() : 0,
         ]);
     }
@@ -169,6 +170,34 @@ $categoryDistribution = $visibility['assets'] ? Asset::query()
                 return $items;
             })
             ->sortBy('date')
+            ->take(6)
+            ->values();
+    }
+
+    private function expiredCoverage(): Collection
+    {
+        return Asset::query()
+            ->where(function ($query): void {
+                $query->whereDate('warranty_expiry', '<', today())
+                    ->orWhereDate('amc_expiry', '<', today());
+            })
+            ->get()
+            ->flatMap(function (Asset $asset): array {
+                $items = [];
+                foreach (['Warranty' => $asset->warranty_expiry, 'AMC' => $asset->amc_expiry] as $type => $date) {
+                    if ($date && $date->lt(today())) {
+                        $items[] = [
+                            'asset' => $asset,
+                            'type' => $type,
+                            'date' => $date,
+                            'days' => $date->diffInDays(today()),
+                        ];
+                    }
+                }
+
+                return $items;
+            })
+            ->sortByDesc('date')
             ->take(6)
             ->values();
     }
