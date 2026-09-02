@@ -29,7 +29,7 @@ return [
         'label' => 'Access Accounts',
         'icon' => 'fa-user-gear',
         'items' => [
-            ['access-accounts*', 'fa-user-tie', 'Asset Manager', 'access-accounts.index', ['role' => 'Asset Manager'], 'access_accounts_asset_manager'],
+            ['access-accounts*', 'fa-user-tie', 'Manager', 'access-accounts.index', ['role' => 'Asset Manager'], 'access_accounts_asset_manager'],
             ['access-accounts*', 'fa-user-ninja', 'Admin', 'access-accounts.index', ['role' => 'Sub admin'], 'access_accounts_sub_admin'],
             ['access-accounts*', 'fa-user-shield', 'Auditor', 'access-accounts.index', ['role' => 'Auditor'], 'access_accounts_auditor'],
             ['access-accounts*', 'fa-user-lock', 'Viewer', 'access-accounts.index', ['role' => 'Viewer'], 'access_accounts_viewer'],
