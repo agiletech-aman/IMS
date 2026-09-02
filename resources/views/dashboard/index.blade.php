@@ -157,7 +157,7 @@
             <div class="panel-body">
                 <ul class="list-widget">
                     @forelse($expiredCoverage as $expiry)
-                        <li><div><strong>{{ $expiry['asset']->name }}</strong><small>{{ $expiry['asset']->asset_tag }} · {{ $expiry['type'] }} · {{ $expiry['date']->format('d M Y') }}</small></div><span class="badge-soft danger">{{ round($expiry['days']) }} {{ $expiry['days'] == 1 ? 'day' : 'days' }} ago</span></li>
+                        <li><div><strong>{{ $expiry['asset']->name }}</strong><small>{{ $expiry['asset']->asset_tag }} · {{ $expiry['type'] }} · {{ $expiry['date']->format('d M Y') }}</small></div><span class="badge-soft danger">{{ $expiry['days'] > 30 ? 'More than 30 days ago' : round($expiry['days']).' '.($expiry['days'] == 1 ? 'day' : 'days').' ago' }}</span></li>
                     @empty
                         <li class="dashboard-empty"><i class="fa-solid fa-circle-check"></i><span>No expired coverage</span></li>
                     @endforelse
