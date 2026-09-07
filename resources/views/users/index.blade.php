@@ -278,7 +278,7 @@
 
             <h2>
                 {{ $selectedRole
-                    ? $selectedRole.' Login Directory'
+                    ? \App\Support\RoleLabel::display($selectedRole).' Login Directory'
                     : 'Asset Assignee Directory'
                 }}
             </h2>
@@ -963,7 +963,7 @@
                             No
                             {{
                                 $selectedRole
-                                    ? strtolower($selectedRole).' access accounts'
+                                    ? strtolower(\App\Support\RoleLabel::display($selectedRole)).' access accounts'
                                     : 'users'
                             }}
                             found.

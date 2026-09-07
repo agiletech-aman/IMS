@@ -7,6 +7,7 @@ class RoleLabel
     private const DISPLAY_MAP = [
         'Administrator' => 'Super Admin',
         'Sub admin' => 'Admin',
+        'Asset Manager' => 'Manager',
     ];
 
     public static function display(?string $role): string
