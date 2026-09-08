@@ -27,8 +27,8 @@ $amcEnabled = (bool) old('amc_enabled', $editing && filled($asset->amc_expiry));
                 <div class="col-md-6 col-xl-4"><label class="form-label">Type <span class="text-danger">*</span></label><select class="form-select" name="asset_type_id" id="assetType" required>
                         <option value="">Select type</option>@foreach($types as $type)<option value="{{ $type->id }}" @selected((string)$field('asset_type_id')===(string)$type->id)>{{ $type->name }}</option>@endforeach
                     </select></div>
-                <div class="col-md-6 col-xl-4"><label class="form-label">Brand <span class="text-danger">*</span></label><select class="form-select" name="brand_id" required>
-                        <option value="">Select brand</option>@foreach($brands as $brand)<option value="{{ $brand->id }}" @selected((string)$field('brand_id')===(string)$brand->id)>{{ $brand->name }}</option>@endforeach
+                <div class="col-md-6 col-xl-4"><label class="form-label">Subtype</label><select class="form-select" id="assetSubtype" name="asset_subtype_id">
+                        <option value="">Select subtype</option>@foreach($subtypes as $subtype)<option value="{{ $subtype->id }}" data-asset-type="{{ $subtype->asset_type_id }}" @selected((string)$field('asset_subtype_id')===(string)$subtype->id)>{{ $subtype->name }}</option>@endforeach
                     </select></div>
                 <div class="col-md-6 col-xl-4"><label class="form-label">Serial Number <span class="text-danger">*</span></label><input class="form-control" name="serial_number" value="{{ $field('serial_number') }}" placeholder="Enter unique serial number" required></div>
                 <div class="col-md-6 col-xl-4"><label class="form-label">FR Number <span class="text-danger">*</span></label><input class="form-control" name="fr_number" value="{{ $field('fr_number') }}" placeholder="Enter FR number" required></div>
@@ -41,7 +41,7 @@ $amcEnabled = (bool) old('amc_enabled', $editing && filled($asset->amc_expiry));
 <div class="col-md-6 col-xl-4"><label class="form-label">Installation Date <span class="text-danger">*</span></label><input class="form-control" type="date" name="installation_date" value="{{ old('installation_date', $editing ? $asset->installation_date?->format('Y-m-d') : '') }}" placeholder="Select installation date" required></div>
                 <div class="col-12" id="subtypeFieldsWrap" hidden>
                     <hr class="my-1">
-                    <p class="form-label mb-2">Type-specific details</p>
+                    <p class="form-label mb-2">Subtype Parameters</p>
                     <div class="row g-3" id="subtypeFieldsContainer"></div>
                 </div>
                 <div class="col-md-6 col-xl-4">
@@ -132,44 +132,57 @@ $amcEnabled = (bool) old('amc_enabled', $editing && filled($asset->amc_expiry));
         };
 filter('assetDepartment', 'assetSubDepartment', 'department');
 
-        const subtypeFields = @json($subtypes->map(fn ($subtype) => ['id' => $subtype->id, 'asset_type_id' => $subtype->asset_type_id, 'name' => $subtype->name]));
-        const existingSubtypeValues = @json($editing ? ($asset->subtype_values ?? []) : old('subtype_values', []));
+        @php
+            $subtypesJson = $subtypes->map(function ($subtype) {
+                return [
+                    'id' => $subtype->id,
+                    'asset_type_id' => $subtype->asset_type_id,
+                    'name' => $subtype->name,
+                    'parameter_values' => $subtype->parameter_values ?: [],
+                ];
+            });
+        @endphp
+        const subtypesData = @json($subtypesJson);
+        const typeParameters = @json($types->pluck('parameters', 'id'));
         const assetTypeSelect = document.getElementById('assetType');
+        const assetSubtypeSelect = document.getElementById('assetSubtype');
         const subtypeWrap = document.getElementById('subtypeFieldsWrap');
         const subtypeContainer = document.getElementById('subtypeFieldsContainer');
 
-        const renderSubtypeFields = () => {
-            if (!assetTypeSelect || !subtypeContainer) return;
+        filter('assetType', 'assetSubtype', 'assetType');
+
+        const renderSubtypeParameters = () => {
+            if (!assetTypeSelect || !assetSubtypeSelect || !subtypeContainer) return;
 
             subtypeContainer.innerHTML = '';
-            const fields = subtypeFields.filter(f => String(f.asset_type_id) === assetTypeSelect.value);
-            subtypeWrap.hidden = fields.length === 0;
 
-            fields.forEach(field => {
+            const params = typeParameters[assetTypeSelect.value] || [];
+            const subtype = subtypesData.find(s => String(s.id) === assetSubtypeSelect.value);
+
+            subtypeWrap.hidden = params.length === 0 || !subtype;
+
+            if (!subtype) return;
+
+            params.forEach(param => {
                 const col = document.createElement('div');
                 col.className = 'col-md-6 col-xl-4';
 
                 const label = document.createElement('label');
                 label.className = 'form-label';
-                label.append(field.name + ' ');
-                const asterisk = document.createElement('span');
-                asterisk.className = 'text-danger';
-                asterisk.textContent = '*';
-                label.append(asterisk);
+                label.textContent = param;
 
-                const input = document.createElement('input');
-                input.className = 'form-control';
-                input.name = 'subtype_values[' + field.id + ']';
-                input.required = true;
-                input.value = existingSubtypeValues[field.id] ?? '';
+                const value = document.createElement('div');
+                value.className = 'form-control-plaintext fw-semibold';
+                value.textContent = subtype.parameter_values[param] || '—';
 
-                col.append(label, input);
+                col.append(label, value);
                 subtypeContainer.append(col);
             });
         };
 
-        assetTypeSelect?.addEventListener('change', renderSubtypeFields);
-        renderSubtypeFields();
+        assetTypeSelect?.addEventListener('change', renderSubtypeParameters);
+        assetSubtypeSelect?.addEventListener('change', renderSubtypeParameters);
+        renderSubtypeParameters();
 
         const assignedSearch = document.getElementById('assignedToSearch');
         const assignedMenu = document.getElementById('assignedToMenu');

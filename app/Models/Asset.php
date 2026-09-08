@@ -15,6 +15,7 @@ class Asset extends Model
     'name',
     'asset_type_id',
     'subtype_values',
+    'asset_subtype_id',
     'brand_id',
     'department_id',
     'sub_department_id',
@@ -41,6 +42,31 @@ protected function casts(): array
     public function type(): BelongsTo
     {
         return $this->belongsTo(AssetType::class, 'asset_type_id');
+    }
+
+    public function subtype(): BelongsTo
+    {
+        return $this->belongsTo(AssetSubtype::class, 'asset_subtype_id');
+    }
+
+    /**
+     * The selected Subtype's configured parameter values, ordered by the
+     * parent Type's current parameter list, for read-only display on the asset.
+     *
+     * @return array<int, array{label: string, value: ?string}>
+     */
+    public function subtypeParameterValues(): array
+    {
+        if (! $this->subtype) {
+            return [];
+        }
+
+        $values = $this->subtype->parameter_values ?? [];
+        $labels = $this->type?->parameters ?: array_keys($values);
+
+        return collect($labels)
+            ->map(fn ($param) => ['label' => $param, 'value' => $values[$param] ?? null])
+            ->all();
     }
 
     /**

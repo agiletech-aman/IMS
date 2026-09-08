@@ -6,7 +6,6 @@ use App\Models\Asset;
 use App\Models\AssetAssignmentHistory;
 use App\Models\AssetSubtype;
 use App\Models\AssetType;
-use App\Models\Brand;
 use App\Models\Department;
 use App\Models\Faculty;
 use App\Models\SubDepartment;
@@ -277,7 +276,7 @@ $assets = $query
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate($this->rules($request));
-        $data['subtype_values'] = $this->subtypeValues($request);
+        $data['brand_id'] = AssetSubtype::find($data['asset_subtype_id'] ?? null)?->brand_id;
         $characters = Str::of($data['name'])->ascii()->upper()->replaceMatches('/[^A-Z0-9]/', '')->value();
         $first = $characters[0] ?? 'X';
         $last = $characters !== '' ? $characters[strlen($characters) - 1] : 'X';
@@ -294,7 +293,7 @@ $assets = $query
 
 public function show(Asset $asset): View
     {
-        return view('assets.show', ['asset' => $asset->load(['type', 'brand', 'department', 'subDepartment'])]);
+        return view('assets.show', ['asset' => $asset->load(['type', 'brand', 'department', 'subDepartment', 'subtype'])]);
     }
 
     public function edit(Asset $asset): View
@@ -307,7 +306,7 @@ public function show(Asset $asset): View
         $previousAssignedTo = $asset->assigned_to;
 
         $data = $request->validate($this->rules($request, $asset->id));
-        $data['subtype_values'] = $this->subtypeValues($request);
+        $data['brand_id'] = AssetSubtype::find($data['asset_subtype_id'] ?? null)?->brand_id;
         if ($request->hasFile('image')) {
             if ($asset->image_path) {
                 Storage::disk('public')->delete($asset->image_path);
@@ -384,8 +383,7 @@ public function show(Asset $asset): View
     {
 return [
             'types' => AssetType::where('status', 'Active')->orderBy('name')->get(),
-            'subtypes' => AssetSubtype::where('status', 'Active')->orderBy('name')->get(['id', 'asset_type_id', 'name']),
-            'brands' => Brand::where('status', 'Active')->orderBy('name')->get(),
+            'subtypes' => AssetSubtype::where('status', 'Active')->orderBy('name')->get(['id', 'asset_type_id', 'name', 'parameter_values']),
             'departments' => Department::where('status', 'Active')->orderBy('name')->get(),
             'subDepartments' => SubDepartment::where('status', 'Active')->orderBy('name')->get(),
             'users' => Faculty::where('status', 'Active')->orderBy('name')->get(['id', 'name', 'unique_id']),
@@ -397,7 +395,7 @@ return [
 $rules = [
             'name' => ['required', 'string', 'max:255'],
             'asset_type_id' => ['required', 'exists:asset_types,id'],
-            'brand_id' => ['required', 'exists:brands,id'],
+            'asset_subtype_id' => ['nullable', Rule::exists('asset_subtypes', 'id')->where('asset_type_id', $request->input('asset_type_id'))],
             'department_id' => ['required', 'exists:departments,id'],
             'sub_department_id' => ['required', Rule::exists('sub_departments', 'id')->where('department_id', $request->input('department_id'))],
             'serial_number' => ['required', 'string', 'max:255', Rule::unique('assets')->ignore($id)],
@@ -411,33 +409,6 @@ $rules = [
             'notes' => ['nullable', 'string', 'max:5000'],
         ];
 
-        foreach ($this->subtypeIdsForType($request) as $subtypeId) {
-            $subtype = AssetSubtype::find($subtypeId);
-            $rules["subtype_values.{$subtypeId}"] = ($subtype?->is_required ?? true)
-                ? ['required', 'string', 'max:255']
-                : ['nullable', 'string', 'max:255'];
-        }
-
         return $rules;
-    }
-
-    /**
-     * The subtype field values submitted with the request, filtered down to only
-     * the fields that actually belong to the selected asset type.
-     */
-    private function subtypeValues(Request $request): array
-    {
-        $allowedIds = $this->subtypeIdsForType($request)->map(fn (int $id) => (string) $id);
-
-        return collect($request->input('subtype_values', []))
-            ->only($allowedIds)
-            ->all();
-    }
-
-    private function subtypeIdsForType(Request $request): \Illuminate\Support\Collection
-    {
-        return AssetSubtype::where('asset_type_id', $request->input('asset_type_id'))
-            ->where('status', 'Active')
-            ->pluck('id');
     }
 }

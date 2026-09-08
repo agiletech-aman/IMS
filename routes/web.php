@@ -76,6 +76,14 @@ Route::middleware([EnsureStaticAuthenticated::class, EnsureCentreSelected::class
         $permission = fn (string $module, string $action = 'view') =>
             EnsurePermission::class . ":{$module},{$action}";
 
+        // Sub-Types sample download (one sheet per Asset Type, like the Assets bulk import)
+        Route::get(
+            'sub-types/import-sample',
+            [AssetMasterController::class, 'subtypeImportSample']
+        )
+            ->middleware($permission('sub_types', 'import'))
+            ->name('sub-types.import-sample');
+
         foreach ([
             'departments' => 'departments',
             'sub-departments' => 'sub_departments',

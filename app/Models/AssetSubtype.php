@@ -11,18 +11,24 @@ class AssetSubtype extends Model
 {
     use CentreScoped;
 
-    protected $fillable = ['asset_type_id', 'name', 'code', 'description', 'status', 'is_required'];
+    protected $fillable = ['asset_type_id', 'brand_id', 'name', 'code', 'description', 'status', 'is_required', 'parameter_values'];
 
     protected function casts(): array
     {
         return [
             'is_required' => 'boolean',
+            'parameter_values' => 'array',
         ];
     }
 
     public function assetType(): BelongsTo
     {
         return $this->belongsTo(AssetType::class);
+    }
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
     }
 
     /**

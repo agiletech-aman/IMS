@@ -106,7 +106,8 @@ class AssetImportExportController extends Controller
                 ->with('openAssetImportModal', true);
         }
 
-        $importCount = 0;
+        $insertedCount = 0;
+        $updatedCount = 0;
         $totalRows = 0;
 
         foreach ($sheets as $sheet) {
@@ -130,34 +131,50 @@ class AssetImportExportController extends Controller
                 $payload = [
                     'name' => (string) $row['name'],
                     'asset_type_id' => $type->id,
-                    'subtype_values' => $resolvedIds['subtype_values'] ?? [],
+                    'asset_subtype_id' => $resolvedIds['asset_subtype_id'] ?? null,
                     'brand_id' => $resolvedIds['brand_id'] ?? null,
                     'department_id' => $resolvedIds['department_id'] ?? null,
                     'sub_department_id' => $resolvedIds['sub_department_id'] ?? null,
-                    'serial_number' => (string) $row['serial_number'],
-                    'fr_number' => (string) $row['fr_number'],
-                    'installation_date' => $this->toDate($row['installation_date'] ?? ''),
+                    'serial_number' => (string) ($row['serial_number'] ?? ''),
+                    'fr_number' => (string) ($row['fr_number'] ?? ''),
+                    'installation_date' => $resolvedIds['installation_date'] ?? null,
                     'assigned_to' => (string) ($row['assigned_to'] ?? ''),
-                    'status' => (string) $row['status'],
-                    'warranty_expiry' => $this->toDate($row['warranty_expiry'] ?? ''),
-                    'amc_expiry' => $this->toDate($row['amc_expiry'] ?? ''),
+                    'status' => (string) ($row['status'] ?? ''),
+                    'warranty_expiry' => $resolvedIds['warranty_expiry'] ?? null,
+                    'amc_expiry' => $resolvedIds['amc_expiry'] ?? null,
                     'notes' => (string) ($row['notes'] ?? ''),
                 ];
 
                 $providedAssetTag = trim((string) ($row['asset_tag'] ?? ''));
-                $serialNumber = trim((string) $payload['serial_number']);
 
-                if ($providedAssetTag !== '' && Asset::where('asset_tag', $providedAssetTag)->exists()) {
-                    $errors[] = ['row' => $rowNumber, 'sheet' => $type->name, 'asset' => $assetName, 'messages' => ["Asset Tag '{$providedAssetTag}' already exists."]];
+                $existingAsset = $providedAssetTag !== ''
+                    ? Asset::where('asset_tag', $providedAssetTag)->first()
+                    : null;
+
+                /*
+                |--------------------------------------------------------------------------
+                | Asset Tag matches an existing asset — update it, never duplicate
+                |--------------------------------------------------------------------------
+                */
+
+                if ($existingAsset) {
+                    try {
+                        $existingAsset->update($payload);
+                        $updatedCount++;
+                    } catch (\Throwable $e) {
+                        report($e);
+                        $errors[] = ['row' => $rowNumber, 'sheet' => $type->name, 'asset' => $assetName, 'messages' => ['Could not update this asset. Check for an invalid value.']];
+                    }
 
                     continue;
                 }
 
-                if ($serialNumber !== '' && Asset::where('serial_number', $serialNumber)->exists()) {
-                    $errors[] = ['row' => $rowNumber, 'sheet' => $type->name, 'asset' => $assetName, 'messages' => ["Serial Number '{$serialNumber}' already exists."]];
-
-                    continue;
-                }
+                /*
+                |--------------------------------------------------------------------------
+                | No match — create a new asset. Blank tag: auto-generate one.
+                | Non-blank tag (confirmed unused above): use it as given.
+                |--------------------------------------------------------------------------
+                */
 
                 $assetTag = $providedAssetTag;
 
@@ -177,10 +194,10 @@ class AssetImportExportController extends Controller
 
                 try {
                     Asset::create($payload + ['asset_tag' => $assetTag]);
-                    $importCount++;
+                    $insertedCount++;
                 } catch (\Throwable $e) {
                     report($e);
-                    $errors[] = ['row' => $rowNumber, 'sheet' => $type->name, 'asset' => $assetName, 'messages' => ['Could not save this asset. Check for a duplicate Serial Number or invalid value.']];
+                    $errors[] = ['row' => $rowNumber, 'sheet' => $type->name, 'asset' => $assetName, 'messages' => ['Could not save this asset. Check for a duplicate Asset Tag or invalid value.']];
 
                     continue;
                 }
@@ -194,16 +211,16 @@ class AssetImportExportController extends Controller
         $response = back()->with('importErrors', $errors)
             ->with('importResult', [
                 'errors' => count($errors),
-                'inserted' => $importCount,
-                'updated' => 0,
+                'inserted' => $insertedCount,
+                'updated' => $updatedCount,
             ])
             ->with('openAssetImportModal', $errors !== []);
         $this->audit->record(
             'IMPORT',
             'Assets',
-            "Asset import completed with {$importCount} inserted and ".count($errors).' failed rows.',
+            "Asset import completed with {$insertedCount} inserted, {$updatedCount} updated and ".count($errors).' failed rows.',
             result: $errors === [] ? 'Success' : 'Failed',
-            metadata: ['inserted' => $importCount, 'failed' => count($errors)],
+            metadata: ['inserted' => $insertedCount, 'updated' => $updatedCount, 'failed' => count($errors)],
         );
 
         if ($errors !== []) {
@@ -215,7 +232,7 @@ class AssetImportExportController extends Controller
 
         return $response->with(
             'success',
-            "Asset import completed: {$importCount} asset(s) imported successfully."
+            "Asset import completed: {$insertedCount} asset(s) created, {$updatedCount} asset(s) updated."
         );
     }
 
@@ -237,16 +254,5 @@ class AssetImportExportController extends Controller
             ->orderBy('name')
             ->pluck('id')
             ->all();
-    }
-
-    private function toDate($v): ?string
-    {
-        $v = trim((string) $v);
-        if ($v === '') {
-            return null;
-        }
-
-        // Expect Y-m-d from export
-        return $v;
     }
 }

@@ -1,5 +1,6 @@
 @php
     $activeTypes = $types->where('status', 'Active')->values();
+    $csvClass = $csvClass ?? \App\Support\AssetCsv::class;
 @endphp
 
 <div class="asset-type-checklist" data-prefix="{{ $prefix }}">
@@ -27,12 +28,12 @@
         <details class="asset-type-preview">
             <summary>Preview sheet columns per type</summary>
             @foreach($activeTypes as $type)
-                @php $columns = \App\Support\AssetCsv::columnSpec($type); @endphp
+                @php $columns = $csvClass::columnSpec($type); @endphp
                 <div class="asset-type-preview-row">
                     <strong>{{ $type->name }}</strong>
                     <div class="asset-import-columns">
                         @foreach($columns as $column)
-                            <span class="asset-import-chip {{ isset($column['subtype_id']) ? 'dynamic' : '' }}">{{ $column['label'] }}{{ $column['required'] ? '' : ' (optional)' }}</span>
+                            <span class="asset-import-chip {{ isset($column['parameter']) ? 'dynamic' : '' }}">{{ $column['label'] }}{{ $column['required'] ? '' : ' (optional)' }}</span>
                         @endforeach
                     </div>
                 </div>

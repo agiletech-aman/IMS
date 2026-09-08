@@ -8,6 +8,7 @@ use App\Models\AssetType;
 use App\Models\Brand;
 use App\Models\Department;
 use App\Models\SubDepartment;
+use App\Support\SubtypeCsv;
 use App\Support\UniqueCodeGenerator;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AssetMasterController extends Controller
 {
@@ -117,6 +119,10 @@ class AssetMasterController extends Controller
     public function export(Request $request)
     {
         $module = $this->module($request);
+
+        if ($module === 'sub-types') {
+            return $this->exportSubtypesWorkbook($request);
+        }
 
         $config = $this->config($module);
 
@@ -242,6 +248,10 @@ class AssetMasterController extends Controller
     ): RedirectResponse
     {
         $module = $this->module($request);
+
+        if ($module === 'sub-types') {
+            return $this->importSubtypesWorkbook($request);
+        }
 
         $config = $this->config($module);
 
@@ -540,6 +550,168 @@ class AssetMasterController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | SUB-TYPES WORKBOOK (one sheet per Asset Type, like the Assets bulk import)
+    |--------------------------------------------------------------------------
+    */
+
+    public function subtypeImportSample(Request $request): BinaryFileResponse
+    {
+        $typeIds = $this->resolveSubtypeTypeIds($request);
+
+        $filename = 'sub-types_import_sample.xlsx';
+        $tmpPath = storage_path('app/'.$filename);
+
+        SubtypeCsv::exportWorkbook($typeIds, $tmpPath, withData: false);
+
+        return response()->download($tmpPath)->deleteFileAfterSend(true);
+    }
+
+    private function exportSubtypesWorkbook(Request $request): BinaryFileResponse
+    {
+        $typeIds = $this->resolveSubtypeTypeIds($request);
+
+        $filename = 'sub-types_export_'.now()->format('Y-m-d-His').'.xlsx';
+        $tmpPath = storage_path('app/'.$filename);
+
+        SubtypeCsv::exportWorkbook($typeIds, $tmpPath, withData: true);
+
+        return response()->download($tmpPath)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * The Asset Type ids selected for a Sub-Types export/sample download.
+     * Falls back to every active type when none are explicitly checked.
+     */
+    private function resolveSubtypeTypeIds(Request $request): array
+    {
+        $requested = collect($request->input('types', []))
+            ->filter(fn ($value) => $value !== null && $value !== '')
+            ->map(fn ($value) => (int) $value)
+            ->unique()
+            ->values();
+
+        return AssetType::where('status', 'Active')
+            ->when($requested->isNotEmpty(), fn ($query) => $query->whereIn('id', $requested))
+            ->orderBy('name')
+            ->pluck('id')
+            ->all();
+    }
+
+    private function importSubtypesWorkbook(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:5120'],
+        ]);
+
+        $parsed = SubtypeCsv::parseWorkbook($request->file('file')->getRealPath());
+        $sheets = $parsed['sheets'] ?? [];
+        $fileErrors = $parsed['fileErrors'] ?? [];
+
+        if ($sheets === []) {
+            return back()->with(
+                'error',
+                $fileErrors[0] ?? 'The import file could not be read.'
+            );
+        }
+
+        $inserted = 0;
+        $updated = 0;
+        $skipped = 0;
+
+        DB::beginTransaction();
+
+        try {
+
+            foreach ($sheets as $sheet) {
+                $type = $sheet['type'];
+
+                foreach ($sheet['rows'] as $row) {
+                    $name = trim((string) ($row['name'] ?? ''));
+
+                    if ($name === '') {
+                        $skipped++;
+
+                        continue;
+                    }
+
+                    $resolved = SubtypeCsv::resolveRow($type, $row);
+
+                    if ($resolved['errors'] !== []) {
+                        $skipped++;
+
+                        continue;
+                    }
+
+                    $data = $resolved['resolved'];
+                    $data['name'] = $name;
+
+                    $providedCode = trim((string) ($row['code'] ?? ''));
+
+                    $existing = $providedCode !== ''
+                        ? AssetSubtype::where('code', $providedCode)->first()
+                        : null;
+
+                    if ($existing) {
+
+                        $existing->update($data);
+
+                        $updated++;
+
+                        continue;
+
+                    }
+
+                    $code = $providedCode;
+
+                    if ($code === '') {
+                        $code = UniqueCodeGenerator::generate(
+                            'sub-types',
+                            'SY',
+                            (new AssetSubtype())->getTable(),
+                            'code'
+                        );
+                    }
+
+                    AssetSubtype::create($data + [
+                        'code' => $code,
+                        'is_required' => true,
+                    ]);
+
+                    $inserted++;
+                }
+            }
+
+            DB::commit();
+
+        } catch (\Throwable $exception) {
+
+            DB::rollBack();
+
+            report($exception);
+
+            return back()->with(
+                'error',
+                'Import failed. No changes were saved.'
+            );
+
+        }
+
+        $message = "{$inserted} created, {$updated} updated";
+
+        if ($skipped > 0) {
+            $message .= ", {$skipped} skipped";
+        }
+
+        foreach ($fileErrors as $fileError) {
+            $message .= '. '.$fileError;
+        }
+
+        return back()->with('success', $message.'.');
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | STORE
     |--------------------------------------------------------------------------
     */
@@ -595,6 +767,21 @@ class AssetMasterController extends Controller
 
 
         unset($data['logo']);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Subtype Parameters
+        |--------------------------------------------------------------------------
+        */
+
+        if ($module === 'types') {
+            $data['parameters'] = $this->cleanParameters($data['parameters'] ?? []);
+        }
+
+        if ($module === 'sub-types') {
+            $data['parameter_values'] = $this->filteredParameterValues($request->input('parameter_values', []), $data['asset_type_id']);
+        }
 
 
         $config['model']::create(
@@ -673,6 +860,21 @@ class AssetMasterController extends Controller
 
 
         unset($data['logo']);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Subtype Parameters
+        |--------------------------------------------------------------------------
+        */
+
+        if ($module === 'types') {
+            $data['parameters'] = $this->cleanParameters($data['parameters'] ?? []);
+        }
+
+        if ($module === 'sub-types') {
+            $data['parameter_values'] = $this->filteredParameterValues($request->input('parameter_values', []), $data['asset_type_id']);
+        }
 
 
         $model->update(
@@ -962,6 +1164,14 @@ class AssetMasterController extends Controller
                     ?? null
                 ),
 
+            'parameters' =>
+                $this->cleanParameters(
+                    $this->splitDelimitedList(
+                        $data['parameters']
+                        ?? null
+                    )
+                ),
+
         ];
     }
 
@@ -1003,10 +1213,56 @@ class AssetMasterController extends Controller
         }
 
 
+        $brandName = trim(
+            (string) (
+                $data['brand']
+                ?? ''
+            )
+        );
+
+
+        if ($brandName === '') {
+            return null;
+        }
+
+
+        $brand = Brand::query()
+            ->whereRaw(
+                'LOWER(name) = ?',
+                [strtolower($brandName)]
+            )
+            ->first();
+
+
+        if (!$brand) {
+            return null;
+        }
+
+
+        $rawParameterValues = [];
+
+        foreach ($this->allSubtypeParameterNames() as $parameter) {
+
+            $value = trim(
+                (string) (
+                    $data[strtolower(trim($parameter))]
+                    ?? ''
+                )
+            );
+
+            if ($value !== '') {
+                $rawParameterValues[$parameter] = $value;
+            }
+
+        }
+
+
         return $common + [
 
             'asset_type_id' =>
                 $assetType->id,
+            'brand_id' =>
+                $brand->id,
             'is_required' =>
                 (bool) filter_var(
                     $data['is_required'] ?? true,
@@ -1016,6 +1272,11 @@ class AssetMasterController extends Controller
                 $this->nullableString(
                     $data['description']
                     ?? null
+                ),
+            'parameter_values' =>
+                $this->filteredParameterValues(
+                    $rawParameterValues,
+                    $assetType->id
                 ),
 
         ];
@@ -1057,6 +1318,7 @@ class AssetMasterController extends Controller
                 'code',
                 'status',
                 'description',
+                'parameters',
                 'assets',
             ],
 
@@ -1064,8 +1326,10 @@ class AssetMasterController extends Controller
                 'name',
                 'code',
                 'asset_type',
+                'brand',
                 'status',
                 'description',
+                ...$this->allSubtypeParameterNames(),
                 'assets',
             ],
 
@@ -1128,6 +1392,7 @@ class AssetMasterController extends Controller
                 $record->code,
                 $record->status,
                 $record->description,
+                implode('|', $record->parameters ?? []),
                 $record->assets_count,
             ],
 
@@ -1135,8 +1400,12 @@ class AssetMasterController extends Controller
                 $record->name,
                 $record->code,
                 $record->assetType?->name,
+                $record->brand?->name,
                 $record->status,
                 $record->description,
+                ...collect($this->allSubtypeParameterNames())
+                    ->map(fn (string $parameter) => $record->parameter_values[$parameter] ?? '')
+                    ->all(),
                 $record->assets_count,
             ],
 
@@ -1181,6 +1450,63 @@ class AssetMasterController extends Controller
         return $value !== ''
             ? $value
             : null;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUBTYPE PARAMETERS
+    |--------------------------------------------------------------------------
+    */
+
+    private function cleanParameters(array $parameters): array
+    {
+        return collect($parameters)
+            ->map(fn ($parameter) => trim((string) $parameter))
+            ->filter(fn ($parameter) => $parameter !== '')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function filteredParameterValues(array $values, ?int $assetTypeId): array
+    {
+        $allowed = AssetType::find($assetTypeId)?->parameters ?? [];
+
+        return collect($values)
+            ->only($allowed)
+            ->all();
+    }
+
+    /**
+     * "RAM|Processor|Storage" -> ['RAM', 'Processor', 'Storage'] — the CSV
+     * format for a Type's parameter key list (used by export/import).
+     */
+    private function splitDelimitedList(?string $value): array
+    {
+        if (trim((string) $value) === '') {
+            return [];
+        }
+
+        return array_map('trim', explode('|', $value));
+    }
+
+    /**
+     * The deduplicated set of Subtype Parameter names configured across every
+     * Asset Type, in first-seen order — the CSV/export column list for
+     * sub-types is built from this so it always reflects current config.
+     */
+    private function allSubtypeParameterNames(): array
+    {
+        return AssetType::query()
+            ->pluck('parameters')
+            ->filter()
+            ->flatMap(fn (array $parameters) => $parameters)
+            ->map(fn ($parameter) => trim((string) $parameter))
+            ->filter(fn ($parameter) => $parameter !== '')
+            ->unique()
+            ->values()
+            ->all();
     }
 
 
@@ -1271,6 +1597,7 @@ class AssetMasterController extends Controller
                 'icon' => 'fa-layer-group',
                 'with' => [
                     'assetType',
+                    'brand',
                 ],
             ],
 
@@ -1334,6 +1661,17 @@ class AssetMasterController extends Controller
             'sub-types' => [
                 'asset_type_id' =>
                     AssetType::orderBy('name')
+                        ->pluck(
+                            'name',
+                            'id'
+                        ),
+                'type_parameters' =>
+                    AssetType::pluck(
+                        'parameters',
+                        'id'
+                    ),
+                'brand_id' =>
+                    Brand::orderBy('name')
                         ->pluck(
                             'name',
                             'id'
@@ -1413,6 +1751,17 @@ class AssetMasterController extends Controller
                         'max:2000',
                     ],
 
+                    'parameters' => [
+                        'nullable',
+                        'array',
+                    ],
+
+                    'parameters.*' => [
+                        'nullable',
+                        'string',
+                        'max:150',
+                    ],
+
                 ],
 
 
@@ -1423,6 +1772,10 @@ class AssetMasterController extends Controller
                         'required',
                         'exists:asset_types,id',
                     ],
+                    'brand_id' => [
+                        'required',
+                        'exists:brands,id',
+                    ],
                     'is_required' => [
                         'nullable',
                         'boolean',
@@ -1431,6 +1784,10 @@ class AssetMasterController extends Controller
                         'nullable',
                         'string',
                         'max:2000',
+                    ],
+                    'parameter_values' => [
+                        'nullable',
+                        'array',
                     ],
 
                 ],

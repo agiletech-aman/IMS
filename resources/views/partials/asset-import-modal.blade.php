@@ -71,7 +71,7 @@
             <input class="form-control" id="assetImportFile" type="file" name="csv" accept=".xlsx,.xls" required>
           </div>
           <small class="text-secondary d-block mt-2">
-            Each sheet's <strong>name must be an Asset Type</strong> (e.g. "Laptop", "Desktop") — that's how rows get matched to the right type and fields. Asset Tags are generated automatically; don't include that column's values.
+            Each sheet's <strong>name must be an Asset Type</strong> (e.g. "Laptop", "Desktop") — that's how rows get matched to the right type and fields. Leave Asset Tag blank to create a new asset (a tag is generated automatically); enter an existing Asset Tag to update that asset instead.
           </small>
           @foreach($errors->assetImport->all() as $message)
             <div class="text-danger small mt-1"><i class="fa-solid fa-circle-exclamation me-1"></i>{{ $message }}</div>

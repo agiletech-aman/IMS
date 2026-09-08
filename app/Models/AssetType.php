@@ -10,7 +10,14 @@ class AssetType extends Model
 {
     use CentreScoped;
 
-    protected $fillable = ['name', 'code', 'description', 'status'];
+    protected $fillable = ['name', 'code', 'description', 'status', 'parameters'];
+
+    protected function casts(): array
+    {
+        return [
+            'parameters' => 'array',
+        ];
+    }
 
     public function assets(): HasMany
     {
