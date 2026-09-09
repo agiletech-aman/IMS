@@ -136,6 +136,17 @@
                                 >
                             </div>
 
+                            <div class="col-md-6">
+                                <label class="form-label">Room Number</label>
+                                <input
+                                    type="text"
+                                    name="room_number"
+                                    class="form-control"
+                                    value="{{ old('room_number', $user?->room_number) }}"
+                                    placeholder="Enter room number"
+                                >
+                            </div>
+
                             <div class="col-12">
                                 <label class="form-label">Remark</label>
                                 <textarea
