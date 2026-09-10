@@ -22,11 +22,18 @@ trait CentreScoped
         });
 
         static::creating(function ($model): void {
-            $centre = app(CentreContextService::class)->selected();
-
-            if ($centre !== null && blank($model->getAttribute('centre'))) {
-                $model->setAttribute('centre', $centre);
+            if (filled($model->getAttribute('centre'))) {
+                return;
             }
+
+            // Seeders/factories/artisan commands run without a browser session
+            // and have no centre to select — only real web requests are held
+            // to "you must pick a centre first".
+            if (app()->runningInConsole()) {
+                return;
+            }
+
+            $model->setAttribute('centre', app(CentreContextService::class)->requireSelected());
         });
     }
 
