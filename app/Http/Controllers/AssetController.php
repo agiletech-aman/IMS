@@ -401,7 +401,15 @@ $rules = [
             'serial_number' => ['required', 'string', 'max:255', Rule::unique('assets')->ignore($id)],
             'fr_number' => ['required', 'string', 'max:255'],
             'installation_date' => ['required', 'date'],
-            'assigned_to' => ['nullable', 'string', 'max:255'],
+            'assigned_to' => ['nullable', 'string', 'max:255', function ($attribute, $value, $fail) {
+                if ($value === null || $value === '') {
+                    return;
+                }
+
+                if (! Faculty::where('name', $value)->where('status', 'Active')->exists()) {
+                    $fail('Please pick a user from the directory, or leave this unassigned.');
+                }
+            }],
             'status' => ['required', Rule::in(['Active', 'In Stock', 'Under Maintenance', 'Retired'])],
             'warranty_expiry' => ['nullable', 'date'],
             'amc_expiry' => ['nullable', 'date'],

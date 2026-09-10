@@ -188,6 +188,9 @@ filter('assetDepartment', 'assetSubDepartment', 'department');
         const assignedMenu = document.getElementById('assignedToMenu');
         if (assignedSearch && assignedMenu) {
             const options = [...assignedMenu.querySelectorAll('.combo-option')];
+            const validNames = new Set(options.map(option => option.dataset.value));
+            const isValidAssignedTo = (value) => validNames.has(value);
+            let lastValidValue = isValidAssignedTo(assignedSearch.value) ? assignedSearch.value : '';
 
             const filterOptions = () => {
                 const term = assignedSearch.value.trim().toLowerCase();
@@ -207,16 +210,45 @@ filter('assetDepartment', 'assetSubDepartment', 'department');
                 option.addEventListener('mousedown', (e) => {
                     e.preventDefault();
                     assignedSearch.value = option.dataset.value;
+                    lastValidValue = option.dataset.value;
                     assignedMenu.hidden = true;
                 });
             });
 
             assignedSearch.addEventListener('blur', () => {
-                setTimeout(() => { assignedMenu.hidden = true; }, 150);
+
+                setTimeout(() => {
+
+                    assignedMenu.hidden = true;
+
+                    if (!isValidAssignedTo(assignedSearch.value)) {
+                        assignedSearch.value = lastValidValue;
+                    }
+
+                }, 150);
+
             });
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') assignedMenu.hidden = true;
+            });
+
+            assignedSearch.closest('form')?.addEventListener('submit', (event) => {
+
+                if (isValidAssignedTo(assignedSearch.value)) {
+                    return;
+                }
+
+                event.preventDefault();
+                assignedSearch.value = lastValidValue;
+                assignedSearch.focus();
+
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Please pick a user from the list, or leave it Unassigned.', 'warning');
+                } else {
+                    alert('Please pick a user from the list, or leave it Unassigned.');
+                }
+
             });
         }
 
