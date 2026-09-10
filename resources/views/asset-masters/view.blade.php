@@ -17,7 +17,7 @@
 
             @if($module === 'types')
                 <div class="mt-3">
-                    <label class="form-label mb-2">Subtype Parameters</label>
+                    <label class="form-label mb-2">Parameters</label>
                     @if(!empty($record->parameters))
                         <div class="d-flex flex-wrap gap-2">
                             @foreach($record->parameters as $parameter)

@@ -26,6 +26,16 @@ document.addEventListener('DOMContentLoaded',()=>{
  if(innerWidth>=992&&localStorage.getItem('IIM-sidebar')==='collapsed')body.classList.add('sidebar-collapsed');
  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el=>new bootstrap.Tooltip(el));
  document.querySelectorAll('form[data-demo]').forEach(form=>form.addEventListener('submit',e=>{e.preventDefault();window.IIM.toast('Your changes have been saved successfully.','success')}));
+ document.querySelectorAll('input[type="file"][data-max-size-mb]').forEach(input=>{
+  const maxBytes=Number(input.dataset.maxSizeMb)*1024*1024;
+  input.closest('form')?.addEventListener('submit',event=>{
+   const file=input.files?.[0];
+   if(file&&file.size>maxBytes){
+    event.preventDefault();
+    window.IIM.toast(`File is too large. Please choose a file under ${input.dataset.maxSizeMb} MB.`,'warning');
+   }
+  });
+ });
  (window.IIMFlashNotifications||[]).forEach(notification=>window.IIM.toast(notification.message,notification.type,notification.title));
 
  const globalSearch=document.querySelector('[data-global-search]');

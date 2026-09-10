@@ -41,7 +41,7 @@ $amcEnabled = (bool) old('amc_enabled', $editing && filled($asset->amc_expiry));
 <div class="col-md-6 col-xl-4"><label class="form-label">Installation Date <span class="text-danger">*</span></label><input class="form-control" type="date" name="installation_date" value="{{ old('installation_date', $editing ? $asset->installation_date?->format('Y-m-d') : '') }}" placeholder="Select installation date" required></div>
                 <div class="col-12" id="subtypeFieldsWrap" hidden>
                     <hr class="my-1">
-                    <p class="form-label mb-2">Subtype Parameters</p>
+                    <p class="form-label mb-2">Parameters</p>
                     <div class="row g-3" id="subtypeFieldsContainer"></div>
                 </div>
                 <div class="col-md-6 col-xl-4">
@@ -60,7 +60,7 @@ $amcEnabled = (bool) old('amc_enabled', $editing && filled($asset->amc_expiry));
                 <div class="col-md-6 col-xl-4"><label class="form-label">Status <span class="text-danger">*</span></label><select class="form-select" name="status" required>
                         <option value="" disabled @selected($field('status')==='' )>Select asset status</option>@foreach(['Active','In Stock','Under Maintenance','Retired'] as $status)<option @selected($field('status')===$status)>{{ $status }}</option>@endforeach
                     </select></div>
-                <div class="col-md-6 col-xl-4"><label class="form-label">Asset Image {{ $editing ? '(leave blank to keep current)' : '' }}</label><input class="form-control" type="file" name="image" accept=".jpg,.jpeg,.png,.webp,image/*"><small class="text-secondary">JPG, PNG or WebP up to 4 MB</small></div>
+                <div class="col-md-6 col-xl-4"><label class="form-label">Asset Image {{ $editing ? '(leave blank to keep current)' : '' }}</label><input class="form-control" type="file" name="image" id="assetImageInput" data-max-size-mb="4" accept=".jpg,.jpeg,.png,.webp,image/*"><small class="text-secondary">JPG, PNG or WebP up to 4 MB</small></div>
                 @if($editing && $asset->image_path)<div class="col-12"><img src="{{ \App\Support\PublicUrl::storage($asset->image_path) }}" alt="Current asset image" style="width:120px;height:90px;object-fit:cover;border-radius:10px"></div>@endif
                 <div class="col-12">
                     <section class="asset-coverage">

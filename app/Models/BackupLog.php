@@ -12,6 +12,11 @@ class BackupLog extends Model
 
     protected $fillable = ['backup_id', 'level', 'event', 'message', 'context'];
 
+    protected static function centreOptional(): bool
+    {
+        return true;
+    }
+
     protected function casts(): array
     {
         return ['context' => 'array'];

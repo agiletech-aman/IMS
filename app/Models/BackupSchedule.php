@@ -17,6 +17,11 @@ class BackupSchedule extends Model
         'last_run_at', 'next_run_at', 'created_by',
     ];
 
+    protected static function centreOptional(): bool
+    {
+        return true;
+    }
+
     protected function casts(): array
     {
         return [

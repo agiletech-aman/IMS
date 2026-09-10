@@ -28,7 +28,7 @@
 
                     <div class="col-12" data-subtype-parameters-section data-existing="{{ json_encode($editing ? ($record->parameter_values ?? []) : old('parameter_values', [])) }}">
                         <div class="p-3 border rounded-3" style="background:var(--bg-secondary)">
-                            <label class="form-label mb-0">Subtype Parameters</label>
+                            <label class="form-label mb-0">Parameters</label>
                             <div class="params-grid" data-subtype-parameters-list></div>
                             <div class="text-secondary small d-flex align-items-center gap-1 mt-2" data-subtype-parameters-empty><i class="fa-regular fa-circle-question"></i><span>Select an Asset Type that has configured parameters to enter values here.</span></div>
                         </div>
@@ -36,13 +36,13 @@
                 @elseif($module === 'brands')
                     <div class="col-md-6"><label class="form-label">Country</label><input class="form-control" name="country" value="{{ $value('country') }}" placeholder="Enter country name"></div>
                     <div class="col-md-6"><label class="form-label">Support Contact</label><input class="form-control" name="support_contact" value="{{ $value('support_contact') }}" placeholder="Enter email or phone number"></div>
-                    <div class="col-12"><label class="form-label">Brand Logo {{ $editing ? '(leave blank to keep current)' : '' }}</label><input class="form-control" type="file" name="logo" accept=".jpg,.jpeg,.png,.webp,image/*"><small class="text-secondary">JPG, PNG or WebP up to 2 MB</small></div>
+                    <div class="col-12"><label class="form-label">Brand Logo {{ $editing ? '(leave blank to keep current)' : '' }}</label><input class="form-control" type="file" name="logo" data-max-size-mb="2" accept=".jpg,.jpeg,.png,.webp,image/*"><small class="text-secondary">JPG, PNG or WebP up to 2 MB</small></div>
                 @endif
                 @if($module === 'types')
                     @php $existingParameters = $editing ? ($record->parameters ?? []) : old('parameters', []); @endphp
                     <div class="col-12" data-parameters-section>
                         <div class="p-3 border rounded-3" style="background:var(--bg-secondary)">
-                            <label class="form-label mb-2">Subtype Parameters</label>
+                            <label class="form-label mb-2">Parameters</label>
                             <div data-parameters-list>
                                 @foreach($existingParameters as $parameter)
                                     <div class="input-group mb-2" data-parameter-row>

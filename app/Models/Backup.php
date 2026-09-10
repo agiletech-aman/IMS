@@ -15,6 +15,11 @@ class Backup extends Model
 
     public const STATUSES = ['queued', 'running', 'completed', 'failed', 'verified', 'corrupted'];
 
+    protected static function centreOptional(): bool
+    {
+        return true;
+    }
+
     protected $fillable = [
         'backup_number', 'backup_schedule_id', 'type', 'status',
         'verification_status', 'file_name', 'file_path', 'size_bytes',

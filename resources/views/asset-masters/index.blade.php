@@ -1280,7 +1280,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <p class="text-secondary small">Pick the Asset Types you want a sheet for — all are selected by default ("All"). Each sheet's columns come straight from that Type's current Subtype Parameters.</p>
+                            <p class="text-secondary small">Pick the Asset Types you want a sheet for — all are selected by default ("All"). Each sheet's columns come straight from that Type's current Parameters.</p>
                             @include('partials.asset-type-checklist', ['types' => $subtypeExportTypes, 'prefix' => 'subtype-sample', 'csvClass' => \App\Support\SubtypeCsv::class])
                         </div>
                         <div class="modal-footer">

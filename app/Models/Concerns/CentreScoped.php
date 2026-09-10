@@ -33,8 +33,29 @@ trait CentreScoped
                 return;
             }
 
-            $model->setAttribute('centre', app(CentreContextService::class)->requireSelected());
+            $context = app(CentreContextService::class);
+            $centre = $context->selected();
+
+            if ($centre !== null && ! $context->isAll()) {
+                $model->setAttribute('centre', $centre);
+
+                return;
+            }
+
+            // Models that may legitimately span every centre (e.g. a
+            // whole-system backup taken with no centre filter) skip the
+            // "pick a centre first" requirement and let the column default
+            // apply instead of erroring out.
+            if (static::centreOptional()) {
+                return;
+            }
+
+            $model->setAttribute('centre', $context->requireSelected());
         });
     }
 
+    protected static function centreOptional(): bool
+    {
+        return false;
+    }
 }
