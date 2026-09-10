@@ -1557,7 +1557,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     event.preventDefault();
 
-                    alert('Please select at least one asset to assign.');
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Please select at least one asset to assign.', 'warning');
+                    } else {
+                        alert('Please select at least one asset to assign.');
+                    }
 
                 }
 

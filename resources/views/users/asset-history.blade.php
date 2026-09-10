@@ -56,6 +56,23 @@
     color: #64748b;
 }
 
+.history-search-box {
+    position: relative;
+    max-width: 420px;
+}
+
+.history-search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+.history-search-box input {
+    padding-left: 36px;
+}
+
 @media(max-width:768px) {
     .history-toolbar {
         align-items: flex-start;
@@ -146,7 +163,7 @@
 </div>
 
 
-<div class="row row-cols-2 row-cols-lg-4 g-3 mb-3">
+<div class="row row-cols-2 g-3 mb-3">
 
     @include('partials.stat-card', [
         'icon' => 'fa-clock-rotate-left',
@@ -159,20 +176,6 @@
         'label' => 'Current Assets',
         'value' => number_format($currentAssignments->count()),
         'class' => 'success'
-    ])
-
-    @include('partials.stat-card', [
-        'icon' => 'fa-arrow-right-to-bracket',
-        'label' => 'First Asset',
-        'value' => $firstAssignment?->asset?->asset_tag ?: '—',
-        'class' => 'info'
-    ])
-
-    @include('partials.stat-card', [
-        'icon' => 'fa-clock',
-        'label' => 'Last Asset',
-        'value' => $latestAssignment?->asset?->asset_tag ?: '—',
-        'class' => 'warning'
     ])
 
 </div>
@@ -263,6 +266,32 @@
         </span>
 
     </div>
+
+
+    <form
+        method="GET"
+        action="{{ route('users.asset-history', $user) }}"
+        class="p-3 border-bottom"
+        id="historyFilterForm"
+    >
+
+        <div class="history-search-box">
+
+            <i class="fa-solid fa-magnifying-glass"></i>
+
+            <input
+                type="search"
+                name="search"
+                id="historySearch"
+                value="{{ request('search') }}"
+                placeholder="Search asset, tag, type, serial, department or assigned by..."
+                autocomplete="off"
+                class="form-control"
+            >
+
+        </div>
+
+    </form>
 
 
     <div class="table-responsive">
@@ -378,5 +407,34 @@
     @endif
 
 </div>
+
+@push('scripts')
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const form = document.getElementById('historyFilterForm');
+    const search = document.getElementById('historySearch');
+
+    if (!form || !search) {
+        return;
+    }
+
+    let searchTimer;
+
+    search.addEventListener('input', function () {
+
+        clearTimeout(searchTimer);
+
+        searchTimer = setTimeout(function () {
+            form.submit();
+        }, 450);
+
+    });
+
+});
+</script>
+
+@endpush
 
 @endsection

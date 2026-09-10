@@ -64,7 +64,7 @@ class UserController extends Controller
                 ->get(['id', 'name']),
             'selectedRole' => null,
             'availableAssets' => Asset::with('type:id,name')
-                ->whereNull('assigned_to')
+                ->where(fn($q) => $q->whereNull('assigned_to')->orWhere('assigned_to', ''))
                 ->orderBy('name')
                 ->orderBy('asset_tag')
                 ->get(['id', 'asset_tag', 'name', 'asset_type_id', 'status']),
@@ -127,7 +127,9 @@ class UserController extends Controller
         $data = $request->validate([
             'asset_ids' => ['required', 'array', 'min:1'],
             'asset_ids.*' => [
-                Rule::exists('assets', 'id')->whereNull('assigned_to'),
+                Rule::exists('assets', 'id')->where(
+                    fn($q) => $q->whereNull('assigned_to')->orWhere('assigned_to', '')
+                ),
             ],
         ], [
             'asset_ids.*.exists' => 'One or more selected assets are no longer available for assignment.',
@@ -137,7 +139,9 @@ class UserController extends Controller
             ?? session('static_auth_user.email')
             ?? 'System';
 
-        $assets = Asset::whereIn('id', $data['asset_ids'])->whereNull('assigned_to')->get();
+        $assets = Asset::whereIn('id', $data['asset_ids'])
+            ->where(fn($q) => $q->whereNull('assigned_to')->orWhere('assigned_to', ''))
+            ->get();
 
         foreach ($assets as $asset) {
             $asset->update([
@@ -179,23 +183,38 @@ class UserController extends Controller
         return back()->with('success', $message);
     }
 
-    public function assetHistory(Faculty $user): View
+    public function assetHistory(Request $request, Faculty $user): View
     {
         $historyQuery = AssetAssignmentHistory::query()
             ->with(['asset.type', 'asset.department'])
             ->where('faculty_id', $user->id);
 
-        $history = (clone $historyQuery)->orderByDesc('assigned_at')->paginate(10)->withQueryString();
-        $firstAssignment = (clone $historyQuery)->orderBy('assigned_at')->first();
-        $latestAssignment = (clone $historyQuery)->orderByDesc('assigned_at')->first();
         $currentAssignments = (clone $historyQuery)->whereNull('unassigned_at')->orderByDesc('assigned_at')->get();
         $totalAssignments = (clone $historyQuery)->count();
+
+        $filteredQuery = clone $historyQuery;
+
+        if ($search = trim((string) $request->query('search'))) {
+            $filteredQuery->where(function ($builder) use ($search): void {
+                $builder
+                    ->where('assigned_by', 'like', "%{$search}%")
+                    ->orWhere('unassigned_by', 'like', "%{$search}%")
+                    ->orWhereHas('asset', function ($assetQuery) use ($search): void {
+                        $assetQuery
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('asset_tag', 'like', "%{$search}%")
+                            ->orWhere('serial_number', 'like', "%{$search}%")
+                            ->orWhereHas('type', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                            ->orWhereHas('department', fn($q) => $q->where('name', 'like', "%{$search}%"));
+                    });
+            });
+        }
+
+        $history = $filteredQuery->orderByDesc('assigned_at')->paginate(10)->withQueryString();
 
         return view('users.asset-history', compact(
             'user',
             'history',
-            'firstAssignment',
-            'latestAssignment',
             'currentAssignments',
             'totalAssignments'
         ));
