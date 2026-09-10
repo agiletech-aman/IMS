@@ -692,7 +692,12 @@
                                         data-bs-target="#assignAssetModal"
                                         data-user-name="{{ $user->name }}"
                                         data-action="{{ route('users.assign-asset',$user) }}"
-                                        @disabled($availableAssets->isEmpty())
+                                        data-assigned="{{ $user->assignedAssets->map(fn($asset) => [
+                                            'id' => $asset->id,
+                                            'tag' => $asset->asset_tag,
+                                            'name' => $asset->name,
+                                            'type' => $asset->asset_type_id,
+                                        ])->toJson() }}"
                                     >
                                         <i class="fa-solid fa-laptop-file"></i>
                                     </button>
@@ -1121,6 +1126,20 @@
 
                 <div class="modal-body">
 
+                    <div id="assignAssetAlreadyWrap" class="mb-3 d-none">
+
+                        <label class="form-label">
+                            Already Assigned to this User
+                        </label>
+
+                        <div
+                            id="assignAssetAlreadyList"
+                            class="d-flex flex-column gap-2 p-2 border rounded"
+                        ></div>
+
+                    </div>
+
+
                     @if($availableAssets->isNotEmpty())
 
                         <div class="row g-3">
@@ -1169,41 +1188,46 @@
 
                             <div class="col-12">
 
-                                <label
-                                    class="form-label"
-                                    for="assignAssetSelect"
-                                >
-                                    Available Assets *
+                                <label class="form-label">
+                                    Available Assets to Add
                                 </label>
 
 
-                                <select
-                                    class="form-select"
-                                    id="assignAssetSelect"
-                                    name="asset_ids[]"
-                                    size="8"
-                                    multiple
-                                    required
+                                <div
+                                    id="assignAssetAvailableList"
+                                    class="d-flex flex-column gap-2 p-2 border rounded"
+                                    style="max-height: 260px; overflow-y: auto;"
                                 >
 
                                     @foreach($availableAssets as $availableAsset)
 
-                                        <option
-                                            value="{{ $availableAsset->id }}"
+                                        <div
+                                            class="form-check assign-asset-option"
                                             data-type="{{ $availableAsset->asset_type_id }}"
                                         >
-                                            {{ $availableAsset->asset_tag }}
-                                            —
-                                            {{ $availableAsset->name }}
-                                            ({{ $availableAsset->status }})
-                                        </option>
+
+                                            <input
+                                                class="form-check-input"
+                                                type="checkbox"
+                                                name="asset_ids[]"
+                                                value="{{ $availableAsset->id }}"
+                                                id="assignAssetOption{{ $availableAsset->id }}"
+                                            >
+
+                                            <label
+                                                class="form-check-label"
+                                                for="assignAssetOption{{ $availableAsset->id }}"
+                                            >
+                                                {{ $availableAsset->asset_tag }}
+                                                —
+                                                {{ $availableAsset->name }}
+                                                ({{ $availableAsset->status }})
+                                            </label>
+
+                                        </div>
 
                                     @endforeach
 
-                                </select>
-
-                                <div class="form-text">
-                                    Hold Ctrl (Windows) or Cmd (Mac) and click to select multiple assets.
                                 </div>
 
                             </div>
@@ -1216,29 +1240,28 @@
                             <i class="fa-solid fa-circle-info"></i>
 
                             <span>
-                                Only unassigned assets are listed.
+                                Only currently unassigned assets can be added.
                                 In Stock assets become Active after assignment.
                             </span>
 
                         </div>
 
-                    @else
-
-                        <div class="empty-assignment-state">
-
-                            <i class="fa-solid fa-laptop-circle-xmark"></i>
-
-                            <strong>
-                                No assets available
-                            </strong>
-
-                            <span>
-                                Add a new asset or unassign an existing one first.
-                            </span>
-
-                        </div>
-
                     @endif
+
+
+                    <div id="assignAssetEmptyState" class="empty-assignment-state d-none">
+
+                        <i class="fa-solid fa-laptop-circle-xmark"></i>
+
+                        <strong>
+                            No assets available
+                        </strong>
+
+                        <span>
+                            Add a new asset or unassign an existing one first.
+                        </span>
+
+                    </div>
 
                 </div>
 
@@ -1257,7 +1280,6 @@
                     <button
                         type="submit"
                         class="btn btn-primary"
-                        @disabled($availableAssets->isEmpty())
                     >
                         <i class="fa-solid fa-link me-2"></i>
                         Assign Assets
@@ -1414,9 +1436,24 @@ document.addEventListener('DOMContentLoaded', function () {
                         'assignAssetType'
                     );
 
-                const select =
+                const alreadyWrap =
                     document.getElementById(
-                        'assignAssetSelect'
+                        'assignAssetAlreadyWrap'
+                    );
+
+                const alreadyList =
+                    document.getElementById(
+                        'assignAssetAlreadyList'
+                    );
+
+                const availableList =
+                    document.getElementById(
+                        'assignAssetAvailableList'
+                    );
+
+                const emptyState =
+                    document.getElementById(
+                        'assignAssetEmptyState'
                     );
 
 
@@ -1432,15 +1469,95 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
 
-                if (select) {
+                if (availableList) {
 
-                    [...select.options]
-                        .forEach(option => {
+                    availableList
+                        .querySelectorAll('input[type="checkbox"]')
+                        .forEach(checkbox => {
 
-                            option.selected = false;
-                            option.hidden = false;
+                            checkbox.checked = false;
 
                         });
+
+                    availableList
+                        .querySelectorAll('.assign-asset-option')
+                        .forEach(row => {
+
+                            row.hidden = false;
+
+                        });
+
+                }
+
+
+                let assigned = [];
+
+                try {
+                    assigned = JSON.parse(button.dataset.assigned || '[]');
+                } catch (e) {
+                    assigned = [];
+                }
+
+
+                if (alreadyList) {
+
+                    alreadyList.innerHTML = '';
+
+                    assigned.forEach(asset => {
+
+                        const row = document.createElement('div');
+                        row.className = 'form-check';
+
+                        row.innerHTML =
+                            '<input class="form-check-input" type="checkbox" checked disabled>'
+                            + '<label class="form-check-label text-secondary">'
+                            + asset.tag + ' — ' + asset.name
+                            + ' <span class="badge bg-success-subtle text-success ms-1">Assigned</span>'
+                            + '</label>';
+
+                        alreadyList.appendChild(row);
+
+                    });
+
+                }
+
+
+                if (alreadyWrap) {
+                    alreadyWrap.classList.toggle('d-none', assigned.length === 0);
+                }
+
+
+                const hasAvailable =
+                    !!availableList
+                    && availableList.querySelectorAll('.assign-asset-option').length > 0;
+
+                if (emptyState) {
+                    emptyState.classList.toggle(
+                        'd-none',
+                        hasAvailable || assigned.length > 0
+                    );
+                }
+
+            }
+        );
+
+
+    document
+        .getElementById('assignAssetForm')
+        ?.addEventListener(
+            'submit',
+            function (event) {
+
+                const checked =
+                    this.querySelectorAll(
+                        'input[name="asset_ids[]"]:checked'
+                    );
+
+                if (checked.length === 0) {
+
+                    event.preventDefault();
+
+                    alert('Please select at least one asset to assign.');
 
                 }
 
@@ -1454,26 +1571,29 @@ document.addEventListener('DOMContentLoaded', function () {
             'change',
             function () {
 
-                const select =
-                    document.getElementById(
-                        'assignAssetSelect'
-                    );
-
                 const selectedType =
                     this.value;
 
 
-                [...select.options]
-                    .forEach(option => {
+                document
+                    .querySelectorAll('#assignAssetAvailableList .assign-asset-option')
+                    .forEach(row => {
 
                         const matches =
                             !selectedType
-                            || option.dataset.type === selectedType;
+                            || row.dataset.type === selectedType;
 
-                        option.hidden = !matches;
+                        row.hidden = !matches;
 
                         if (!matches) {
-                            option.selected = false;
+
+                            const checkbox =
+                                row.querySelector('input[type="checkbox"]');
+
+                            if (checkbox) {
+                                checkbox.checked = false;
+                            }
+
                         }
 
                     });
