@@ -26,7 +26,7 @@ class UserController extends Controller
 
     public function index(Request $request): View
     {
-        $query = Faculty::query()->with('department');
+        $query = Faculty::query()->with(['department', 'assignedAssets:id,name,asset_tag,assigned_to,asset_type_id']);
         $this->centreContext->apply($query);
 
         $statsQuery = Faculty::query();
@@ -125,49 +125,58 @@ class UserController extends Controller
     public function assignAsset(Request $request, Faculty $user): RedirectResponse
     {
         $data = $request->validate([
-            'asset_type_id' => ['required', 'exists:asset_types,id'],
-            'asset_id' => [
-                'required',
-                Rule::exists('assets', 'id')->where(fn($query) => $query
-                    ->whereNull('assigned_to')
-                    ->where('asset_type_id', $request->integer('asset_type_id'))),
+            'asset_ids' => ['required', 'array', 'min:1'],
+            'asset_ids.*' => [
+                Rule::exists('assets', 'id')->whereNull('assigned_to'),
             ],
         ], [
-            'asset_id.exists' => 'This asset is no longer available for assignment.',
+            'asset_ids.*.exists' => 'One or more selected assets are no longer available for assignment.',
         ]);
 
-        $asset = Asset::findOrFail($data['asset_id']);
-        $asset->update([
-            'assigned_to' => $user->name,
-            'status' => $asset->status === 'In Stock' ? 'Active' : $asset->status,
-        ]);
+        $assignedBy = session('static_auth_user.name')
+            ?? session('static_auth_user.email')
+            ?? 'System';
 
-        AssetAssignmentHistory::create([
-            'faculty_id' => $user->id,
-            'asset_id' => $asset->id,
-            'assigned_at' => now(),
-            'assigned_by' => session('static_auth_user.name')
-                ?? session('static_auth_user.email')
-                ?? 'System',
-        ]);
-        $this->audit->record(
-            'ASSIGN',
-            'Assets',
-            "{$asset->asset_tag} — {$asset->name} was assigned to {$user->name}.",
-            $asset,
-            ['assigned_to' => null],
-            ['assigned_to' => $user->name, 'user_id' => $user->id],
-        );
-        $this->notifications->send(
-            'asset_assigned',
-            'Asset assigned',
-            "{$asset->asset_tag} — {$asset->name} was assigned to {$user->name}.",
-            'success',
-            'Assets',
-            ['asset_id' => $asset->id, 'user_id' => $user->id],
-        );
+        $assets = Asset::whereIn('id', $data['asset_ids'])->whereNull('assigned_to')->get();
 
-        return back()->with('success', "{$asset->asset_tag} assigned to {$user->name} successfully.");
+        foreach ($assets as $asset) {
+            $asset->update([
+                'assigned_to' => $user->name,
+                'status' => $asset->status === 'In Stock' ? 'Active' : $asset->status,
+            ]);
+
+            AssetAssignmentHistory::create([
+                'faculty_id' => $user->id,
+                'asset_id' => $asset->id,
+                'assigned_at' => now(),
+                'assigned_by' => $assignedBy,
+            ]);
+
+            $this->audit->record(
+                'ASSIGN',
+                'Assets',
+                "{$asset->asset_tag} — {$asset->name} was assigned to {$user->name}.",
+                $asset,
+                ['assigned_to' => null],
+                ['assigned_to' => $user->name, 'user_id' => $user->id],
+            );
+
+            $this->notifications->send(
+                'asset_assigned',
+                'Asset assigned',
+                "{$asset->asset_tag} — {$asset->name} was assigned to {$user->name}.",
+                'success',
+                'Assets',
+                ['asset_id' => $asset->id, 'user_id' => $user->id],
+            );
+        }
+
+        $count = $assets->count();
+        $message = $count === 1
+            ? "{$assets->first()->asset_tag} assigned to {$user->name} successfully."
+            : "{$count} assets assigned to {$user->name} successfully.";
+
+        return back()->with('success', $message);
     }
 
     public function assetHistory(Faculty $user): View

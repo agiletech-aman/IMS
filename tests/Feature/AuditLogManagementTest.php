@@ -85,8 +85,7 @@ class AuditLogManagementTest extends TestCase
         $asset->update(['assigned_to' => null, 'status' => 'In Stock']);
 
         $this->asSubAdmin()->post(route('users.assign-asset', $user), [
-            'asset_type_id' => $asset->asset_type_id,
-            'asset_id' => $asset->id,
+            'asset_ids' => [$asset->id],
         ])->assertRedirect();
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'ASSIGN',

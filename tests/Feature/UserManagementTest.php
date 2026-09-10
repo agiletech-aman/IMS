@@ -111,8 +111,7 @@ class UserManagementTest extends TestCase
             ->assertSee(route('users.assign-asset', $user));
 
         $this->post(route('users.assign-asset', $user), [
-            'asset_type_id' => $asset->asset_type_id,
-            'asset_id' => $asset->id,
+            'asset_ids' => [$asset->id],
         ])->assertRedirect()->assertSessionHas('success');
 
         $asset->refresh();

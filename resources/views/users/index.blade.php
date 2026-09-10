@@ -601,6 +601,7 @@
             <th>Phone Number</th>
             <th>Email</th>
             <th>Remark</th>
+            <th>Assigned Assets</th>
             <th>Actions</th>
 
         @else
@@ -657,6 +658,19 @@
 
                             <td title="{{ $user->remark }}">
                                 {{ Str::limit($user->remark, 40) ?: '—' }}
+                            </td>
+
+                            <td>
+                                @if($user->assignedAssets->isEmpty())
+                                    <span class="text-muted">—</span>
+                                @else
+                                    <span
+                                        class="badge bg-primary-subtle text-primary"
+                                        title="{{ $user->assignedAssets->map(fn($asset) => $asset->asset_tag.' — '.$asset->name)->implode(', ') }}"
+                                    >
+                                        {{ $user->assignedAssets->count() }} asset{{ $user->assignedAssets->count() > 1 ? 's' : '' }}
+                                    </span>
+                                @endif
                             </td>
 
                             <td class="text-nowrap">
@@ -954,7 +968,7 @@
                     <tr>
 
                         <td
-                            colspan="7"
+                            colspan="{{ $selectedRole ? 7 : 9 }}"
                             class="text-center py-5 text-secondary"
                         >
 
@@ -1084,7 +1098,7 @@
 
                         <p class="mb-0 mt-1 text-secondary small">
 
-                            Select an available asset for
+                            Select one or more available assets for
 
                             <strong id="assignAssetUser">
                                 this user
@@ -1112,24 +1126,22 @@
                         <div class="row g-3">
 
 
-                            <div class="col-sm-5">
+                            <div class="col-12">
 
                                 <label
                                     class="form-label"
                                     for="assignAssetType"
                                 >
-                                    Asset Type *
+                                    Filter by Asset Type
                                 </label>
 
                                 <select
                                     class="form-select"
                                     id="assignAssetType"
-                                    name="asset_type_id"
-                                    required
                                 >
 
                                     <option value="">
-                                        Select type
+                                        All types
                                     </option>
 
 
@@ -1155,35 +1167,30 @@
                             </div>
 
 
-                            <div class="col-sm-7">
+                            <div class="col-12">
 
                                 <label
                                     class="form-label"
                                     for="assignAssetSelect"
                                 >
-                                    Available Asset *
+                                    Available Assets *
                                 </label>
 
 
                                 <select
                                     class="form-select"
                                     id="assignAssetSelect"
-                                    name="asset_id"
+                                    name="asset_ids[]"
+                                    size="8"
+                                    multiple
                                     required
-                                    disabled
                                 >
-
-                                    <option value="">
-                                        Select type first
-                                    </option>
-
 
                                     @foreach($availableAssets as $availableAsset)
 
                                         <option
                                             value="{{ $availableAsset->id }}"
                                             data-type="{{ $availableAsset->asset_type_id }}"
-                                            hidden
                                         >
                                             {{ $availableAsset->asset_tag }}
                                             —
@@ -1194,6 +1201,10 @@
                                     @endforeach
 
                                 </select>
+
+                                <div class="form-text">
+                                    Hold Ctrl (Windows) or Cmd (Mac) and click to select multiple assets.
+                                </div>
 
                             </div>
 
@@ -1249,7 +1260,7 @@
                         @disabled($availableAssets->isEmpty())
                     >
                         <i class="fa-solid fa-link me-2"></i>
-                        Assign Asset
+                        Assign Assets
                     </button>
 
                 </div>
@@ -1423,19 +1434,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (select) {
 
-                    select.value = '';
-
-                    select.disabled = true;
-
-                    select.options[0].textContent =
-                        'Select type first';
-
-
                     [...select.options]
-                        .slice(1)
                         .forEach(option => {
 
-                            option.hidden = true;
+                            option.selected = false;
+                            option.hidden = false;
 
                         });
 
@@ -1460,25 +1463,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     this.value;
 
 
-                select.value = '';
-
-                select.disabled =
-                    !selectedType;
-
-
-                select.options[0].textContent =
-                    selectedType
-                        ? 'Select an asset'
-                        : 'Select type first';
-
-
                 [...select.options]
-                    .slice(1)
                     .forEach(option => {
 
-                        option.hidden =
-                            option.dataset.type
-                            !== selectedType;
+                        const matches =
+                            !selectedType
+                            || option.dataset.type === selectedType;
+
+                        option.hidden = !matches;
+
+                        if (!matches) {
+                            option.selected = false;
+                        }
 
                     });
 
