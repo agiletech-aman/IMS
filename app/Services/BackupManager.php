@@ -67,7 +67,6 @@ class BackupManager
             ]);
             $this->log($backup, 'success', 'backup_completed', 'Backup completed successfully.', [
                 'size_bytes' => $backup->size_bytes,
-                'checksum' => $backup->checksum,
             ]);
             $this->audit->record(
                 'CREATE',

@@ -18,7 +18,6 @@
             <div><dt>Size</dt><dd>{{ $backup->formattedSize() }}</dd></div><div><dt>Duration</dt><dd>{{ $backup->duration_seconds === null ? '—' : $backup->duration_seconds.' seconds' }}</dd></div>
             <div><dt>Created by</dt><dd>{{ $backup->created_by ?: 'System' }}</dd></div><div><dt>Schedule</dt><dd>{{ $backup->schedule?->name ?: 'Manual' }}</dd></div>
             <div><dt>Database method</dt><dd>{{ $backup->database_method ?: 'Not applicable' }}</dd></div><div><dt>Private file</dt><dd>{{ $backup->file_name ?: 'Not created' }}</dd></div>
-            <div class="wide"><dt>SHA-256 checksum</dt><dd><code>{{ $backup->checksum ?: 'Not available' }}</code></dd></div>
             @if($backup->error_message)<div class="wide"><dt>Error</dt><dd class="text-danger">{{ $backup->error_message }}</dd></div>@endif
         </dl>
     </div></div></div>
