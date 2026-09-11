@@ -50,7 +50,7 @@
                             $administratorOnly = $moduleKey === 'administrators';
                         @endphp
                         <tr>
-                            <td><div class="cell-title"><span class="mini-icon"><i class="fa-solid {{ $module['icon'] }}"></i></span><span><strong>{{ $module['label'] }}</strong><small>{{ $administratorOnly ? 'Administrator accounts only' : 'Module permission' }}</small></span></div></td>
+                            <td><div class="cell-title"><span class="mini-icon"><i class="fa-solid {{ $module['icon'] }}"></i></span><span><strong>{{ $module['label'] }}</strong><small>{{ $administratorOnly ? 'Super Admin accounts only' : 'Module permission' }}</small></span></div></td>
                             @foreach($actions as $action)
                                 @php
                                     $applicable = in_array($action, $module['actions'], true) && ! $administratorOnly;
@@ -76,7 +76,7 @@
             </div>
             <div class="panel-body border-top permission-note">
                 <i class="fa-solid fa-circle-info"></i>
-                <span><strong>View</strong> is the module-access switch and is required for every other action. Administrator retains unrestricted access.</span>
+                <span><strong>View</strong> is the module-access switch and is required for every other action. Super Admin retains unrestricted access.</span>
             </div>
         </div>
     @endforeach

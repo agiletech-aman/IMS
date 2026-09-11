@@ -1125,7 +1125,7 @@
                                 'types' => [
                                     ['Sample Laptop', 'Active', 'A sample laptop type', 'RAM|Processor|Storage'],
                                     ['Sample Desktop', 'Active', 'A sample desktop type', 'RAM|Processor|Graphics'],
-                                    ['Sample CCTV', 'Active', 'A sample CCTV type', 'Resolution|Lens|Night Vision'],
+                                    ['Sample Printer', 'Active', 'A sample printer type', 'Print Type|Paper Size|Connectivity'],
                                 ],
                                 'departments' => [
                                     ['Sample Department', 'Active', 'A sample description'],
