@@ -9,6 +9,7 @@ use App\Services\CentreContextService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -34,7 +35,6 @@ class AuditLogController extends Controller
         'Sub Departments',
         'Types',
         'Users',
-        'Vendors',
     ];
 
     public function index(Request $request): View
@@ -46,6 +46,7 @@ class AuditLogController extends Controller
             'logs' => $query->latest()->paginate(20)->withQueryString(),
             'modules' => collect(self::MODULES)
                 ->merge(AuditLog::query()->distinct()->pluck('module'))
+                ->reject(fn (string $module) => $module === 'Vendors')
                 ->filter()
                 ->unique()
                 ->sort()
@@ -177,7 +178,13 @@ class AuditLogController extends Controller
                         ->orWhere('ip_address', 'like', "%{$search}%");
                 });
             })
-            ->when($filters['module'] ?? null, fn (Builder $query, string $module) => $query->where('module', $module))
+            ->when($filters['module'] ?? null, function (Builder $query, string $module): void {
+                if (Str::startsWith($module, 'role:')) {
+                    $query->where('actor_role', Str::after($module, 'role:'));
+                } else {
+                    $query->where('module', $module);
+                }
+            })
             ->when($filters['action'] ?? null, fn (Builder $query, string $action) => $query->where('action', $action))
             ->when($filters['result'] ?? null, fn (Builder $query, string $result) => $query->where('result', $result))
             ->when($filters['date_from'] ?? null, fn (Builder $query, string $date) => $query->whereDate('created_at', '>=', $date))

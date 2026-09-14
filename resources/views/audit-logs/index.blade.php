@@ -4,6 +4,13 @@
 @php
     $permissionService = app(\App\Services\PermissionService::class);
     $isSuperAdmin = session('static_auth_user.role') === 'Administrator';
+
+    $roleModuleOptions = collect(config('sidebar', []))
+        ->first(fn ($group) => ($group['id'] ?? null) === 'userManagement')['items'] ?? [];
+    $roleModuleOptions = collect($roleModuleOptions)
+        ->filter(fn ($item) => $permissionService->allows($item[5] ?? '', 'view'))
+        ->map(fn ($item) => ['value' => 'role:'.($item[4]['role'] ?? ''), 'label' => $item[2]])
+        ->values();
 @endphp
 <div class="page-heading">
     <div><p class="eyebrow">Enterprise workspace</p><h1>Audit Logs</h1><p>Complete activity history for assets, users, masters, vendors, complaints, alerts, reports, and settings.</p></div>
@@ -61,6 +68,11 @@
                         @foreach($modules as $moduleOption)
                             <option value="{{ $moduleOption }}" @selected(request('module') === $moduleOption)>
                                 {{ $moduleOption }}
+                            </option>
+                        @endforeach
+                        @foreach($roleModuleOptions as $roleOption)
+                            <option value="{{ $roleOption['value'] }}" @selected(request('module') === $roleOption['value'])>
+                                {{ $roleOption['label'] }}
                             </option>
                         @endforeach
                     </select>
