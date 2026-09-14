@@ -140,7 +140,7 @@ class AssetCsv
 
     private static function writeSheet(Worksheet $sheet, AssetType $type, bool $withData): void
     {
-        $spec = self::columnSpec($type, withAssetTag: true);
+        $spec = self::columnSpec($type, withAssetTag: $withData);
         $lastColumn = Coordinate::stringFromColumnIndex(count($spec));
 
         foreach ($spec as $index => $column) {
