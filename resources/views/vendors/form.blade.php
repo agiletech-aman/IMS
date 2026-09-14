@@ -22,7 +22,7 @@
                     <div class="row g-3">
                         <div class="col-md-8">
                             <label class="form-label">Company Name <span class="text-danger">*</span></label>
-                            <input class="form-control" name="name" value="{{ $value('name') }}" placeholder="Enter vendor or OEM name" required>
+                            <input class="form-control" name="name" value="{{ $value('name') }}" placeholder="Enter vendor or OEM name" minlength="3" maxlength="15" required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Vendor Code</label>
@@ -58,7 +58,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Phone</label>
-                            <input class="form-control" name="phone" value="{{ $value('phone') }}" placeholder="+91 98765 43210">
+                            <input class="form-control" name="phone" value="{{ $value('phone') }}" placeholder="Enter 10-digit phone number" inputmode="numeric" pattern="[0-9]{10}" maxlength="10">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Email</label>

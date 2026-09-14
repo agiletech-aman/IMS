@@ -210,14 +210,14 @@ class AccessAccountController extends Controller
     private function rules(?User $accessAccount = null): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'min:3', 'max:15'],
             'email' => [
                 'required',
                 'email',
                 'max:255',
                 Rule::unique('users', 'email')->ignore($accessAccount?->id),
             ],
-            'contact' => ['nullable', 'string', 'max:30'],
+            'contact' => ['nullable', 'digits:10'],
             'address' => ['nullable', 'string', 'max:2000'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'status' => ['required', Rule::in(['Active', 'Inactive'])],

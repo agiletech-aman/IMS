@@ -23,7 +23,7 @@ $amcEnabled = (bool) old('amc_enabled', $editing && filled($asset->amc_expiry));
         <div class="panel-body">
             <div class="row g-3">
                 <div class="col-md-6 col-xl-4"><label class="form-label">Asset ID</label><input class="form-control" value="{{ $editing ? $asset->asset_tag : 'AST-XX-001' }}" readonly><small class="text-secondary">Uses asset name's first and last character</small></div>
-<div class="col-md-6 col-xl-4"><label class="form-label">Asset Name <span class="text-danger">*</span></label><input class="form-control" name="name" value="{{ $field('name') }}" placeholder="Enter asset name" required></div>
+<div class="col-md-6 col-xl-4"><label class="form-label">Asset Name <span class="text-danger">*</span></label><input class="form-control" name="name" value="{{ $field('name') }}" placeholder="Enter asset name" minlength="3" maxlength="15" required></div>
                 <div class="col-md-6 col-xl-4"><label class="form-label">Type <span class="text-danger">*</span></label><select class="form-select" name="asset_type_id" id="assetType" required>
                         <option value="">Select type</option>@foreach($types as $type)<option value="{{ $type->id }}" @selected((string)$field('asset_type_id')===(string)$type->id)>{{ $type->name }}</option>@endforeach
                     </select></div>
@@ -58,7 +58,7 @@ $amcEnabled = (bool) old('amc_enabled', $editing && filled($asset->amc_expiry));
                     <small class="text-secondary">Search and pick from the user directory</small>
                 </div>
                 <div class="col-md-6 col-xl-4"><label class="form-label">Status <span class="text-danger">*</span></label><select class="form-select" name="status" required>
-                        <option value="" disabled @selected($field('status')==='' )>Select asset status</option>@foreach(['Active','In Stock','Under Maintenance','Retired'] as $status)<option @selected($field('status')===$status)>{{ $status }}</option>@endforeach
+                        @foreach(['Active','In Stock','Under Maintenance','Retired'] as $status)<option @selected($field('status', 'In Stock')===$status)>{{ $status }}</option>@endforeach
                     </select></div>
                 <div class="col-md-6 col-xl-4"><label class="form-label">Asset Image {{ $editing ? '(leave blank to keep current)' : '' }}</label><input class="form-control" type="file" name="image" id="assetImageInput" data-max-size-mb="4" accept=".jpg,.jpeg,.png,.webp,image/*"><small class="text-secondary">JPG, PNG or WebP up to 4 MB</small></div>
                 @if($editing && $asset->image_path)<div class="col-12"><img src="{{ \App\Support\PublicUrl::storage($asset->image_path) }}" alt="Current asset image" style="width:120px;height:90px;object-fit:cover;border-radius:10px"></div>@endif

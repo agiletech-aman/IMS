@@ -107,14 +107,14 @@
                         <div class="modal-header"><div><h2 class="modal-title fs-6">Add Administrator</h2><small class="text-secondary">Create a separate full-access login account</small></div><button class="btn-close" data-bs-dismiss="modal"></button></div>
                         <form method="POST" action="{{ route('settings.admins.store') }}" enctype="multipart/form-data">@csrf
                             <div class="modal-body p-4"><div class="row g-3">
-                                <div class="col-md-6"><label class="form-label">Full Name <span class="text-danger">*</span></label><input class="form-control" name="name" required></div>
+                                <div class="col-md-6"><label class="form-label">Full Name <span class="text-danger">*</span></label><input class="form-control" name="name" minlength="3" maxlength="15" required></div>
                                 <div class="col-md-6"><label class="form-label">Email <span class="text-danger">*</span></label><input class="form-control" type="email" name="email" required></div>
                                 <div class="col-md-6"><label class="form-label">Password <span class="text-danger">*</span></label><input class="form-control" type="password" name="password" minlength="8" autocomplete="new-password" required><small class="text-secondary">Minimum 8 characters</small></div>
                                 <div class="col-md-6"><label class="form-label">Profile Image</label><input class="form-control" type="file" name="image" accept=".jpg,.jpeg,.png,.webp,image/*"></div>
-                                <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="phone"></div>
+                                <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="phone" placeholder="Enter 10-digit phone number" inputmode="numeric" pattern="[0-9]{10}" maxlength="10"></div>
                                 <div class="col-md-6"><label class="form-label">Designation</label><input class="form-control" name="designation" placeholder="System Administrator"></div>
                                 <div class="col-12"><label class="form-label">Address</label><textarea class="form-control" name="address" rows="2"></textarea></div>
-                                <div class="col-md-6"><label class="form-label">Status <span class="text-danger">*</span></label><select class="form-select" name="status" required><option>Active</option><option>Inactive</option></select></div>
+                                <div class="col-md-6"><label class="form-label">Status <span class="text-danger">*</span></label><select class="form-select" name="status" required><option selected>Active</option><option>Inactive</option></select></div>
                             </div></div>
                             <div class="modal-footer"><button class="btn btn-soft" type="button" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary"><i class="fa-solid fa-user-shield me-2"></i>Create Administrator</button></div>
                         </form>
@@ -127,11 +127,11 @@
                             <div class="modal-header"><div><h2 class="modal-title fs-6">Edit Administrator</h2><small class="text-secondary">{{ $admin->email }}</small></div><button class="btn-close" data-bs-dismiss="modal"></button></div>
                             <form method="POST" action="{{ route('settings.admins.update', $admin) }}" enctype="multipart/form-data">@csrf @method('PUT')
                                 <div class="modal-body p-4"><div class="row g-3">
-                                    <div class="col-md-6"><label class="form-label">Full Name <span class="text-danger">*</span></label><input class="form-control" name="name" value="{{ $admin->name }}" required></div>
+                                    <div class="col-md-6"><label class="form-label">Full Name <span class="text-danger">*</span></label><input class="form-control" name="name" value="{{ $admin->name }}" minlength="3" maxlength="15" required></div>
                                     <div class="col-md-6"><label class="form-label">Email <span class="text-danger">*</span></label><input class="form-control" type="email" name="email" value="{{ $admin->email }}" required></div>
                                     <div class="col-md-6"><label class="form-label">New Password</label><input class="form-control" type="password" name="password" minlength="8" placeholder="Leave blank to keep current" autocomplete="new-password"></div>
                                     <div class="col-md-6"><label class="form-label">Profile Image</label><input class="form-control" type="file" name="image" accept=".jpg,.jpeg,.png,.webp,image/*"><small class="text-secondary">Leave blank to keep current image</small></div>
-                                    <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="phone" value="{{ $admin->phone }}"></div>
+                                    <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="phone" value="{{ $admin->phone }}" placeholder="Enter 10-digit phone number" inputmode="numeric" pattern="[0-9]{10}" maxlength="10"></div>
                                     <div class="col-md-6"><label class="form-label">Designation</label><input class="form-control" name="designation" value="{{ $admin->designation }}"></div>
                                     <div class="col-12"><label class="form-label">Address</label><textarea class="form-control" name="address" rows="2">{{ $admin->address }}</textarea></div>
                                     <div class="col-md-6"><label class="form-label">Status <span class="text-danger">*</span></label><select class="form-select" name="status" required><option @selected($admin->status === 'Active')>Active</option><option @selected($admin->status === 'Inactive')>Inactive</option></select></div>

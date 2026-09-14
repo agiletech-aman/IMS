@@ -1700,7 +1700,8 @@ class AssetMasterController extends Controller
             'name' => [
                 'required',
                 'string',
-                'max:255',
+                'min:3',
+                'max:15',
             ],
 
             'status' => [

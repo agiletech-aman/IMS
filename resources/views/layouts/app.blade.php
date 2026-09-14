@@ -193,6 +193,7 @@
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     @include('partials.notifications')
     <script src="{{ \App\Support\PublicUrl::asset('static/js/app.js') }}?v={{ filemtime(public_path('static/js/app.js')) }}"></script>
+    <script src="{{ \App\Support\PublicUrl::asset('static/js/validation.js') }}?v={{ filemtime(public_path('static/js/validation.js')) }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 

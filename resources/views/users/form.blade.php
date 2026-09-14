@@ -78,6 +78,8 @@
                                     class="form-control"
                                     value="{{ old('name', $user?->name) }}"
                                     placeholder="Enter full name"
+                                    minlength="3"
+                                    maxlength="15"
                                     required
                                 >
                             </div>
@@ -121,7 +123,10 @@
                                     name="contact"
                                     class="form-control"
                                     value="{{ old('contact', $user?->contact) }}"
-                                    placeholder="Enter phone number"
+                                    placeholder="Enter 10-digit phone number"
+                                    inputmode="numeric"
+                                    pattern="[0-9]{10}"
+                                    maxlength="10"
                                 >
                             </div>
 
@@ -171,6 +176,8 @@
                                     class="form-control"
                                     value="{{ old('name', $user?->name) }}"
                                     placeholder="Enter full name"
+                                    minlength="3"
+                                    maxlength="15"
                                     required
                                 >
                             </div>
@@ -194,7 +201,10 @@
                                     name="contact"
                                     class="form-control"
                                     value="{{ old('contact', $user?->contact) }}"
-                                    placeholder="Enter phone number"
+                                    placeholder="Enter 10-digit phone number"
+                                    inputmode="numeric"
+                                    pattern="[0-9]{10}"
+                                    maxlength="10"
                                 >
                             </div>
 
