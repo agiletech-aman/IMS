@@ -4,36 +4,6 @@
 @php
     $permissionService = app(\App\Services\PermissionService::class);
     $isSuperAdmin = session('static_auth_user.role') === 'Administrator';
-
-    $auditModuleMap = [
-        'departments' => 'Departments',
-        'sub_departments' => 'Sub Departments',
-        'types' => 'Types',
-        'brands' => 'Brands',
-        'assets' => 'Assets',
-        'users' => 'Users',
-        'reports' => 'Reports',
-        'audit_logs' => 'Audit Logs',
-        'backup' => 'Backup & Recovery',
-        'roles_permissions' => 'Roles & Permissions',
-        'settings' => 'Settings',
-    ];
-
-    $auditModules = collect(config('sidebar', []))
-        ->flatMap(fn ($group) => $group['items'] ?? [])
-        ->filter(function ($item) use ($permissionService) {
-            $permissionModule = $item[5] ?? null;
-            return $permissionModule && $permissionService->allows($permissionModule);
-        })
-        ->map(function ($item) use ($auditModuleMap) {
-            $permissionModule = $item[5];
-            return [
-                'value' => $auditModuleMap[$permissionModule] ?? $item[2],
-                'label' => $auditModuleMap[$permissionModule] ?? $item[2],
-            ];
-        })
-        ->unique('value')
-        ->values();
 @endphp
 <div class="page-heading">
     <div><p class="eyebrow">Enterprise workspace</p><h1>Audit Logs</h1><p>Complete activity history for assets, users, masters, vendors, complaints, alerts, reports, and settings.</p></div>
@@ -88,9 +58,9 @@
 
                     <select class="form-select" name="module">
                         <option value="">All modules</option>
-                        @foreach($auditModules as $auditModule)
-                            <option value="{{ $auditModule['value'] }}" @selected(request('module') === $auditModule['value'])>
-                                {{ $auditModule['label'] }}
+                        @foreach($modules as $moduleOption)
+                            <option value="{{ $moduleOption }}" @selected(request('module') === $moduleOption)>
+                                {{ $moduleOption }}
                             </option>
                         @endforeach
                     </select>
