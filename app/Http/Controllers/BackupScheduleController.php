@@ -58,7 +58,7 @@ class BackupScheduleController extends Controller
             'day_of_week' => ['nullable', 'integer', 'between:0,6', 'required_if:frequency,weekly'],
             'day_of_month' => ['nullable', 'integer', 'between:1,31', 'required_if:frequency,monthly'],
             'retention_type' => ['required', Rule::in(['count', 'days'])],
-            'retention_value' => ['required', 'integer', 'between:1,3650'],
+            'retention_value' => ['required', 'integer', 'between:1,30'],
             'enabled' => ['nullable', 'boolean'],
         ]);
         if ($data['frequency'] !== 'weekly') {
