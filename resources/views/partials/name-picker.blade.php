@@ -29,6 +29,7 @@
         title="Only letters and spaces are allowed."
         placeholder="{{ $placeholder ?? 'Enter new '.($label ?? 'name') }}"
         value="{{ $selected }}"
+        oninput="this.value=this.value.replace(/[^A-Za-z ]/g,'')"
         @if(!$showInput) hidden @endif
         @if($isRequired) required @endif
     >
