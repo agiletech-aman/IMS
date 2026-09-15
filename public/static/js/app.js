@@ -249,29 +249,6 @@ document.addEventListener('DOMContentLoaded',()=>{
  renderRecent();
 });
 
-const IIMHandleNameSelect=select=>{
- const wrap=select.closest('[data-name-field]');
- const input=wrap&&wrap.querySelector('[data-name-input]');
- if(!input)return;
- if(select.value==='__other__'){
-  input.value='';
-  input.hidden=false;
-  input.focus();
- }else if(select.value===''){
-  input.hidden=true;
-  input.value='';
- }else{
-  input.value=select.value;
-  input.hidden=true;
- }
-};
-document.querySelectorAll('[data-name-select]').forEach(select=>{
- select.addEventListener('change',()=>IIMHandleNameSelect(select));
-});
-document.addEventListener('change',e=>{
- if(e.target.matches&&e.target.matches('[data-name-select]'))IIMHandleNameSelect(e.target);
-});
-
 document.addEventListener('click',e=>{
  const trigger=e.target.closest('[data-requires-centre]');
  if(!trigger)return;
