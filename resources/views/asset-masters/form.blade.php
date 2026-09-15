@@ -18,7 +18,11 @@
     <div class="modal-dialog modal-dialog-centered {{ in_array($module, ['types', 'sub-types']) ? 'modal-lg' : '' }}"><div class="modal-content panel">
         <div class="modal-header" style="border-color:var(--border-color)"><h2 class="modal-title fs-6">{{ $editing ? 'Edit' : 'Add' }} {{ $singular }}</h2><button class="btn-close" data-bs-dismiss="modal"></button></div>
         <form method="POST" action="{{ $action }}" enctype="multipart/form-data">@csrf @if($editing) @method('PUT') @endif
-            <div class="modal-body p-4"><div class="row g-3 g-md-4">
+            <div class="modal-body p-4">
+                @if(!$editing)
+                    @include('partials.centre-warning')
+                @endif
+                <div class="row g-3 g-md-4">
                 <div class="{{ $module === 'sub-types' ? 'col-12 col-sm-6 col-md-3' : 'col-md-7' }}"><label class="form-label">Name <span class="text-danger">*</span></label>
                     @include('partials.name-picker', [
                         'options' => $existingMasterNames,

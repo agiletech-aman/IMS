@@ -69,6 +69,10 @@
 
                 <div class="modal-body">
 
+                    @if(!$isEdit)
+                        @include('partials.centre-warning')
+                    @endif
+
                     @if(!$isAccessAccount)
 
                         <div class="row g-3">

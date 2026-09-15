@@ -210,12 +210,6 @@
         <div class="app-main">
             @include('partials.header')
             <main class="content-wrap">
-                @if($needsCentreSelection)
-                    <div class="alert-centre-warning" role="alert">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>No specific Centre is selected. New records need a Centre — pick <strong>Noida</strong> or <strong>Lucknow</strong> from the Centre menu above before adding data.</span>
-                    </div>
-                @endif
                 @include('partials.breadcrumbs')
                 @yield('content')
             </main>
