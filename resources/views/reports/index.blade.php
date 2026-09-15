@@ -15,6 +15,7 @@
                 <span class="report-filter-title"><i class="fa-solid fa-layer-group"></i>Classification</span>
                 <div class="row g-3">
 <div class="col-md-6 col-xl-3"><label class="form-label">Type</label><select class="form-select" name="asset_type_id" id="reportType"><option value="">All types</option>@foreach($types as $type)<option value="{{ $type->id }}" @selected((string)request('asset_type_id')===(string)$type->id)>{{ $type->name }}</option>@endforeach</select></div>
+                    <div class="col-md-6 col-xl-3"><label class="form-label">Sub Type</label><select class="form-select" name="asset_subtype_id" id="reportSubType"><option value="">All subtypes</option>@foreach($subtypes as $subtype)<option value="{{ $subtype->id }}" data-type="{{ $subtype->asset_type_id }}" @selected((string)request('asset_subtype_id')===(string)$subtype->id)>{{ $subtype->name }}</option>@endforeach</select></div>
                     <div class="col-md-6 col-xl-3"><label class="form-label">Brand</label><select class="form-select" name="brand_id"><option value="">All brands</option>@foreach($brands as $brand)<option value="{{ $brand->id }}" @selected((string)request('brand_id')===(string)$brand->id)>{{ $brand->name }}</option>@endforeach</select></div>
                     <div class="col-md-6 col-xl-3"><label class="form-label">Status</label><select class="form-select" name="status"><option value="">All statuses</option>@foreach(['Active','In Stock','Under Maintenance','Retired'] as $status)<option @selected(request('status')===$status)>{{ $status }}</option>@endforeach</select></div>
                 </div>
@@ -116,6 +117,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   parent.addEventListener('change',sync);sync();
  };
 connect('reportDepartment','reportSubDepartment','department');
+connect('reportType','reportSubType','type');
 });
 </script>
 @endpush

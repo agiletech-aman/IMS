@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\ExportsCentreSplitExcel;
 use App\Models\Asset;
+use App\Models\AssetSubtype;
 use App\Models\AssetType;
 use App\Models\Brand;
 use App\Models\Department;
@@ -40,6 +41,7 @@ class ReportController extends Controller
             ],
             'hasGenerated' => $hasGenerated,
             'types' => AssetType::where('status', 'Active')->orderBy('name')->get(),
+            'subtypes' => AssetSubtype::where('status', 'Active')->orderBy('name')->get(),
             'brands' => Brand::where('status', 'Active')->orderBy('name')->get(),
             'departments' => Department::where('status', 'Active')->orderBy('name')->get(),
             'subDepartments' => SubDepartment::where('status', 'Active')->orderBy('name')->get(),
@@ -103,7 +105,7 @@ class ReportController extends Controller
         return response()->streamDownload(function () use ($assets): void {
             $output = fopen('php://output', 'wb');
             fputcsv($output, [
-                'Asset ID', 'Asset Name', 'Type', 'Brand', 'Department',
+                'Asset ID', 'Asset Name', 'Type', 'Sub Type', 'Brand', 'Department',
                 'Sub Department', 'Assigned To', 'Status', 'Warranty Expiry', 'AMC Expiry',
             ]);
 
@@ -112,6 +114,7 @@ class ReportController extends Controller
                     $asset->asset_tag,
                     $asset->name,
                     $asset->type?->name,
+                    $asset->subtype?->name,
                     $asset->brand?->name,
                     $asset->department?->name,
                     $asset->subDepartment?->name,
@@ -151,7 +154,7 @@ class ReportController extends Controller
         );
 
         $headings = [
-            'Asset ID', 'Asset Name', 'Type', 'Brand', 'Department',
+            'Asset ID', 'Asset Name', 'Type', 'Sub Type', 'Brand', 'Department',
             'Sub Department', 'Assigned To', 'Status', 'Warranty Expiry', 'AMC Expiry',
         ];
 
@@ -164,6 +167,7 @@ class ReportController extends Controller
                 $asset->asset_tag,
                 $asset->name,
                 $asset->type?->name,
+                $asset->subtype?->name,
                 $asset->brand?->name,
                 $asset->department?->name,
                 $asset->subDepartment?->name,
@@ -184,10 +188,10 @@ class ReportController extends Controller
 
     private function reportQuery(array $filters): Builder
     {
-$query = Asset::with(['type', 'brand', 'department', 'subDepartment']);
+$query = Asset::with(['type', 'subtype', 'brand', 'department', 'subDepartment']);
 
         foreach ([
-            'asset_type_id', 'brand_id', 'department_id',
+            'asset_type_id', 'asset_subtype_id', 'brand_id', 'department_id',
             'sub_department_id', 'status',
         ] as $field) {
             if (filled($filters[$field] ?? null)) {
@@ -223,6 +227,11 @@ $query = Asset::with(['type', 'brand', 'department', 'subDepartment']);
     {
 return [
             'asset_type_id' => ['nullable', 'exists:asset_types,id'],
+            'asset_subtype_id' => ['nullable', Rule::exists('asset_subtypes', 'id')->where(
+                fn ($query) => filled($request->input('asset_type_id'))
+                    ? $query->where('asset_type_id', $request->input('asset_type_id'))
+                    : $query
+            )],
             'brand_id' => ['nullable', 'exists:brands,id'],
             'department_id' => ['nullable', 'exists:departments,id'],
             'sub_department_id' => ['nullable', Rule::exists('sub_departments', 'id')->where(
