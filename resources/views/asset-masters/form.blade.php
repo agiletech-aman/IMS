@@ -3,13 +3,30 @@
     $modalId = $editing ? 'editMasterModal'.$record->id : 'createMasterModal';
     $action = $editing ? route('asset-management.'.$module.'.update', $record->id) : route('asset-management.'.$module.'.store');
     $value = fn ($field, $default = '') => old($field, $editing ? $record->{$field} : $default);
+    $masterModels = [
+        'departments' => \App\Models\Department::class,
+        'sub-departments' => \App\Models\SubDepartment::class,
+        'types' => \App\Models\AssetType::class,
+        'sub-types' => \App\Models\AssetSubtype::class,
+        'brands' => \App\Models\Brand::class,
+    ];
+    $existingMasterNames = isset($masterModels[$module])
+        ? $masterModels[$module]::query()->pluck('name')->filter()->unique()->sort()->values()
+        : collect();
 @endphp
 <div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered {{ in_array($module, ['types', 'sub-types']) ? 'modal-lg' : '' }}"><div class="modal-content panel">
         <div class="modal-header" style="border-color:var(--border-color)"><h2 class="modal-title fs-6">{{ $editing ? 'Edit' : 'Add' }} {{ $singular }}</h2><button class="btn-close" data-bs-dismiss="modal"></button></div>
         <form method="POST" action="{{ $action }}" enctype="multipart/form-data">@csrf @if($editing) @method('PUT') @endif
             <div class="modal-body p-4"><div class="row g-3 g-md-4">
-                <div class="{{ $module === 'sub-types' ? 'col-12 col-sm-6 col-md-3' : 'col-md-7' }}"><label class="form-label">Name <span class="text-danger">*</span></label><input class="form-control" name="name" value="{{ $value('name') }}" placeholder="Enter {{ strtolower($singular) }} name" minlength="3" maxlength="15" required></div>
+                <div class="{{ $module === 'sub-types' ? 'col-12 col-sm-6 col-md-3' : 'col-md-7' }}"><label class="form-label">Name <span class="text-danger">*</span></label>
+                    @include('partials.name-picker', [
+                        'options' => $existingMasterNames,
+                        'selected' => $value('name'),
+                        'label' => strtolower($singular).' name',
+                        'placeholder' => 'Enter '.strtolower($singular).' name',
+                    ])
+                </div>
                 <div class="{{ $module === 'sub-types' ? 'col-12 col-sm-6 col-md-3' : 'col-md-5' }}"><label class="form-label">Code</label><input class="form-control" value="{{ $editing ? $record->code : $prefix.'-Auto' }}" readonly><small class="text-secondary">Generated automatically</small></div>
                 @if($module === 'sub-departments')
                     <div class="col-12"><label class="form-label">Department <span class="text-danger">*</span></label><select class="form-select" name="department_id" required><option value="">Select department</option>@foreach($options['department_id'] as $id=>$label)<option value="{{ $id }}" @selected((string)$value('department_id') === (string)$id)>{{ $label }}</option>@endforeach</select></div>

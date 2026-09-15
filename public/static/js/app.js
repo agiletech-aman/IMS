@@ -249,5 +249,23 @@ document.addEventListener('DOMContentLoaded',()=>{
  renderRecent();
 });
 
+document.addEventListener('change',e=>{
+ if(!e.target.matches('[data-name-select]'))return;
+ const wrap=e.target.closest('[data-name-field]');
+ const input=wrap&&wrap.querySelector('[data-name-input]');
+ if(!input)return;
+ if(e.target.value==='__other__'){
+  input.value='';
+  input.style.display='';
+  input.focus();
+ }else if(e.target.value===''){
+  input.style.display='none';
+  input.value='';
+ }else{
+  input.value=e.target.value;
+  input.style.display='none';
+ }
+});
+
 
 

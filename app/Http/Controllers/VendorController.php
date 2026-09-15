@@ -85,7 +85,7 @@ class VendorController extends Controller
     private function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'min:3', 'max:15'],
+            'name' => ['required', 'string', 'min:3', 'max:50'],
             'vendor_type' => ['required', Rule::in(['Vendor', 'OEM', 'Vendor & OEM'])],
             'category' => ['nullable', 'string', 'max:100'],
             'contact_person' => ['nullable', 'string', 'max:255'],

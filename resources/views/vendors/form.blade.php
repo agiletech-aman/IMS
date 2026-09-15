@@ -3,6 +3,7 @@
     $modalId = $editing ? 'editVendorModal'.$vendor->id : 'createVendorModal';
     $action = $editing ? route('vendors.update', $vendor) : route('vendors.store');
     $value = fn (string $field, mixed $default = '') => old($field, $editing ? $vendor->{$field} : $default);
+    $existingVendorNames = \App\Models\Vendor::query()->pluck('name')->filter()->unique()->sort()->values();
 @endphp
 
 <div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-hidden="true">
@@ -22,7 +23,12 @@
                     <div class="row g-3">
                         <div class="col-md-8">
                             <label class="form-label">Company Name <span class="text-danger">*</span></label>
-                            <input class="form-control" name="name" value="{{ $value('name') }}" placeholder="Enter vendor or OEM name" minlength="3" maxlength="15" required>
+                            @include('partials.name-picker', [
+                                'options' => $existingVendorNames,
+                                'selected' => $value('name'),
+                                'label' => 'vendor name',
+                                'placeholder' => 'Enter vendor or OEM name',
+                            ])
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Vendor Code</label>

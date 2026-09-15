@@ -210,7 +210,7 @@ class AccessAccountController extends Controller
     private function rules(?User $accessAccount = null): array
     {
         return [
-            'name' => ['required', 'string', 'min:3', 'max:15'],
+            'name' => ['required', 'string', 'min:3', 'max:50'],
             'email' => [
                 'required',
                 'email',

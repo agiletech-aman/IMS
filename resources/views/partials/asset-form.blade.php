@@ -3,6 +3,7 @@ $editing = isset($asset);
 $field = fn ($name, $default = '') => old($name, $editing ? $asset->{$name} : $default);
 $warrantyEnabled = (bool) old('warranty_enabled', $editing && filled($asset->warranty_expiry));
 $amcEnabled = (bool) old('amc_enabled', $editing && filled($asset->amc_expiry));
+$existingAssetNames = \App\Models\Asset::query()->pluck('name')->filter()->unique()->sort()->values();
 @endphp
 <style>
 .combo-select{position:relative}
@@ -23,7 +24,14 @@ $amcEnabled = (bool) old('amc_enabled', $editing && filled($asset->amc_expiry));
         <div class="panel-body">
             <div class="row g-3">
                 <div class="col-md-6 col-xl-4"><label class="form-label">Asset ID</label><input class="form-control" value="{{ $editing ? $asset->asset_tag : 'AST-XX-001' }}" readonly><small class="text-secondary">Uses asset name's first and last character</small></div>
-<div class="col-md-6 col-xl-4"><label class="form-label">Asset Name <span class="text-danger">*</span></label><input class="form-control" name="name" value="{{ $field('name') }}" placeholder="Enter asset name" minlength="3" maxlength="15" required></div>
+<div class="col-md-6 col-xl-4"><label class="form-label">Asset Name <span class="text-danger">*</span></label>
+                    @include('partials.name-picker', [
+                        'options' => $existingAssetNames,
+                        'selected' => $field('name'),
+                        'label' => 'asset name',
+                        'placeholder' => 'Enter asset name',
+                    ])
+                </div>
                 <div class="col-md-6 col-xl-4"><label class="form-label">Type <span class="text-danger">*</span></label><select class="form-select" name="asset_type_id" id="assetType" required>
                         <option value="">Select type</option>@foreach($types as $type)<option value="{{ $type->id }}" @selected((string)$field('asset_type_id')===(string)$type->id)>{{ $type->name }}</option>@endforeach
                     </select></div>

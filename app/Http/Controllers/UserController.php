@@ -287,7 +287,7 @@ class UserController extends Controller
     private function rules(?int $userId = null): array
     {
         return [
-            'name' => ['required', 'string', 'min:3', 'max:15'],
+            'name' => ['required', 'string', 'min:3', 'max:50'],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('faculties', 'email')->ignore($userId)],
             'contact' => ['nullable', 'digits:10'],
             'department_id' => ['nullable', 'exists:departments,id'],

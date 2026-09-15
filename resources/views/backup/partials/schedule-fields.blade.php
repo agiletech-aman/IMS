@@ -1,6 +1,14 @@
 @php($prefix = $schedule ? 'edit-'.$schedule->id : 'new')
+@php($existingScheduleNames = \App\Models\BackupSchedule::query()->pluck('name')->filter()->unique()->sort()->values())
 <div class="row g-3" data-schedule-fields>
-    <div class="col-md-6"><label class="form-label">Schedule name</label><input class="form-control" name="name" required maxlength="100" value="{{ old('name',$schedule?->name) }}" placeholder="Daily production backup"></div>
+    <div class="col-md-6"><label class="form-label">Schedule name</label>
+        @include('partials.name-picker', [
+            'options' => $existingScheduleNames,
+            'selected' => old('name', $schedule?->name),
+            'label' => 'schedule name',
+            'placeholder' => 'Daily production backup',
+        ])
+    </div>
     <div class="col-md-3"><label class="form-label">Backup type</label><select class="form-select" name="backup_type" required>@foreach(['database','files','full'] as $type)<option value="{{ $type }}" @selected(old('backup_type',$schedule?->backup_type ?? 'full')===$type)>{{ ucfirst($type) }}</option>@endforeach</select></div>
     <div class="col-md-3"><label class="form-label">Run time</label><input class="form-control" type="time" name="run_at" required value="{{ old('run_at',$schedule ? substr($schedule->run_at,0,5) : '02:00') }}"></div>
     <div class="col-md-4"><label class="form-label">Frequency</label><select class="form-select" name="frequency" required>@foreach(['daily','weekly','monthly'] as $frequency)<option value="{{ $frequency }}" @selected(old('frequency',$schedule?->frequency ?? 'weekly')===$frequency)>{{ ucfirst($frequency) }}</option>@endforeach</select></div>

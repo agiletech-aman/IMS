@@ -40,7 +40,7 @@
             <div class="tab-pane fade {{ $activeTab === 'general' ? 'show active' : '' }}" id="general">
                 <div class="panel-header"><div><h2>General Settings</h2><p>Regional preferences and system defaults</p></div></div>
                 <div class="panel-body"><form method="POST" action="{{ route('settings.general.update') }}">@csrf<div class="row g-3">
-                    <div class="col-md-6"><label class="form-label">Application Name <span class="text-danger">*</span></label><input class="form-control" name="application_name" value="{{ old('application_name',$settings->application_name) }}" required></div>
+                    <div class="col-md-6"><label class="form-label">Application Name <span class="text-danger">*</span></label><input class="form-control" name="application_name" value="{{ old('application_name',$settings->application_name) }}" maxlength="50" required></div>
                     <div class="col-md-6"><label class="form-label">Default Language <span class="text-danger">*</span></label><select class="form-select" name="language" required><option value="en" @selected($settings->language==='en')>English (India)</option><option value="hi" @selected($settings->language==='hi')>Hindi</option></select></div>
                     <div class="col-md-6"><label class="form-label">Time Zone <span class="text-danger">*</span></label><select class="form-select" name="timezone" required>@foreach(['Asia/Kolkata'=>'Asia/Kolkata (UTC +05:30)','UTC'=>'UTC','Asia/Dubai'=>'Asia/Dubai (UTC +04:00)','Europe/London'=>'Europe/London','America/New_York'=>'America/New York'] as $value=>$label)<option value="{{ $value }}" @selected($settings->timezone===$value)>{{ $label }}</option>@endforeach</select></div>
                     <div class="col-md-6"><label class="form-label">Date Format <span class="text-danger">*</span></label><select class="form-select" name="date_format" required><option value="d M Y" @selected($settings->date_format==='d M Y')>DD MMM YYYY</option><option value="d/m/Y" @selected($settings->date_format==='d/m/Y')>DD/MM/YYYY</option><option value="Y-m-d" @selected($settings->date_format==='Y-m-d')>YYYY-MM-DD</option></select></div>
@@ -50,7 +50,7 @@
             <div class="tab-pane fade {{ $activeTab === 'company' ? 'show active' : '' }}" id="company">
                 <div class="panel-header"><h2>Company Information</h2></div>
                 <div class="panel-body"><form method="POST" action="{{ route('settings.company.update') }}">@csrf<div class="row g-3">
-                    <div class="col-md-6"><label class="form-label">Company Name <span class="text-danger">*</span></label><input class="form-control" name="company_name" value="{{ old('company_name',$settings->company_name) }}" required></div>
+                    <div class="col-md-6"><label class="form-label">Company Name <span class="text-danger">*</span></label><input class="form-control" name="company_name" value="{{ old('company_name',$settings->company_name) }}" maxlength="50" required></div>
                     <div class="col-md-6"><label class="form-label">Tax / GST Number</label><input class="form-control" name="tax_number" value="{{ old('tax_number',$settings->tax_number) }}"></div>
                     <div class="col-12"><label class="form-label">Registered Address</label><textarea class="form-control" name="registered_address" rows="3">{{ old('registered_address',$settings->registered_address) }}</textarea></div>
                     <div class="col-md-6"><label class="form-label">Support Email</label><input class="form-control" type="email" name="support_email" value="{{ old('support_email',$settings->support_email) }}"></div>
@@ -107,7 +107,14 @@
                         <div class="modal-header"><div><h2 class="modal-title fs-6">Add Administrator</h2><small class="text-secondary">Create a separate full-access login account</small></div><button class="btn-close" data-bs-dismiss="modal"></button></div>
                         <form method="POST" action="{{ route('settings.admins.store') }}" enctype="multipart/form-data">@csrf
                             <div class="modal-body p-4"><div class="row g-3">
-                                <div class="col-md-6"><label class="form-label">Full Name <span class="text-danger">*</span></label><input class="form-control" name="name" minlength="3" maxlength="15" required></div>
+                                <div class="col-md-6"><label class="form-label">Full Name <span class="text-danger">*</span></label>
+                                    @include('partials.name-picker', [
+                                        'options' => $admins->pluck('name')->filter()->unique()->sort()->values(),
+                                        'selected' => old('name'),
+                                        'label' => 'administrator name',
+                                        'placeholder' => 'Enter full name',
+                                    ])
+                                </div>
                                 <div class="col-md-6"><label class="form-label">Email <span class="text-danger">*</span></label><input class="form-control" type="email" name="email" required></div>
                                 <div class="col-md-6"><label class="form-label">Password <span class="text-danger">*</span></label><input class="form-control" type="password" name="password" minlength="8" autocomplete="new-password" required><small class="text-secondary">Minimum 8 characters</small></div>
                                 <div class="col-md-6"><label class="form-label">Profile Image</label><input class="form-control" type="file" name="image" accept=".jpg,.jpeg,.png,.webp,image/*"></div>
@@ -127,7 +134,14 @@
                             <div class="modal-header"><div><h2 class="modal-title fs-6">Edit Administrator</h2><small class="text-secondary">{{ $admin->email }}</small></div><button class="btn-close" data-bs-dismiss="modal"></button></div>
                             <form method="POST" action="{{ route('settings.admins.update', $admin) }}" enctype="multipart/form-data">@csrf @method('PUT')
                                 <div class="modal-body p-4"><div class="row g-3">
-                                    <div class="col-md-6"><label class="form-label">Full Name <span class="text-danger">*</span></label><input class="form-control" name="name" value="{{ $admin->name }}" minlength="3" maxlength="15" required></div>
+                                    <div class="col-md-6"><label class="form-label">Full Name <span class="text-danger">*</span></label>
+                                        @include('partials.name-picker', [
+                                            'options' => $admins->pluck('name')->filter()->unique()->sort()->values(),
+                                            'selected' => old('name', $admin->name),
+                                            'label' => 'administrator name',
+                                            'placeholder' => 'Enter full name',
+                                        ])
+                                    </div>
                                     <div class="col-md-6"><label class="form-label">Email <span class="text-danger">*</span></label><input class="form-control" type="email" name="email" value="{{ $admin->email }}" required></div>
                                     <div class="col-md-6"><label class="form-label">New Password</label><input class="form-control" type="password" name="password" minlength="8" placeholder="Leave blank to keep current" autocomplete="new-password"></div>
                                     <div class="col-md-6"><label class="form-label">Profile Image</label><input class="form-control" type="file" name="image" accept=".jpg,.jpeg,.png,.webp,image/*"><small class="text-secondary">Leave blank to keep current image</small></div>
@@ -163,7 +177,7 @@
                             <div class="col-md-6"><label class="form-label">Username</label><input class="form-control" name="username" value="{{ old('username',$smtp->username) }}" autocomplete="off"></div>
                             <div class="col-md-6"><label class="form-label">Password</label><input class="form-control" type="password" name="password" value="" placeholder="{{ $smtp->password ? 'Saved — leave blank to keep' : 'Enter SMTP password' }}" autocomplete="new-password"></div>
                             <div class="col-md-4"><label class="form-label">Encryption</label><select class="form-select" name="encryption"><option value="tls" @selected($smtp->encryption==='tls')>TLS</option><option value="ssl" @selected($smtp->encryption==='ssl')>SSL</option><option value="none" @selected(blank($smtp->encryption))>None</option></select></div>
-                            <div class="col-md-4"><label class="form-label">From Name <span class="text-danger">*</span></label><input class="form-control" name="from_name" value="{{ old('from_name',$smtp->from_name) }}" placeholder="Agile Tech Solutions IIM"></div>
+                            <div class="col-md-4"><label class="form-label">From Name <span class="text-danger">*</span></label><input class="form-control" name="from_name" value="{{ old('from_name',$smtp->from_name) }}" placeholder="Agile Tech Solutions IIM" maxlength="50"></div>
                             <div class="col-md-4"><label class="form-label">From Email <span class="text-danger">*</span></label><input class="form-control" type="email" name="from_address" value="{{ old('from_address',$smtp->from_address) }}"></div>
                             <div class="col-12"><label class="form-label">Alert Recipient Emails <span class="text-danger">*</span></label><textarea class="form-control" name="notification_emails" rows="2" placeholder="admin@company.com, assets@company.com">{{ old('notification_emails',$smtp->notification_emails) }}</textarea><small class="text-secondary">Separate multiple recipients with commas, semicolons, or spaces.</small></div>
                         </div>

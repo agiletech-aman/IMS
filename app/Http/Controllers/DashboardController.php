@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use App\Models\AuditLog;
+use App\Models\Department;
 use App\Models\Faculty;
+use App\Models\SubDepartment;
 use App\Models\SystemNotification;
 use App\Models\User;
 use App\Services\CentreContextService;
@@ -70,8 +72,8 @@ $categoryDistribution = $visibility['assets'] ? Asset::query()
                 ['icon' => 'fa-circle-check', 'label' => 'Active Assets', 'value' => Asset::where('status', 'Active')->count(), 'class' => 'success', 'url' => route('assets.index', ['status' => 'Active'])],
                 ['icon' => 'fa-box-open', 'label' => 'In Stock', 'value' => Asset::where('status', 'In Stock')->count(), 'class' => 'info', 'url' => route('assets.index', ['status' => 'In Stock'])],
                 ['icon' => 'fa-screwdriver-wrench', 'label' => 'Maintenance', 'value' => Asset::where('status', 'Under Maintenance')->count(), 'class' => 'warning', 'url' => route('assets.index', ['status' => 'Under Maintenance'])],
-                ['icon' => 'fa-user-check', 'label' => 'Assigned Assets', 'value' => Asset::whereNotNull('assigned_to')->where('assigned_to', '!=', '')->count(), 'class' => 'success', 'url' => route('assets.index', ['assigned' => '1'])],
-                ['icon' => 'fa-link-slash', 'label' => 'Unassigned Assets', 'value' => Asset::whereNull('assigned_to')->orWhere('assigned_to', '')->count(), 'class' => 'warning', 'url' => route('assets.index', ['assigned' => '0'])],
+                ['icon' => 'fa-sitemap', 'label' => 'Departments', 'value' => Department::count(), 'class' => 'success', 'url' => route('asset-management.departments.index')],
+                ['icon' => 'fa-diagram-project', 'label' => 'Sub Departments', 'value' => SubDepartment::count(), 'class' => 'info', 'url' => route('asset-management.sub-departments.index')],
             ];
         }
         if ($visibility['users']) {

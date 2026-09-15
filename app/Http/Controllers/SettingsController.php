@@ -35,7 +35,7 @@ class SettingsController extends Controller
     public function updateGeneral(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'application_name' => ['required', 'string', 'max:255'],
+            'application_name' => ['required', 'string', 'max:50'],
             'language' => ['required', Rule::in(['en', 'hi'])],
             'timezone' => ['required', 'timezone:all'],
             'date_format' => ['required', Rule::in(['d M Y', 'd/m/Y', 'Y-m-d'])],
@@ -48,7 +48,7 @@ class SettingsController extends Controller
     public function updateCompany(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'company_name' => ['required', 'string', 'max:255'],
+            'company_name' => ['required', 'string', 'max:50'],
             'tax_number' => ['nullable', 'string', 'max:100'],
             'registered_address' => ['nullable', 'string', 'max:2000'],
             'support_email' => ['nullable', 'email', 'max:255'],
@@ -96,7 +96,7 @@ class SettingsController extends Controller
             'username' => ['nullable', 'string', 'max:255'],
             'password' => ['nullable', 'string', 'max:1000'],
             'encryption' => ['nullable', Rule::in(['tls', 'ssl', 'none'])],
-            'from_name' => ['required_if:enabled,1', 'nullable', 'string', 'max:255'],
+            'from_name' => ['required_if:enabled,1', 'nullable', 'string', 'max:50'],
             'from_address' => ['required_if:enabled,1', 'nullable', 'email', 'max:255'],
             'notification_emails' => ['required_if:enabled,1', 'nullable', 'string', 'max:2000'],
         ]);

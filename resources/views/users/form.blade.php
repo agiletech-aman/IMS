@@ -14,6 +14,9 @@
             ])
             : route('access-accounts.store', ['role' => $selectedRole]))
         : ($isEdit ? route('users.update', $user) : route('users.store'));
+
+    $existingFacultyNames = \App\Models\Faculty::query()->pluck('name')->filter()->unique()->sort()->values();
+    $existingAccessAccountNames = \App\Models\User::query()->pluck('name')->filter()->unique()->sort()->values();
 @endphp
 
 <div
@@ -72,16 +75,12 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">User Name <span class="text-danger">*</span></label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    class="form-control"
-                                    value="{{ old('name', $user?->name) }}"
-                                    placeholder="Enter full name"
-                                    minlength="3"
-                                    maxlength="15"
-                                    required
-                                >
+                                @include('partials.name-picker', [
+                                    'options' => $existingFacultyNames,
+                                    'selected' => old('name', $user?->name),
+                                    'label' => 'user name',
+                                    'placeholder' => 'Enter full name',
+                                ])
                             </div>
 
                             <div class="col-md-6">
@@ -170,16 +169,12 @@
 
                             <div class="col-md-8">
                                 <label class="form-label">Name <span class="text-danger">*</span></label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    class="form-control"
-                                    value="{{ old('name', $user?->name) }}"
-                                    placeholder="Enter full name"
-                                    minlength="3"
-                                    maxlength="15"
-                                    required
-                                >
+                                @include('partials.name-picker', [
+                                    'options' => $existingAccessAccountNames,
+                                    'selected' => old('name', $user?->name),
+                                    'label' => 'user name',
+                                    'placeholder' => 'Enter full name',
+                                ])
                             </div>
 
                             <div class="col-md-6">

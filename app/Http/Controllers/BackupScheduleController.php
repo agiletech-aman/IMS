@@ -51,7 +51,7 @@ class BackupScheduleController extends Controller
     private function validated(Request $request): array
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:50'],
             'backup_type' => ['required', Rule::in(['database', 'files', 'full'])],
             'frequency' => ['required', Rule::in(['daily', 'weekly', 'monthly'])],
             'run_at' => ['required', 'date_format:H:i'],
