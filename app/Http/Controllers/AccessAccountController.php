@@ -209,8 +209,19 @@ class AccessAccountController extends Controller
 
     private function rules(?User $accessAccount = null): array
     {
+        $centre = $this->centreContext->selected();
+
         return [
-            'name' => ['required', 'string', 'min:3', 'max:50'],
+            'name' => [
+                'required',
+                'string',
+                'min:3',
+                'max:50',
+                'regex:/^[A-Za-z ]+$/',
+                Rule::unique('users', 'name')
+                    ->where(fn ($query) => $centre ? $query->where('centre', $centre) : $query)
+                    ->ignore($accessAccount?->id),
+            ],
             'email' => [
                 'required',
                 'email',

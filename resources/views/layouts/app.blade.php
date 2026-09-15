@@ -167,6 +167,32 @@
         min-width: 180px;
     }
 }
+
+.alert-centre-warning {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.alert-centre-warning i {
+    color: #d97706;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+:root:not([data-theme="light"]) .alert-centre-warning,
+[data-theme="dark"] .alert-centre-warning {
+    background: rgba(217, 119, 6, 0.12);
+    border-color: rgba(217, 119, 6, 0.35);
+    color: #fbbf24;
+}
 </style>
 
 
@@ -174,11 +200,22 @@
     @if(request()->is('login', 'forgot-password', 'reset-password'))
     @yield('content')
     @else
+    @php
+        $needsCentreSelection = filled(session('static_auth_user.admin_id'))
+            && ! in_array(session('selected_centre'), ['noida', 'lucknow'], true);
+    @endphp
+    <script>window.IIM=window.IIM||{};window.IIM.centreOk=@json(!$needsCentreSelection);</script>
     <div class="app-shell">
         @include('partials.sidebar')
         <div class="app-main">
             @include('partials.header')
             <main class="content-wrap">
+                @if($needsCentreSelection)
+                    <div class="alert-centre-warning" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>No specific Centre is selected. New records need a Centre — pick <strong>Noida</strong> or <strong>Lucknow</strong> from the Centre menu above before adding data.</span>
+                    </div>
+                @endif
                 @include('partials.breadcrumbs')
                 @yield('content')
             </main>

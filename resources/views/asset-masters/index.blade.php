@@ -446,6 +446,7 @@
                 type="button"
                 data-bs-toggle="modal"
                 data-bs-target="#createMasterModal"
+                data-requires-centre
             >
                 <i class="fa-solid fa-plus me-2"></i>
 

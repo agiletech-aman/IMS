@@ -87,7 +87,6 @@ class AuditLogger
             'Department' => 'Departments',
             'SubDepartment' => 'Sub Departments',
             'User' => 'Users',
-            'Vendor' => 'Vendors',
             'SystemNotification' => 'Alerts',
             'NotificationPreference' => 'Notification Settings',
             'SmtpSetting' => 'SMTP Settings',

@@ -8,6 +8,7 @@ use App\Models\AssetType;
 use App\Models\Brand;
 use App\Models\Department;
 use App\Models\SubDepartment;
+use App\Services\CentreContextService;
 use App\Support\SubtypeCsv;
 use App\Support\UniqueCodeGenerator;
 use Illuminate\Database\QueryException;
@@ -21,6 +22,10 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AssetMasterController extends Controller
 {
+    public function __construct(private readonly CentreContextService $centreContext)
+    {
+    }
+
     /*
     |--------------------------------------------------------------------------
     | INDEX
@@ -1695,6 +1700,9 @@ class AssetMasterController extends Controller
         ?int $id = null
     ): array
     {
+        $table = $this->config($module)['model']::make()->getTable();
+        $centre = $this->centreContext->selected();
+
         $common = [
 
             'name' => [
@@ -1702,6 +1710,10 @@ class AssetMasterController extends Controller
                 'string',
                 'min:3',
                 'max:50',
+                'regex:/^[A-Za-z ]+$/',
+                Rule::unique($table, 'name')
+                    ->where(fn ($query) => $centre ? $query->where('centre', $centre) : $query)
+                    ->ignore($id),
             ],
 
             'status' => [

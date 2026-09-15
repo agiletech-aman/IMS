@@ -13,7 +13,7 @@
         ->values();
 @endphp
 <div class="page-heading">
-    <div><p class="eyebrow">Enterprise workspace</p><h1>Audit Logs</h1><p>Complete activity history for assets, users, masters, vendors, complaints, alerts, reports, and settings.</p></div>
+    <div><p class="eyebrow">Enterprise workspace</p><h1>Audit Logs</h1><p>Complete activity history for assets, users, masters, complaints, alerts, reports, and settings.</p></div>
     <div class="d-flex flex-wrap gap-2">
         @if($permissionService->allows('audit_logs','export'))
             <a class="btn btn-soft" href="{{ route('audit-logs.export', request()->query()) }}"><i class="fa-solid fa-file-csv me-2 text-success"></i>Export CSV</a>

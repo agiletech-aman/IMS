@@ -24,7 +24,6 @@ class RolePermission extends Model
         'access_accounts_sub_admin' => ['label' => 'Admin', 'icon' => 'fa-user-ninja', 'actions' => ['view', 'create', 'update', 'delete', 'import', 'export']],
         'access_accounts_auditor' => ['label' => 'Auditor', 'icon' => 'fa-user-shield', 'actions' => ['view', 'create', 'update', 'delete', 'import', 'export']],
         'access_accounts_viewer' => ['label' => 'Viewer', 'icon' => 'fa-user-lock', 'actions' => ['view', 'create', 'update', 'delete', 'import', 'export']],
-        //'vendors' => ['label' => 'Vendors / OEM', 'icon' => 'fa-handshake', 'actions' => ['view', 'create', 'update', 'delete']],
         'notifications' => ['label' => 'Notifications & Alerts', 'icon' => 'fa-bell', 'actions' => ['view', 'update', 'delete']],
         'reports' => ['label' => 'Reports', 'icon' => 'fa-file-lines', 'actions' => ['view', 'create', 'export']],
         'audit_logs' => ['label' => 'Audit Logs', 'icon' => 'fa-clock-rotate-left', 'actions' => ['view', 'export']],

@@ -32,7 +32,7 @@
             <div class="notification-list">
                 @forelse($notifications as $notification)
                     @php
-                        $icons = ['amc_expiry'=>'fa-screwdriver-wrench','warranty_expiry'=>'fa-shield-halved','user_created'=>'fa-user-plus','user_deleted'=>'fa-user-minus','asset_assigned'=>'fa-laptop-file','report_generated'=>'fa-file-lines','vendor_changed'=>'fa-handshake'];
+                        $icons = ['amc_expiry'=>'fa-screwdriver-wrench','warranty_expiry'=>'fa-shield-halved','user_created'=>'fa-user-plus','user_deleted'=>'fa-user-minus','asset_assigned'=>'fa-laptop-file','report_generated'=>'fa-file-lines'];
                     @endphp
                     <article class="notification-item {{ $notification->read_at ? 'is-read' : 'is-unread' }}">
                         <span class="alert-icon {{ $notification->severity }}"><i class="fa-solid {{ $icons[$notification->event_type] ?? 'fa-bell' }}"></i></span>

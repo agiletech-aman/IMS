@@ -4,12 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\BackupSchedule;
 use App\Services\AuditLogger;
+use App\Services\CentreContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class BackupScheduleController extends Controller
 {
+    public function __construct(private readonly CentreContextService $centreContext)
+    {
+    }
+
     public function store(Request $request, AuditLogger $audit): RedirectResponse
     {
         $data = $this->validated($request);
@@ -25,7 +30,7 @@ class BackupScheduleController extends Controller
 
     public function update(Request $request, BackupSchedule $schedule, AuditLogger $audit): RedirectResponse
     {
-        $data = $this->validated($request);
+        $data = $this->validated($request, $schedule->id);
         $data['enabled'] = $request->boolean('enabled');
         $schedule->fill($data);
         $schedule->next_run_at = $schedule->enabled ? $schedule->calculateNextRun() : null;
@@ -48,10 +53,20 @@ class BackupScheduleController extends Controller
         return back()->with('success', 'Backup schedule deleted. Existing backups were retained.');
     }
 
-    private function validated(Request $request): array
+    private function validated(Request $request, ?int $scheduleId = null): array
     {
+        $centre = $this->centreContext->selected();
+
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:50'],
+            'name' => [
+                'required',
+                'string',
+                'max:50',
+                'regex:/^[A-Za-z ]+$/',
+                Rule::unique('backup_schedules', 'name')
+                    ->where(fn ($query) => $centre ? $query->where('centre', $centre) : $query)
+                    ->ignore($scheduleId),
+            ],
             'backup_type' => ['required', Rule::in(['database', 'files', 'full'])],
             'frequency' => ['required', Rule::in(['daily', 'weekly', 'monthly'])],
             'run_at' => ['required', 'date_format:H:i'],

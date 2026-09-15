@@ -11,7 +11,8 @@
     app(\App\Services\PermissionService::class)->allows('assets','create')
         ? [
             'actionUrl'=>route('assets.create'),
-            'actionLabel'=>'Add Asset'
+            'actionLabel'=>'Add Asset',
+            'requiresCentre'=>true,
         ]
         : []
 ))

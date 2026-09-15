@@ -249,23 +249,39 @@ document.addEventListener('DOMContentLoaded',()=>{
  renderRecent();
 });
 
-document.addEventListener('change',e=>{
- if(!e.target.matches('[data-name-select]'))return;
- const wrap=e.target.closest('[data-name-field]');
+const IIMHandleNameSelect=select=>{
+ const wrap=select.closest('[data-name-field]');
  const input=wrap&&wrap.querySelector('[data-name-input]');
  if(!input)return;
- if(e.target.value==='__other__'){
+ if(select.value==='__other__'){
   input.value='';
-  input.style.display='';
+  input.hidden=false;
   input.focus();
- }else if(e.target.value===''){
-  input.style.display='none';
+ }else if(select.value===''){
+  input.hidden=true;
   input.value='';
  }else{
-  input.value=e.target.value;
-  input.style.display='none';
+  input.value=select.value;
+  input.hidden=true;
  }
+};
+document.querySelectorAll('[data-name-select]').forEach(select=>{
+ select.addEventListener('change',()=>IIMHandleNameSelect(select));
 });
+document.addEventListener('change',e=>{
+ if(e.target.matches&&e.target.matches('[data-name-select]'))IIMHandleNameSelect(e.target);
+});
+
+document.addEventListener('click',e=>{
+ const trigger=e.target.closest('[data-requires-centre]');
+ if(!trigger)return;
+ if(window.IIM&&window.IIM.centreOk)return;
+ e.preventDefault();
+ e.stopPropagation();
+ e.stopImmediatePropagation();
+ window.IIM?.toast?.('Please select a specific Centre (Noida or Lucknow) from the Centre menu before adding new records.','warning','Centre required');
+ document.querySelector('.centre-filter-btn')?.focus();
+},true);
 
 
 

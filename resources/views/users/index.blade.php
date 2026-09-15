@@ -306,6 +306,7 @@
                 type="button"
                 data-bs-toggle="modal"
                 data-bs-target="#createUserModal"
+                data-requires-centre
             >
 
                 <i

@@ -12,7 +12,7 @@
     'use strict';
 
     const NAME_MIN = 3;
-    const NAME_MAX = 15;
+    const NAME_MAX = 50;
     const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const PHONE_LENGTH = 10;
     const PHONE_FIELD_NAMES = ['contact', 'phone'];

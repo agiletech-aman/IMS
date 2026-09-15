@@ -10,7 +10,7 @@
     <div>
         <p class="eyebrow" id="dashboardGreeting" data-name="{{ $firstName }}">Welcome back, {{ $firstName }}</p>
         <h1>Dashboard</h1>
-        <p>Live overview of assets, users, access accounts, vendors, alerts, coverage, and system activity.</p>
+        <p>Live overview of assets, users, access accounts, alerts, coverage, and system activity.</p>
     </div>
     <div class="dashboard-filter">
         <div class="period-switch" role="group" aria-label="Dashboard activity period">

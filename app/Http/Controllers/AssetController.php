@@ -9,6 +9,7 @@ use App\Models\AssetType;
 use App\Models\Department;
 use App\Models\Faculty;
 use App\Models\SubDepartment;
+use App\Services\CentreContextService;
 use App\Services\NotificationService;
 use App\Support\UniqueCodeGenerator;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +23,7 @@ class AssetController extends Controller
 {
     public function __construct(
         private readonly NotificationService $notifications,
+        private readonly CentreContextService $centreContext,
     ) {}
 
 
@@ -392,8 +394,18 @@ return [
 
     private function rules(Request $request, ?int $id = null): array
     {
+$centre = $this->centreContext->selected();
 $rules = [
-            'name' => ['required', 'string', 'min:3', 'max:50'],
+            'name' => [
+                'required',
+                'string',
+                'min:3',
+                'max:50',
+                'regex:/^[A-Za-z ]+$/',
+                Rule::unique('assets', 'name')
+                    ->where(fn ($query) => $centre ? $query->where('centre', $centre) : $query)
+                    ->ignore($id),
+            ],
             'asset_type_id' => ['required', 'exists:asset_types,id'],
             'asset_subtype_id' => ['nullable', Rule::exists('asset_subtypes', 'id')->where('asset_type_id', $request->input('asset_type_id'))],
             'department_id' => ['required', 'exists:departments,id'],

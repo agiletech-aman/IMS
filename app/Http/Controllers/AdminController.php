@@ -85,7 +85,14 @@ class AdminController extends Controller
     private function rules(?Admin $admin = null): array
     {
         return [
-            'name' => ['required', 'string', 'min:3', 'max:50'],
+            'name' => [
+                'required',
+                'string',
+                'min:3',
+                'max:50',
+                'regex:/^[A-Za-z ]+$/',
+                Rule::unique('admins', 'name')->ignore($admin?->id),
+            ],
             'email' => ['required', 'email', 'max:255', Rule::unique('admins', 'email')->ignore($admin?->id)],
             'password' => [$admin ? 'nullable' : 'required', 'nullable', 'string', 'min:8', 'max:255'],
             'phone' => ['nullable', 'digits:10'],

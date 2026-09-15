@@ -11,7 +11,7 @@
         @foreach($options as $opt)
             <option value="{{ $opt }}" @selected($selected === $opt)>{{ $opt }}</option>
         @endforeach
-        <option value="__other__" @selected($isOther)>Other (Add New)</option>
+        <option value="__other__" @selected($isOther)>Other</option>
     </select>
     <input
         type="text"
@@ -20,9 +20,11 @@
         data-name-input
         minlength="3"
         maxlength="50"
+        pattern="[A-Za-z ]+"
+        title="Only letters and spaces are allowed."
         placeholder="{{ $placeholder ?? 'Enter new '.($label ?? 'name') }}"
         value="{{ $selected }}"
-        style="display:{{ $showInput ? 'block' : 'none' }}"
+        @if(!$showInput) hidden @endif
         @if($isRequired) required @endif
     >
 </div>

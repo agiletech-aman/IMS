@@ -15,7 +15,6 @@ use App\Models\SmtpSetting;
 use App\Models\SubDepartment;
 use App\Models\SystemSetting;
 use App\Models\User;
-use App\Models\Vendor;
 use App\Observers\AuditObserver;
 use App\Services\DynamicMailConfig;
 use App\Services\PermissionService;
@@ -51,7 +50,6 @@ class AppServiceProvider extends ServiceProvider
             Faculty::class,
             SubDepartment::class,
             User::class,
-            Vendor::class,
             SystemNotification::class,
             NotificationPreference::class,
             SmtpSetting::class,

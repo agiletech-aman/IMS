@@ -286,8 +286,19 @@ class UserController extends Controller
 
     private function rules(?int $userId = null): array
     {
+        $centre = $this->centreContext->selected();
+
         return [
-            'name' => ['required', 'string', 'min:3', 'max:50'],
+            'name' => [
+                'required',
+                'string',
+                'min:3',
+                'max:50',
+                'regex:/^[A-Za-z ]+$/',
+                Rule::unique('faculties', 'name')
+                    ->where(fn ($query) => $centre ? $query->where('centre', $centre) : $query)
+                    ->ignore($userId),
+            ],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('faculties', 'email')->ignore($userId)],
             'contact' => ['nullable', 'digits:10'],
             'department_id' => ['nullable', 'exists:departments,id'],

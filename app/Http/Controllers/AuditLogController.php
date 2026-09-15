@@ -46,7 +46,6 @@ class AuditLogController extends Controller
             'logs' => $query->latest()->paginate(20)->withQueryString(),
             'modules' => collect(self::MODULES)
                 ->merge(AuditLog::query()->distinct()->pluck('module'))
-                ->reject(fn (string $module) => $module === 'Vendors')
                 ->filter()
                 ->unique()
                 ->sort()

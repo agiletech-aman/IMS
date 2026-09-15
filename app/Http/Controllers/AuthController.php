@@ -151,7 +151,6 @@ class AuthController extends Controller
             'brands' => 'asset-management.brands.index',
             'faculty' => 'users.index',
             'access_accounts' => 'access-accounts.index',
-            'vendors' => 'vendors.index',
             'notifications' => 'notifications.index',
             'reports' => 'reports.index',
             'audit_logs' => 'audit-logs.index',

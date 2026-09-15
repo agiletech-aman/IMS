@@ -18,7 +18,6 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserImportExportController;
-use App\Http\Controllers\VendorController;
 use App\Http\Middleware\EnsureAdministrator;
 use App\Http\Middleware\EnsureCentreSelected;
 use App\Http\Middleware\EnsurePermission;
@@ -171,10 +170,6 @@ Route::middleware([EnsureStaticAuthenticated::class, EnsureCentreSelected::class
     Route::delete('/access-accounts/{accessAccount}', [AccessAccountController::class, 'destroy'])->name('access-accounts.destroy');
     Route::get('/roles-permissions', [RolePermissionController::class, 'index'])->middleware($permission('roles_permissions'))->name('roles-permissions.index');
     Route::post('/roles-permissions', [RolePermissionController::class, 'update'])->middleware($permission('roles_permissions', 'update'))->name('roles-permissions.update');
-    Route::get('/vendors', [VendorController::class, 'index'])->middleware($permission('vendors'))->name('vendors.index');
-    Route::post('/vendors', [VendorController::class, 'store'])->middleware($permission('vendors', 'create'))->name('vendors.store');
-    Route::match(['put', 'patch'], '/vendors/{vendor}', [VendorController::class, 'update'])->middleware($permission('vendors', 'update'))->name('vendors.update');
-    Route::delete('/vendors/{vendor}', [VendorController::class, 'destroy'])->middleware($permission('vendors', 'delete'))->name('vendors.destroy');
     Route::get('/reports', [ReportController::class, 'index'])->middleware($permission('reports'))->name('reports.index');
     Route::post('/reports/generate', [ReportController::class, 'generate'])->middleware($permission('reports', 'create'))->name('reports.generate');
     Route::get('/reports/export', [ReportController::class, 'export'])->middleware($permission('reports', 'export'))->name('reports.export');
