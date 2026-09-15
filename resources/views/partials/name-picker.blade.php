@@ -6,7 +6,12 @@
     $showInput = $isOther || $options->isEmpty();
 @endphp
 <div data-name-field>
-    <select class="form-select" data-name-select @if($isRequired) required @endif>
+    <select
+        class="form-select"
+        data-name-select
+        @if($isRequired) required @endif
+        onchange="var i=this.nextElementSibling;if(this.value==='__other__'){i.value='';i.hidden=false;i.focus();}else if(this.value===''){i.hidden=true;i.value='';}else{i.value=this.value;i.hidden=true;}"
+    >
         <option value="">Select {{ $label ?? 'name' }}</option>
         @foreach($options as $opt)
             <option value="{{ $opt }}" @selected($selected === $opt)>{{ $opt }}</option>
