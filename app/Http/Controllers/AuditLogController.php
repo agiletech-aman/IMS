@@ -25,7 +25,6 @@ class AuditLogController extends Controller
         'Assets',
         'Authentication',
         'Brands',
-        'Categories',
         'Departments',
         'Notification Settings',
         'Reports',
@@ -45,17 +44,17 @@ class AuditLogController extends Controller
         return view('audit-logs.index', [
             'logs' => $query->latest()->paginate(20)->withQueryString(),
             'modules' => collect(self::MODULES)
-                ->merge(AuditLog::query()->distinct()->pluck('module'))
+                ->merge($this->visibleLogs()->distinct()->pluck('module'))
                 ->filter()
                 ->unique()
                 ->sort()
                 ->values(),
-            'actions' => AuditLog::query()->distinct()->orderBy('action')->pluck('action'),
+            'actions' => $this->visibleLogs()->distinct()->orderBy('action')->pluck('action'),
             'stats' => [
-                'today' => AuditLog::whereDate('created_at', today())->count(),
-                'logins' => AuditLog::whereIn('action', ['LOGIN', 'LOGIN FAILED', 'LOGOUT'])->count(),
-                'changes' => AuditLog::whereIn('action', ['CREATE', 'UPDATE', 'DELETE', 'ASSIGN'])->count(),
-                'failed' => AuditLog::where('result', '!=', 'Success')->count(),
+                'today' => $this->visibleLogs()->whereDate('created_at', today())->count(),
+                'logins' => $this->visibleLogs()->whereIn('action', ['LOGIN', 'LOGIN FAILED', 'LOGOUT'])->count(),
+                'changes' => $this->visibleLogs()->whereIn('action', ['CREATE', 'UPDATE', 'DELETE', 'ASSIGN'])->count(),
+                'failed' => $this->visibleLogs()->where('result', '!=', 'Success')->count(),
             ],
         ]);
     }
@@ -166,9 +165,17 @@ class AuditLogController extends Controller
         );
     }
 
-    private function filteredQuery(array $filters): Builder
+    private function visibleLogs(): Builder
     {
         return AuditLog::query()
+            ->when(session('static_auth_user.role') !== 'Administrator', function (Builder $query): void {
+                $query->where(fn (Builder $q) => $q->whereNull('actor_role')->orWhere('actor_role', '!=', 'Administrator'));
+            });
+    }
+
+    private function filteredQuery(array $filters): Builder
+    {
+        return $this->visibleLogs()
             ->when($filters['search'] ?? null, function (Builder $query, string $search): void {
                 $query->where(function (Builder $builder) use ($search): void {
                     $builder->where('actor_name', 'like', "%{$search}%")

@@ -44,10 +44,6 @@ class AuditLogger
                 ? $request->session()->get('static_auth_user', [])
                 : [];
 
-            if (($actor['role'] ?? null) === 'Administrator') {
-                return null;
-            }
-
             return AuditLog::create([
                 'centre' => $actor['centre'] ?? $this->selectedCentre($request),
                 'actor_name' => $actor['name'] ?? 'System',
@@ -81,7 +77,6 @@ class AuditLogger
         return match (class_basename($model)) {
             'Admin' => 'Administrators',
             'Asset' => 'Assets',
-            'AssetCategory' => 'Categories',
             'AssetType' => 'Types',
             'Brand' => 'Brands',
             'Department' => 'Departments',

@@ -77,7 +77,7 @@
                         </div>
                     </div>
                 @endif
-                @if(in_array($module, ['departments','sub-departments','types','sub-types','categories']))
+                @if(in_array($module, ['departments','sub-departments','types','sub-types']))
                     <div class="col-12"><hr class="my-1" style="border-color:var(--border-color);opacity:.6"></div>
                     <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="3" placeholder="Enter a short description">{{ $value('description') }}</textarea></div>
                 @endif

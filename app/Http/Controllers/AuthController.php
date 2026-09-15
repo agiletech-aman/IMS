@@ -145,7 +145,6 @@ class AuthController extends Controller
             'assets' => 'assets.index',
             'departments' => 'asset-management.departments.index',
             'sub_departments' => 'asset-management.sub-departments.index',
-            'categories' => 'asset-management.categories.index',
             'types' => 'asset-management.types.index',
             'sub_types' => 'asset-management.sub-types.index',
             'brands' => 'asset-management.brands.index',

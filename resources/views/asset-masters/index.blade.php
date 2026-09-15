@@ -686,16 +686,6 @@
                         </th>
 
 
-                    @elseif($module === 'categories')
-
-                        <th>
-                            Asset Types
-                        </th>
-
-                        <th>
-                            Description
-                        </th>
-
                     @endif
 
 
@@ -815,16 +805,6 @@
                                 {{ $record->support_contact ?: '—' }}
                             </td>
 
-
-                        @elseif($module === 'categories')
-
-                            <td>
-                                {{ $record->types_count }}
-                            </td>
-
-                            <td>
-                                {{ Str::limit($record->description, 45) ?: '—' }}
-                            </td>
 
                         @endif
 
@@ -1116,7 +1096,6 @@
                                 'sub-departments' => ['name', 'department', 'status', 'description'],
                                 'types' => ['name', 'status', 'description', 'parameters'],
                                 'brands' => ['name', 'country', 'support_contact', 'status'],
-                                'categories' => ['name', 'status', 'description'],
                                 default => [],
                             };
 
@@ -1139,10 +1118,6 @@
                                 'brands' => [
                                     ['Sample Brand', 'India', 'contact@example.com', 'Active'],
                                     ['Sample Brand 2', 'USA', 'contact2@example.com', 'Active'],
-                                ],
-                                'categories' => [
-                                    ['Sample Category', 'Active', 'A sample description'],
-                                    ['Sample Category 2', 'Active', 'Another sample description'],
                                 ],
                                 default => [[]],
                             };

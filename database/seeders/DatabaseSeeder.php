@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Asset;
-use App\Models\AssetCategory;
 use App\Models\AssetSubtype;
 use App\Models\AssetType;
 use App\Models\Brand;
@@ -35,8 +34,6 @@ class DatabaseSeeder extends Seeder
         $infra = SubDepartment::firstOrCreate(['code' => 'SUB-INFRA'], ['department_id' => $it->id, 'name' => 'Infrastructure', 'manager_name' => 'Vikram Singh', 'status' => 'Active']);
         $productDesign = SubDepartment::firstOrCreate(['code' => 'SUB-PD'], ['department_id' => $design->id, 'name' => 'Product Design', 'manager_name' => 'Riya Mehta', 'status' => 'Active']);
 
-        $hardware = AssetCategory::firstOrCreate(['code' => 'CAT-HW'], ['name' => 'Hardware', 'description' => 'End-user computing devices', 'status' => 'Active']);
-        $infrastructure = AssetCategory::firstOrCreate(['code' => 'CAT-INF'], ['name' => 'Infrastructure', 'description' => 'Core server and network assets', 'status' => 'Active']);
         $laptop = AssetType::firstOrCreate(['code' => 'TYPE-LT'], ['name' => 'Laptop', 'status' => 'Active']);
         AssetType::firstOrCreate(['code' => 'TYPE-SV'], ['name' => 'Server', 'status' => 'Active']);
         $cpuField = AssetSubtype::firstOrCreate(['code' => 'SY-001'], ['asset_type_id' => $laptop->id, 'name' => 'CPU', 'status' => 'Active']);

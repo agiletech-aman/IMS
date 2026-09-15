@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use App\Models\Admin;
 use App\Models\Asset;
-use App\Models\AssetCategory;
 use App\Models\AssetType;
 use App\Models\Brand;
 use App\Models\Department;
@@ -43,7 +42,6 @@ class AppServiceProvider extends ServiceProvider
         foreach ([
             Admin::class,
             Asset::class,
-            AssetCategory::class,
             AssetType::class,
             Brand::class,
             Department::class,

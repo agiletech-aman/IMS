@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AssetCategory;
 use App\Models\AssetSubtype;
 use App\Models\AssetType;
 use App\Models\Brand;
@@ -1078,22 +1077,6 @@ class AssetMasterController extends Controller
                 ],
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Categories
-            |--------------------------------------------------------------------------
-            */
-
-            'categories' =>
-                $common + [
-                    'description' =>
-                        $this->nullableString(
-                            $data['description']
-                            ?? null
-                        ),
-                ],
-
-
             default => null,
         };
     }
@@ -1347,15 +1330,6 @@ class AssetMasterController extends Controller
                 'assets',
             ],
 
-            'categories' => [
-                'name',
-                'code',
-                'status',
-                'description',
-                'asset_types',
-                'assets',
-            ],
-
             default => [],
         };
     }
@@ -1420,15 +1394,6 @@ class AssetMasterController extends Controller
                 $record->country,
                 $record->support_contact,
                 $record->status,
-                $record->assets_count,
-            ],
-
-            'categories' => [
-                $record->name,
-                $record->code,
-                $record->status,
-                $record->description,
-                $record->types_count,
                 $record->assets_count,
             ],
 
@@ -1616,21 +1581,6 @@ class AssetMasterController extends Controller
                     'Maintain approved manufacturers and brand logos.',
                 'icon' => 'fa-copyright',
                 'counts' => [
-                    'assets',
-                ],
-            ],
-
-
-            'categories' => [
-                'model' => AssetCategory::class,
-                'prefix' => 'CY',
-                'title' => 'Asset Categories',
-                'singular' => 'Category',
-                'description' =>
-                    'Group related asset types into clear categories.',
-                'icon' => 'fa-tags',
-                'counts' => [
-                    'types',
                     'assets',
                 ],
             ],
@@ -1830,15 +1780,6 @@ class AssetMasterController extends Controller
 
                 ],
 
-
-            'categories' =>
-                $common + [
-                    'description' => [
-                        'nullable',
-                        'string',
-                        'max:2000',
-                    ],
-                ],
 
 
             default => [],
