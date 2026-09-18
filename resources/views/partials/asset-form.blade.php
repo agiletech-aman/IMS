@@ -214,12 +214,18 @@ filter('assetDepartment', 'assetSubDepartment', 'department');
             assignedSearch.addEventListener('input', filterOptions);
             assignedSearch.addEventListener('focus', filterOptions);
 
+            const statusSelect = document.querySelector('select[name="status"]');
+
             options.forEach(option => {
                 option.addEventListener('mousedown', (e) => {
                     e.preventDefault();
                     assignedSearch.value = option.dataset.value;
                     lastValidValue = option.dataset.value;
                     assignedMenu.hidden = true;
+
+                    if (option.dataset.value !== '' && statusSelect) {
+                        statusSelect.value = 'Active';
+                    }
                 });
             });
 
