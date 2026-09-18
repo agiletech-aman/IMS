@@ -290,6 +290,8 @@ $assets = $query
         unset($data['image']);
         $asset = Asset::create($data);
 
+        $this->syncAssignment($asset, null);
+
         return redirect()->route('assets.show', $asset)->with('success', 'Asset created successfully.');
     }
 
