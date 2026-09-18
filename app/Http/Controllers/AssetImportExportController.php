@@ -248,7 +248,21 @@ class AssetImportExportController extends Controller
             return $e->getMessage();
         }
 
-        return "Could not {$verb} this asset. Check for a duplicate Asset Tag/Serial Number or invalid value.";
+        if ($e instanceof \Illuminate\Database\QueryException) {
+            $driverMessage = $e->errorInfo[2] ?? $e->getMessage();
+
+            if (preg_match("/Duplicate entry '(.*)' for key '(.*)'/", $driverMessage, $m)) {
+                return "Could not {$verb} this asset. \"{$m[1]}\" is already used (duplicate {$m[2]}).";
+            }
+
+            if (preg_match("/Column '(.*)' cannot be null/", $driverMessage, $m)) {
+                return "Could not {$verb} this asset. \"{$m[1]}\" is required but was left empty.";
+            }
+
+            return "Could not {$verb} this asset. Database error: {$driverMessage}";
+        }
+
+        return "Could not {$verb} this asset: {$e->getMessage()}";
     }
 
     /**
