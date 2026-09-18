@@ -163,7 +163,7 @@ class AssetImportExportController extends Controller
                         $updatedCount++;
                     } catch (\Throwable $e) {
                         report($e);
-                        $errors[] = ['row' => $rowNumber, 'sheet' => $type->name, 'asset' => $assetName, 'messages' => ['Could not update this asset. Check for an invalid value.']];
+                        $errors[] = ['row' => $rowNumber, 'sheet' => $type->name, 'asset' => $assetName, 'messages' => [$this->describeSaveFailure($e, 'update')]];
                     }
 
                     continue;
@@ -197,7 +197,7 @@ class AssetImportExportController extends Controller
                     $insertedCount++;
                 } catch (\Throwable $e) {
                     report($e);
-                    $errors[] = ['row' => $rowNumber, 'sheet' => $type->name, 'asset' => $assetName, 'messages' => ['Could not save this asset. Check for a duplicate Asset Tag or invalid value.']];
+                    $errors[] = ['row' => $rowNumber, 'sheet' => $type->name, 'asset' => $assetName, 'messages' => [$this->describeSaveFailure($e, 'save')]];
 
                     continue;
                 }
@@ -234,6 +234,21 @@ class AssetImportExportController extends Controller
             'success',
             "Asset import completed: {$insertedCount} asset(s) created, {$updatedCount} asset(s) updated."
         );
+    }
+
+    /**
+     * Turn a save/update failure into a message that names the real cause
+     * instead of always blaming a duplicate Asset Tag — e.g. no specific
+     * Centre selected (Administrator viewing "All Centres") throws an
+     * HttpException here, which is unrelated to duplicate values.
+     */
+    private function describeSaveFailure(\Throwable $e, string $verb): string
+    {
+        if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpException) {
+            return $e->getMessage();
+        }
+
+        return "Could not {$verb} this asset. Check for a duplicate Asset Tag/Serial Number or invalid value.";
     }
 
     /**
