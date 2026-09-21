@@ -190,21 +190,21 @@
 .centre-selection-notice {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 16px;
-    padding: 12px 14px;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 9px 12px;
     background: #f1f5f9;
     border: 1px solid #cbd5e1;
-    border-radius: 10px;
+    border-radius: 8px;
     color: #475569;
-    font-size: 13px;
-    line-height: 1.55;
+    font-size: 12px;
+    line-height: 1.45;
 }
 
 .centre-selection-notice > i {
-    margin-top: 3px;
+    margin-top: 2px;
     color: #64748b;
-    font-size: 15px;
+    font-size: 13px;
     flex-shrink: 0;
 }
 
@@ -322,12 +322,12 @@
 
             document.querySelectorAll('[data-dismiss-info]').forEach(button => {
                 button.addEventListener('click', () => {
-                    button.closest('.info-note')?.remove();
+                    button.closest('.info-note, .centre-selection-notice')?.remove();
                 });
                 button.addEventListener('keydown', (event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        button.closest('.info-note')?.remove();
+                        button.closest('.info-note, .centre-selection-notice')?.remove();
                     }
                 });
             });
@@ -353,4 +353,3 @@
 </body>
 
 </html>
-
