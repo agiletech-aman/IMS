@@ -26,7 +26,7 @@
 </div>
 
 @php $selectedCentre = app(\App\Services\CentreContextService::class)->selected(); @endphp
-<div class="info-note mb-3">
+<div class="info-note mb-3" id="centreInfoNote">
     <i class="fa-solid fa-circle-info"></i>
     <span>
         @if($selectedCentre)
@@ -35,6 +35,7 @@
             <strong>All Centres</strong> is selected — this page shows backups, schedules, and restore jobs from every Centre together. A backup created now will be a full, whole-system backup instead of one Centre's data. Select a specific Centre above for a Centre-only backup.
         @endif
     </span>
+    <button type="button" class="info-note-close" data-dismiss-info aria-label="Dismiss">&times;</button>
 </div>
 
 <div class="row row-cols-2 row-cols-xl-4 g-3 mb-3">
