@@ -21,13 +21,16 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  * Asset Excel import/export, one worksheet per Asset Type.
  *
  * Every workbook (export, or the sample) has one sheet named exactly after an
- * Asset Type. Each sheet only carries what's actually needed to create/update
- * an Asset under the Type → Subtype → Brand model: Name, Asset Type, Subtype
- * Name, Brand, and the common/tail fields. Parameter values are never part of
- * the sheet — they're resolved from the matched Subtype's own configured
- * values once the row's Subtype Name is looked up, so the sheet stays free of
- * columns that duplicate master data. Import identifies each sheet's type by
- * its name and validates/creates rows using only that type's column set.
+ * Asset Type. Each sheet carries what's needed to create/update an Asset
+ * under the Type → Subtype → Brand model: Name, Asset Type, Subtype Name,
+ * Brand, and the common/tail fields. On export, one extra read-only column
+ * per that Type's currently configured Parameters is appended, showing each
+ * asset's resolved Subtype value — for reference only. Import never expects
+ * or requires those Parameter columns: a row's Parameter values always come
+ * from its resolved Subtype's own configuration, so Import identifies each
+ * sheet's type by its name and validates/creates rows using only the
+ * non-Parameter column set (any Parameter columns present, e.g. from
+ * re-uploading an exported file, are simply ignored).
  */
 class AssetCsv
 {
@@ -44,16 +47,35 @@ class AssetCsv
         'status' => ['label' => 'Status', 'required' => true],
         'warranty_expiry' => ['label' => 'Warranty Expiry', 'required' => false],
         'amc_expiry' => ['label' => 'AMC Expiry', 'required' => false],
-        'notes' => ['label' => 'Notes', 'required' => false],
+        'notes' => ['label' => 'Description', 'required' => false],
     ];
 
     /**
-     * The ordered column list for one Asset Type's sheet: Name, Asset Type,
-     * Subtype Name, Brand, then the common/tail fields. Parameter values are
-     * not columns — they're resolved from the matched Subtype's own
-     * configuration once its name is looked up.
+     * One read-only column per Parameter currently configured on the Asset
+     * Type — export only. The value shown is that row's resolved Subtype's
+     * configured value for that parameter; import never expects these.
      */
-    public static function columnSpec(AssetType $type, bool $withAssetTag = false): array
+    public static function parameterColumns(AssetType $type): array
+    {
+        return collect($type->parameters ?? [])
+            ->map(fn (string $parameter) => [
+                'key' => self::normalizeKey($parameter),
+                'label' => $parameter,
+                'required' => false,
+                'parameter' => $parameter,
+            ])
+            ->all();
+    }
+
+    /**
+     * The ordered column list for one Asset Type's sheet: Name, Asset Type,
+     * Subtype Name, Brand, then the common/tail fields. Pass $forExport to
+     * additionally append that Type's read-only Parameter columns (export
+     * and the sample download only) — import never includes or requires
+     * them, since a row's Parameter values always come from its resolved
+     * Subtype's own configuration.
+     */
+    public static function columnSpec(AssetType $type, bool $withAssetTag = false, bool $forExport = false): array
     {
         $spec = [];
 
@@ -68,6 +90,12 @@ class AssetCsv
 
         foreach (self::COMMON_FIELDS as $key => $meta) {
             $spec[] = ['key' => $key, 'label' => $meta['label'], 'required' => $meta['required']];
+        }
+
+        if ($forExport) {
+            foreach (self::parameterColumns($type) as $field) {
+                $spec[] = $field;
+            }
         }
 
         foreach (self::TAIL_FIELDS as $key => $meta) {
@@ -121,7 +149,7 @@ class AssetCsv
 
     private static function writeSheet(Worksheet $sheet, AssetType $type, bool $withData): void
     {
-        $spec = self::columnSpec($type, withAssetTag: $withData);
+        $spec = self::columnSpec($type, withAssetTag: $withData, forExport: true);
         $lastColumn = Coordinate::stringFromColumnIndex(count($spec));
 
         foreach ($spec as $index => $column) {
@@ -184,6 +212,10 @@ class AssetCsv
 
     private static function valueForColumn(Asset $asset, array $column, AssetType $type): string
     {
+        if (isset($column['parameter'])) {
+            return self::parameterValueForAsset($asset, $column['parameter']);
+        }
+
         return match ($column['key']) {
             'asset_tag' => (string) $asset->asset_tag,
             'name' => (string) $asset->name,
@@ -210,6 +242,10 @@ class AssetCsv
      */
     private static function sampleValueForColumn(array $column, AssetType $type, ?AssetSubtype $subtype): string
     {
+        if (isset($column['parameter'])) {
+            return (string) ($subtype?->parameter_values[$column['parameter']] ?? '');
+        }
+
         return match ($column['key']) {
             'asset_tag' => '',
             'name' => 'Sample '.$type->name,
@@ -228,6 +264,32 @@ class AssetCsv
             'notes' => '',
             default => '',
         };
+    }
+
+    /**
+     * A Parameter's value for one asset: the assigned Subtype's configured
+     * value, falling back to the pre-redesign per-asset subtype_values entry
+     * whose field name matches this parameter (backward compatibility for
+     * assets that predate Subtype-level parameter configuration — that old
+     * data is never modified, just still surfaced here when it maps cleanly).
+     */
+    private static function parameterValueForAsset(Asset $asset, string $parameter): string
+    {
+        if ($asset->subtype) {
+            $value = $asset->subtype->parameter_values[$parameter] ?? null;
+
+            if ($value !== null && $value !== '') {
+                return (string) $value;
+            }
+        }
+
+        foreach ($asset->subtypeFieldValues() as $field) {
+            if (Str::lower(trim($field['label'])) === Str::lower(trim($parameter))) {
+                return (string) $field['value'];
+            }
+        }
+
+        return '';
     }
 
     /**

@@ -43,4 +43,27 @@ class AuditLog extends Model
     {
         return $this->morphTo();
     }
+
+    /**
+     * Plain-text summary of a status/assigned_to change captured on this
+     * entry, e.g. for CSV/XLSX export where HTML markup doesn't apply.
+     */
+    public function describeStatusAssignmentChange(): string
+    {
+        $newValues = $this->new_values ?? [];
+        $oldValues = $this->old_values ?? [];
+        $parts = [];
+
+        if (array_key_exists('status', $newValues)) {
+            $parts[] = 'Status changed from '.($oldValues['status'] ?? '—').' to '.$newValues['status'];
+        }
+
+        if (array_key_exists('assigned_to', $newValues)) {
+            $parts[] = $newValues['assigned_to']
+                ? 'Assigned to '.$newValues['assigned_to']
+                : 'Unassigned from '.($oldValues['assigned_to'] ?? 'previous user');
+        }
+
+        return implode('; ', $parts);
+    }
 }

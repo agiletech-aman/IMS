@@ -24,59 +24,88 @@
 @permission('assets','delete')<div class="panel"><div class="panel-header"><h2>Danger Zone</h2></div><div class="panel-body"><form method="POST" action="{{ route('assets.destroy',$asset) }}" data-confirm data-confirm-title="Delete Asset?" data-confirm-message="This will permanently delete {{ $asset->name }} ({{ $asset->asset_tag }}). This action cannot be undone." data-confirm-label="Delete Asset">@csrf @method('DELETE')<button class="btn btn-outline-danger w-100"><i class="fa-regular fa-trash-can me-2"></i>Delete Asset</button></form></div></div>@endpermission</div></div>
 </div>
 <div class="tab-pane fade" id="assetHistoryTab">
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+        <h2 class="h5 mb-1">Asset History</h2>
+        <p class="mb-0 text-secondary small">Assignment trail and status changes for this asset.</p>
+    </div>
+    @permission('assets','export')
+    <div class="d-flex gap-2">
+        <a class="btn btn-soft btn-sm" href="{{ route('assets.history.export',$asset) }}"><i class="fa-solid fa-file-csv me-2 text-success"></i>Export CSV</a>
+        <a class="btn btn-soft btn-sm" href="{{ route('assets.history.export.xlsx',$asset) }}"><i class="fa-solid fa-file-excel me-2 text-success"></i>Export Excel</a>
+    </div>
+    @endpermission
+</div>
+
 <div class="panel mb-3">
-    <div class="panel-header"><h2>Assignment History</h2><p class="mb-0 text-secondary">Who this asset was assigned to, and when.</p></div>
+    <div class="panel-header"><div><h2>Assignment History</h2><p class="mb-0 text-secondary small">Who this asset was assigned to, and when.</p></div></div>
     <div class="table-responsive">
-        <table class="table mb-0">
+        <table class="table data-table mb-0">
             <thead><tr><th>Assigned To</th><th>Assigned At</th><th>Assigned By</th><th>Unassigned At</th><th>Unassigned By</th></tr></thead>
             <tbody>
                 @forelse($assignmentHistory as $entry)
                 <tr>
-                    <td>{{ $entry->faculty?->name ?? '—' }}</td>
+                    <td>
+                        <strong>{{ $entry->faculty?->name ?? '—' }}</strong>
+                        @unless($entry->unassigned_at)
+                            <span class="badge-soft success ms-2">Current</span>
+                        @endunless
+                    </td>
                     <td>{{ $entry->assigned_at?->format('d M Y, h:i A') ?? '—' }}</td>
                     <td>{{ $entry->assigned_by ?? '—' }}</td>
                     <td>{{ $entry->unassigned_at?->format('d M Y, h:i A') ?? '—' }}</td>
                     <td>{{ $entry->unassigned_by ?? '—' }}</td>
                 </tr>
                 @empty
-                <tr><td colspan="5" class="text-center text-secondary py-4">No assignment history recorded for this asset yet.</td></tr>
+                <tr><td colspan="5"><div class="empty-report-state"><i class="fa-solid fa-user-clock"></i><strong>No assignment history yet</strong><span>This asset hasn't been assigned to anyone so far.</span></div></td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 </div>
+
 <div class="panel">
-    <div class="panel-header"><h2>Status Changes</h2><p class="mb-0 text-secondary">When this asset's status or assignment changed.</p></div>
+    <div class="panel-header"><div><h2>Status Changes</h2><p class="mb-0 text-secondary small">When this asset's status or assignment changed.</p></div></div>
     <div class="table-responsive">
-        <table class="table mb-0">
+        <table class="table data-table mb-0">
             <thead><tr><th>Date</th><th>Changed By</th><th>Change</th></tr></thead>
             <tbody>
                 @forelse($activityLog as $log)
+                @php
+                    $statusChanged = array_key_exists('status', $log->new_values ?? []);
+                    $assignmentChanged = array_key_exists('assigned_to', $log->new_values ?? []);
+                    $newAssignee = $log->new_values['assigned_to'] ?? null;
+                @endphp
                 <tr>
-                    <td>{{ $log->created_at->format('d M Y, h:i A') }}</td>
+                    <td class="text-nowrap">{{ $log->created_at->format('d M Y, h:i A') }}</td>
                     <td>{{ $log->actor_name ?? 'System' }}</td>
                     <td>
-                        @if(array_key_exists('status', $log->new_values ?? []))
-                            Status changed from <strong>{{ $log->old_values['status'] ?? '—' }}</strong> to <strong>{{ $log->new_values['status'] }}</strong>
-                        @endif
-                        @if(array_key_exists('assigned_to', $log->new_values ?? []))
-                            @if(array_key_exists('status', $log->new_values ?? []))<br>@endif
-                            @php $newAssignee = $log->new_values['assigned_to'] ?? null; @endphp
-                            @if($newAssignee)
-                                Assigned to <strong>{{ $newAssignee }}</strong>
-                            @else
-                                Unassigned from <strong>{{ $log->old_values['assigned_to'] ?? 'previous user' }}</strong>
+                        <div class="d-flex flex-column gap-1 align-items-start">
+                            @if($statusChanged)
+                                <span class="badge-soft warning">
+                                    <i class="fa-solid fa-rotate me-1"></i>
+                                    {{ $log->old_values['status'] ?? '—' }} → {{ $log->new_values['status'] }}
+                                </span>
                             @endif
-                        @endif
+                            @if($assignmentChanged)
+                                @if($newAssignee)
+                                    <span class="badge-soft success"><i class="fa-solid fa-user-plus me-1"></i>Assigned to {{ $newAssignee }}</span>
+                                @else
+                                    <span class="badge-soft muted"><i class="fa-solid fa-user-minus me-1"></i>Unassigned from {{ $log->old_values['assigned_to'] ?? 'previous user' }}</span>
+                                @endif
+                            @endif
+                        </div>
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="3" class="text-center text-secondary py-4">No status changes recorded for this asset yet.</td></tr>
+                <tr><td colspan="3"><div class="empty-report-state"><i class="fa-solid fa-clock-rotate-left"></i><strong>No status changes yet</strong><span>Status and assignment changes for this asset will show up here.</span></div></td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 </div>
+
 </div>
 </div>
 @endsection

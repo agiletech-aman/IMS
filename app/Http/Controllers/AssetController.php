@@ -19,6 +19,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AssetController extends Controller
 {
@@ -301,22 +305,105 @@ public function show(Asset $asset): View
     {
         $asset->load(['type', 'brand', 'department', 'subDepartment', 'subtype']);
 
-        $assignmentHistory = $asset->assignmentHistory()->with('faculty')->orderByDesc('assigned_at')->get();
-
-        $activityLog = AuditLog::where('auditable_type', Asset::class)
-            ->where('auditable_id', $asset->id)
-            ->where(function ($query) {
-                $query->whereJsonContainsKey('new_values->status')
-                    ->orWhereJsonContainsKey('new_values->assigned_to');
-            })
-            ->orderByDesc('created_at')
-            ->get();
-
         return view('assets.show', [
             'asset' => $asset,
-            'assignmentHistory' => $assignmentHistory,
-            'activityLog' => $activityLog,
-        ]);
+        ] + $this->historyData($asset));
+    }
+
+    /**
+     * The Assignment History rows and status/assignment Activity Log entries
+     * shared by the show page's History tab and its CSV/XLSX exports.
+     */
+    private function historyData(Asset $asset): array
+    {
+        return [
+            'assignmentHistory' => $asset->assignmentHistory()->with('faculty')->orderByDesc('assigned_at')->get(),
+            'activityLog' => AuditLog::where('auditable_type', Asset::class)
+                ->where('auditable_id', $asset->id)
+                ->where(function ($query) {
+                    $query->whereJsonContainsKey('new_values->status')
+                        ->orWhereJsonContainsKey('new_values->assigned_to');
+                })
+                ->orderByDesc('created_at')
+                ->get(),
+        ];
+    }
+
+    public function exportHistoryCsv(Asset $asset): StreamedResponse
+    {
+        $assignmentHistory = $this->historyData($asset)['assignmentHistory'];
+
+        $filename = $asset->asset_tag.'-assignment-history-'.now()->format('Y-m-d-His').'.csv';
+
+        return response()->streamDownload(function () use ($assignmentHistory) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, ['Assigned To', 'Assigned At', 'Assigned By', 'Unassigned At', 'Unassigned By']);
+
+            foreach ($assignmentHistory as $entry) {
+                fputcsv($handle, [
+                    $entry->faculty?->name,
+                    $entry->assigned_at?->format('d M Y h:i A'),
+                    $entry->assigned_by,
+                    $entry->unassigned_at?->format('d M Y h:i A') ?? 'Current',
+                    $entry->unassigned_by,
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    public function exportHistoryXlsx(Asset $asset): BinaryFileResponse
+    {
+        $data = $this->historyData($asset);
+
+        $spreadsheet = new Spreadsheet();
+
+        $assignmentSheet = $spreadsheet->getActiveSheet();
+        $assignmentSheet->setTitle('Assignment History');
+        $assignmentSheet->fromArray(['Assigned To', 'Assigned At', 'Assigned By', 'Unassigned At', 'Unassigned By'], null, 'A1');
+
+        $row = 2;
+        foreach ($data['assignmentHistory'] as $entry) {
+            $assignmentSheet->fromArray([
+                $entry->faculty?->name,
+                $entry->assigned_at?->format('d M Y h:i A'),
+                $entry->assigned_by,
+                $entry->unassigned_at?->format('d M Y h:i A') ?? 'Current',
+                $entry->unassigned_by,
+            ], null, "A{$row}");
+            $row++;
+        }
+
+        $statusSheet = $spreadsheet->createSheet();
+        $statusSheet->setTitle('Status Changes');
+        $statusSheet->fromArray(['Date', 'Changed By', 'Change'], null, 'A1');
+
+        $row = 2;
+        foreach ($data['activityLog'] as $log) {
+            $statusSheet->fromArray([
+                $log->created_at->format('d M Y h:i A'),
+                $log->actor_name ?? 'System',
+                $log->describeStatusAssignmentChange(),
+            ], null, "A{$row}");
+            $row++;
+        }
+
+        foreach ([$assignmentSheet, $statusSheet] as $sheet) {
+            foreach (range('A', $sheet->getHighestColumn()) as $column) {
+                $sheet->getColumnDimension($column)->setAutoSize(true);
+            }
+        }
+
+        $spreadsheet->setActiveSheetIndex(0);
+
+        $filename = $asset->asset_tag.'-history-'.now()->format('Y-m-d-His').'.xlsx';
+        $tmpPath = storage_path('app/'.$filename);
+        (new Xlsx($spreadsheet))->save($tmpPath);
+
+        return response()->download($tmpPath, $filename)->deleteFileAfterSend(true);
     }
 
     public function edit(Asset $asset): View
