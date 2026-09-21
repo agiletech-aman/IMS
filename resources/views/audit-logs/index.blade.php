@@ -41,7 +41,7 @@
     </div>
 </div>
 
-<div class="info-note mb-3">
+<div class="info-note mb-3 {{ $selectedCentre ? '' : 'centre-selection-note' }}">
     <i class="fa-solid fa-circle-info"></i>
     <span>
         @if($selectedCentre)
@@ -219,4 +219,3 @@
 .audit-json{margin:0;max-height:320px;overflow:auto;padding:1rem;border:1px solid var(--border-color);border-radius:12px;background:var(--body-bg);color:var(--text-color);font-size:.78rem;white-space:pre-wrap;word-break:break-word}
 </style>
 @endsection
-

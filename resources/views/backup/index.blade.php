@@ -26,7 +26,7 @@
 </div>
 
 @php $selectedCentre = app(\App\Services\CentreContextService::class)->selected(); @endphp
-<div class="info-note mb-3">
+<div class="info-note mb-3 {{ $selectedCentre ? '' : 'centre-selection-note' }}">
     <i class="fa-solid fa-circle-info"></i>
     <span>
         @if($selectedCentre)
