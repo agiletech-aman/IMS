@@ -125,21 +125,59 @@ class UserController extends Controller
     public function assignAsset(Request $request, Faculty $user): RedirectResponse
     {
         $data = $request->validate([
-            'asset_ids' => ['required', 'array', 'min:1'],
+            'asset_ids' => ['nullable', 'array'],
             'asset_ids.*' => [
                 Rule::exists('assets', 'id')->where(
                     fn($q) => $q->whereNull('assigned_to')->orWhere('assigned_to', '')
                 ),
             ],
+            'keep_asset_ids' => ['nullable', 'array'],
+            'keep_asset_ids.*' => ['integer'],
         ], [
             'asset_ids.*.exists' => 'One or more selected assets are no longer available for assignment.',
         ]);
 
-        $assignedBy = session('static_auth_user.name')
+        $actor = session('static_auth_user.name')
             ?? session('static_auth_user.email')
             ?? 'System';
 
-        $assets = Asset::whereIn('id', $data['asset_ids'])
+        $currentlyAssignedIds = $user->assignedAssets()->pluck('id');
+        $keepIds = collect($data['keep_asset_ids'] ?? [])->map(fn ($id) => (int) $id);
+        $toUnassign = Asset::whereIn('id', $currentlyAssignedIds->diff($keepIds))->get();
+
+        foreach ($toUnassign as $asset) {
+            $asset->update([
+                'assigned_to' => null,
+                'status' => $asset->status === 'Active' ? 'In Stock' : $asset->status,
+            ]);
+
+            AssetAssignmentHistory::where('asset_id', $asset->id)
+                ->where('faculty_id', $user->id)
+                ->whereNull('unassigned_at')
+                ->latest('assigned_at')
+                ->first()
+                ?->update(['unassigned_at' => now(), 'unassigned_by' => $actor]);
+
+            $this->audit->record(
+                'UNASSIGN',
+                'Assets',
+                "{$asset->asset_tag} — {$asset->name} was unassigned from {$user->name}.",
+                $asset,
+                ['assigned_to' => $user->name, 'user_id' => $user->id],
+                ['assigned_to' => null],
+            );
+
+            $this->notifications->send(
+                'asset_unassigned',
+                'Asset unassigned',
+                "{$asset->asset_tag} — {$asset->name} was unassigned from {$user->name}.",
+                'info',
+                'Assets',
+                ['asset_id' => $asset->id, 'user_id' => $user->id],
+            );
+        }
+
+        $assets = Asset::whereIn('id', $data['asset_ids'] ?? [])
             ->where(fn($q) => $q->whereNull('assigned_to')->orWhere('assigned_to', ''))
             ->get();
 
@@ -153,7 +191,7 @@ class UserController extends Controller
                 'faculty_id' => $user->id,
                 'asset_id' => $asset->id,
                 'assigned_at' => now(),
-                'assigned_by' => $assignedBy,
+                'assigned_by' => $actor,
             ]);
 
             $this->audit->record(
@@ -175,12 +213,23 @@ class UserController extends Controller
             );
         }
 
-        $count = $assets->count();
-        $message = $count === 1
-            ? "{$assets->first()->asset_tag} assigned to {$user->name} successfully."
-            : "{$count} assets assigned to {$user->name} successfully.";
+        if ($assets->isEmpty() && $toUnassign->isEmpty()) {
+            return back()->with('success', 'No assignment changes were made.');
+        }
 
-        return back()->with('success', $message);
+        $messageParts = [];
+        if ($assets->isNotEmpty()) {
+            $messageParts[] = $assets->count() === 1
+                ? "{$assets->first()->asset_tag} assigned"
+                : "{$assets->count()} assets assigned";
+        }
+        if ($toUnassign->isNotEmpty()) {
+            $messageParts[] = $toUnassign->count() === 1
+                ? "{$toUnassign->first()->asset_tag} unassigned"
+                : "{$toUnassign->count()} assets unassigned";
+        }
+
+        return back()->with('success', implode(' and ', $messageParts).' for '.$user->name.'.');
     }
 
     public function assetHistory(Request $request, Faculty $user): View

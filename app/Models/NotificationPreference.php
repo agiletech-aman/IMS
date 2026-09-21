@@ -18,6 +18,7 @@ class NotificationPreference extends Model
         'access_account_created' => ['New access account alert', null],
         'access_account_deleted' => ['Deleted access account alert', null],
         'asset_assigned' => ['Asset assignment alert', null],
+        'asset_unassigned' => ['Asset unassignment alert', null],
         'report_generated' => ['Report generation alert', null],
         'backup_completed' => ['Backup completed alert', null],
         'backup_failed' => ['Backup failure alert', null],

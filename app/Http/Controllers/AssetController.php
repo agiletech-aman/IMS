@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Asset;
 use App\Models\AssetAssignmentHistory;
 use App\Models\AssetSubtype;
+use App\Models\AuditLog;
 use App\Models\AssetType;
 use App\Models\Department;
 use App\Models\Faculty;
@@ -178,6 +179,7 @@ public function index(Request $request)
         'serial_number',
         'installation_date',
         'created_at',
+        'updated_at',
     ];
 
 
@@ -297,7 +299,24 @@ $assets = $query
 
 public function show(Asset $asset): View
     {
-        return view('assets.show', ['asset' => $asset->load(['type', 'brand', 'department', 'subDepartment', 'subtype'])]);
+        $asset->load(['type', 'brand', 'department', 'subDepartment', 'subtype']);
+
+        $assignmentHistory = $asset->assignmentHistory()->with('faculty')->orderByDesc('assigned_at')->get();
+
+        $activityLog = AuditLog::where('auditable_type', Asset::class)
+            ->where('auditable_id', $asset->id)
+            ->where(function ($query) {
+                $query->whereJsonContainsKey('new_values->status')
+                    ->orWhereJsonContainsKey('new_values->assigned_to');
+            })
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('assets.show', [
+            'asset' => $asset,
+            'assignmentHistory' => $assignmentHistory,
+            'activityLog' => $activityLog,
+        ]);
     }
 
     public function edit(Asset $asset): View

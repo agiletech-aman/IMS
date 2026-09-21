@@ -22,12 +22,12 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  *
  * Every workbook (export, or the sample) has one sheet named exactly after an
  * Asset Type. Each sheet only carries what's actually needed to create/update
- * an Asset under the Type → Subtype → Brand → Parameters model: Name, Asset
- * Type, Subtype Code, Brand, then one column per that Type's currently
- * configured Subtype Parameters — pulled live from AssetType, never
- * hardcoded, so the sheet stays free of columns that don't apply to that
- * type. Import identifies each sheet's type by its name and validates/
- * creates rows using only that type's column set.
+ * an Asset under the Type → Subtype → Brand model: Name, Asset Type, Subtype
+ * Name, Brand, and the common/tail fields. Parameter values are never part of
+ * the sheet — they're resolved from the matched Subtype's own configured
+ * values once the row's Subtype Name is looked up, so the sheet stays free of
+ * columns that duplicate master data. Import identifies each sheet's type by
+ * its name and validates/creates rows using only that type's column set.
  */
 class AssetCsv
 {
@@ -48,25 +48,10 @@ class AssetCsv
     ];
 
     /**
-     * One column per Parameter currently configured on the Asset Type — the
-     * value shown/expected is that row's resolved Subtype's configured value
-     * for that parameter.
-     */
-    public static function parameterColumns(AssetType $type): array
-    {
-        return collect($type->parameters ?? [])
-            ->map(fn (string $parameter) => [
-                'key' => self::normalizeKey($parameter),
-                'label' => $parameter,
-                'required' => false,
-                'parameter' => $parameter,
-            ])
-            ->all();
-    }
-
-    /**
      * The ordered column list for one Asset Type's sheet: Name, Asset Type,
-     * Subtype Code, Brand, then that type's own parameter columns.
+     * Subtype Name, Brand, then the common/tail fields. Parameter values are
+     * not columns — they're resolved from the matched Subtype's own
+     * configuration once its name is looked up.
      */
     public static function columnSpec(AssetType $type, bool $withAssetTag = false): array
     {
@@ -78,15 +63,11 @@ class AssetCsv
 
         $spec[] = ['key' => 'name', 'label' => 'Name', 'required' => true];
         $spec[] = ['key' => 'asset_type', 'label' => 'Asset Type', 'required' => true];
-        $spec[] = ['key' => 'subtype_code', 'label' => 'Subtype Code', 'required' => false];
+        $spec[] = ['key' => 'subtype_name', 'label' => 'Subtype Name', 'required' => false];
         $spec[] = ['key' => 'brand', 'label' => 'Brand', 'required' => true];
 
         foreach (self::COMMON_FIELDS as $key => $meta) {
             $spec[] = ['key' => $key, 'label' => $meta['label'], 'required' => $meta['required']];
-        }
-
-        foreach (self::parameterColumns($type) as $field) {
-            $spec[] = $field;
         }
 
         foreach (self::TAIL_FIELDS as $key => $meta) {
@@ -203,15 +184,11 @@ class AssetCsv
 
     private static function valueForColumn(Asset $asset, array $column, AssetType $type): string
     {
-        if (isset($column['parameter'])) {
-            return self::parameterValueForAsset($asset, $column['parameter']);
-        }
-
         return match ($column['key']) {
             'asset_tag' => (string) $asset->asset_tag,
             'name' => (string) $asset->name,
             'asset_type' => $type->name,
-            'subtype_code' => (string) ($asset->subtype?->code ?? ''),
+            'subtype_name' => (string) ($asset->subtype?->name ?? ''),
             'brand' => $asset->brand?->name ?? '',
             'department' => $asset->department?->name ?? '',
             'sub_department' => $asset->subDepartment?->name ?? '',
@@ -233,15 +210,11 @@ class AssetCsv
      */
     private static function sampleValueForColumn(array $column, AssetType $type, ?AssetSubtype $subtype): string
     {
-        if (isset($column['parameter'])) {
-            return (string) ($subtype?->parameter_values[$column['parameter']] ?? '');
-        }
-
         return match ($column['key']) {
             'asset_tag' => '',
             'name' => 'Sample '.$type->name,
             'asset_type' => $type->name,
-            'subtype_code' => (string) ($subtype?->code ?? ''),
+            'subtype_name' => (string) ($subtype?->name ?? ''),
             'brand' => (string) ($subtype?->brand?->name ?? ''),
             'department' => 'Sample Department',
             'sub_department' => 'Sample Sub Department',
@@ -255,32 +228,6 @@ class AssetCsv
             'notes' => '',
             default => '',
         };
-    }
-
-    /**
-     * A Parameter's value for one asset: the assigned Subtype's configured
-     * value, falling back to the pre-redesign per-asset subtype_values entry
-     * whose field name matches this parameter (backward compatibility for
-     * assets that predate Subtype-level parameter configuration — that old
-     * data is never modified, just still surfaced here when it maps cleanly).
-     */
-    private static function parameterValueForAsset(Asset $asset, string $parameter): string
-    {
-        if ($asset->subtype) {
-            $value = $asset->subtype->parameter_values[$parameter] ?? null;
-
-            if ($value !== null && $value !== '') {
-                return (string) $value;
-            }
-        }
-
-        foreach ($asset->subtypeFieldValues() as $field) {
-            if (Str::lower(trim($field['label'])) === Str::lower(trim($parameter))) {
-                return (string) $field['value'];
-            }
-        }
-
-        return '';
     }
 
     /**
@@ -458,44 +405,32 @@ class AssetCsv
 
         /*
         |--------------------------------------------------------------------------
-        | Subtype — identified by its unique Code, must belong to this Type
+        | Subtype — identified by its Name, must belong to this Type. Its own
+        | configured Parameter values are used as-is; the sheet never carries
+        | Parameter columns to keep in sync with them.
         |--------------------------------------------------------------------------
         */
 
-        $subtypeCode = trim((string) ($row['subtype_code'] ?? ''));
+        $subtypeName = trim((string) ($row['subtype_name'] ?? ''));
         $subtype = null;
 
-        if ($subtypeCode !== '') {
-            $subtype = AssetSubtype::whereRaw('LOWER(code)=?', [Str::lower($subtypeCode)])->first();
+        if ($subtypeName !== '') {
+            // Scoped to this sheet's Type first, since Subtype names are only
+            // guaranteed unique within a Type, not across the whole system.
+            $subtype = AssetSubtype::where('asset_type_id', $type->id)
+                ->whereRaw('LOWER(name)=?', [Str::lower($subtypeName)])
+                ->first();
 
             if (! $subtype) {
-                $errors[] = "Invalid Subtype Code: {$subtypeCode}";
-            } elseif ($subtype->asset_type_id !== $type->id) {
-                $errors[] = "Subtype {$subtypeCode} does not belong to Asset Type {$type->name}.";
-                $subtype = null;
+                $existsElsewhere = AssetSubtype::whereRaw('LOWER(name)=?', [Str::lower($subtypeName)])->exists();
+
+                $errors[] = $existsElsewhere
+                    ? "Subtype \"{$subtypeName}\" does not belong to Asset Type {$type->name}."
+                    : "Invalid Subtype Name: {$subtypeName}";
             }
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Parameter values — validated against the resolved Subtype's config
-        |--------------------------------------------------------------------------
-        */
-
         if ($subtype) {
-            foreach ($spec as $column) {
-                if (! isset($column['parameter'])) {
-                    continue;
-                }
-
-                $provided = trim((string) ($row[$column['key']] ?? ''));
-                $configured = trim((string) ($subtype->parameter_values[$column['parameter']] ?? ''));
-
-                if ($provided !== '' && $configured !== '' && Str::lower($provided) !== Str::lower($configured)) {
-                    $errors[] = "{$column['label']} value \"{$provided}\" does not match the configured value \"{$configured}\" for Subtype \"{$subtype->code}\".";
-                }
-            }
-
             if ($subtype->is_required) {
                 foreach ($type->parameters ?? [] as $parameterName) {
                     $configured = trim((string) ($subtype->parameter_values[$parameterName] ?? ''));

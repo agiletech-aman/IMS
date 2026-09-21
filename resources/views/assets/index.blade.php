@@ -654,6 +654,36 @@
                     </th>
 
 
+                    {{-- ALLOTMENT DATE --}}
+
+                    <th>
+
+                        <a
+                            href="{{ request()->fullUrlWithQuery([
+                                'sort' => 'updated_at',
+                                'direction' =>
+                                    request('sort') === 'updated_at' &&
+                                    request('direction') === 'asc'
+                                        ? 'desc'
+                                        : 'asc'
+                            ]) }}"
+                        >
+
+                            Allotment Date
+
+                            @if(request('sort') === 'updated_at')
+
+                                <i
+                                    class="fa-solid fa-sort-{{ request('direction') === 'asc' ? 'up' : 'down' }}"
+                                ></i>
+
+                            @endif
+
+                        </a>
+
+                    </th>
+
+
                     {{-- STATUS --}}
 
                     <th>
@@ -750,6 +780,13 @@
 
                         <td>
                             {{ $asset->installation_date?->format('d M Y') ?? '—' }}
+                        </td>
+
+
+                        {{-- ALLOTMENT DATE --}}
+
+                        <td>
+                            {{ $asset->updated_at?->format('d M Y') ?? '—' }}
                         </td>
 
 

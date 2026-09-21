@@ -16,7 +16,7 @@
     $directoryRoute = $isAccessAccountDirectory
         ? 'access-accounts.index'
         : 'users.index';
-    $permissionModule = $accessAccountModule ?? 'users';
+    $permissionModule = $accessAccountModule ?? 'faculty';
 @endphp
 
 @include('partials.page-header',[
@@ -536,7 +536,7 @@
             {{-- EXPORT --}}
 
             @if(! $isAccessAccountDirectory)
-            @permission('users','export')
+            @permission('faculty','export')
 
                 <a
                     href="{{ route(
@@ -560,7 +560,7 @@
             {{-- IMPORT --}}
 
             @if(! $isAccessAccountDirectory)
-            @permission('users','import')
+            @permission('faculty','import')
 
                 <button
                     type="button"
@@ -684,7 +684,7 @@
                                     <i class="fa-regular fa-eye"></i>
                                 </a>
 
-                                @permission('users','assign')
+                                @permission('faculty','assign')
                                     <button
                                         class="btn btn-soft btn-icon assign-asset-button"
                                         type="button"
@@ -704,7 +704,7 @@
                                     </button>
                                 @endpermission
 
-                                @permission('users','update')
+                                @permission('faculty','update')
                                     <button
                                         class="btn btn-soft btn-icon"
                                         type="button"
@@ -716,7 +716,7 @@
                                     </button>
                                 @endpermission
 
-                                @permission('users','delete')
+                                @permission('faculty','delete')
                                     <form
                                         class="d-inline"
                                         method="POST"
@@ -1068,7 +1068,7 @@
 ========================================================= --}}
 
 @if(! $isAccessAccountDirectory)
-@permission('users','assign')
+@permission('faculty','assign')
 
 <div
     class="modal fade"
@@ -1243,6 +1243,7 @@
                             <span>
                                 Only currently unassigned assets can be added.
                                 In Stock assets become Active after assignment.
+                                Uncheck an already assigned asset above to unassign it.
                             </span>
 
                         </div>
@@ -1283,7 +1284,7 @@
                         class="btn btn-primary"
                     >
                         <i class="fa-solid fa-link me-2"></i>
-                        Assign Assets
+                        Save Assignment Changes
                     </button>
 
                 </div>
@@ -1305,7 +1306,7 @@
 ========================================================= --}}
 
 @if(! $isAccessAccountDirectory)
-@permission('users','import')
+@permission('faculty','import')
 
     @include('partials.user-import-modal')
 
@@ -1411,7 +1412,7 @@ document.addEventListener('DOMContentLoaded', function () {
     */
 
     @if(! $isAccessAccountDirectory)
-    @permission('users','assign')
+    @permission('faculty','assign')
 
     document
         .getElementById('assignAssetModal')
@@ -1509,13 +1510,28 @@ document.addEventListener('DOMContentLoaded', function () {
                         const row = document.createElement('div');
                         row.className = 'form-check';
 
-                        row.innerHTML =
-                            '<input class="form-check-input" type="checkbox" checked disabled>'
-                            + '<label class="form-check-label text-secondary">'
-                            + asset.tag + ' — ' + asset.name
-                            + ' <span class="badge bg-success-subtle text-success ms-1">Assigned</span>'
-                            + '</label>';
+                        const checkboxId = 'keepAsset' + asset.id;
 
+                        const checkbox = document.createElement('input');
+                        checkbox.className = 'form-check-input';
+                        checkbox.type = 'checkbox';
+                        checkbox.name = 'keep_asset_ids[]';
+                        checkbox.value = asset.id;
+                        checkbox.id = checkboxId;
+                        checkbox.checked = true;
+
+                        const label = document.createElement('label');
+                        label.className = 'form-check-label';
+                        label.setAttribute('for', checkboxId);
+                        label.append(asset.tag + ' — ' + asset.name + ' ');
+
+                        const badge = document.createElement('span');
+                        badge.className = 'badge bg-success-subtle text-success ms-1';
+                        badge.textContent = 'Assigned';
+                        label.appendChild(badge);
+
+                        row.appendChild(checkbox);
+                        row.appendChild(label);
                         alreadyList.appendChild(row);
 
                     });
@@ -1549,19 +1565,31 @@ document.addEventListener('DOMContentLoaded', function () {
             'submit',
             function (event) {
 
-                const checked =
+                const newlyChecked =
                     this.querySelectorAll(
                         'input[name="asset_ids[]"]:checked'
                     );
 
-                if (checked.length === 0) {
+                const keptChecked =
+                    this.querySelectorAll(
+                        'input[name="keep_asset_ids[]"]:checked'
+                    );
+
+                const wasAssignedTotal =
+                    this.querySelectorAll(
+                        'input[name="keep_asset_ids[]"]'
+                    ).length;
+
+                const hasUnassignChange = keptChecked.length < wasAssignedTotal;
+
+                if (newlyChecked.length === 0 && !hasUnassignChange) {
 
                     event.preventDefault();
 
                     if (typeof window.showToast === 'function') {
-                        window.showToast('Please select at least one asset to assign.', 'warning');
+                        window.showToast('Select an asset to assign, or uncheck one to unassign.', 'warning');
                     } else {
-                        alert('Please select at least one asset to assign.');
+                        alert('Select an asset to assign, or uncheck one to unassign.');
                     }
 
                 }
@@ -1622,7 +1650,7 @@ document.addEventListener('DOMContentLoaded', function () {
 @if(
     ! $isAccessAccountDirectory
     && app(\App\Services\PermissionService::class)
-        ->allows('users','import')
+        ->allows('faculty','import')
     &&
     (
         session('openUserImportModal')

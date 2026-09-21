@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\CentreScoped;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Asset extends Model
 {
@@ -37,6 +38,25 @@ protected function casts(): array
             'warranty_expiry' => 'date', 'amc_expiry' => 'date',
             'subtype_values' => 'array',
         ];
+    }
+
+    /**
+     * assigned_to only makes sense while status is Active — if status is
+     * saved as anything else, clear the assignment so the two never drift
+     * apart regardless of which write path (form, CSV import, unassign) hit.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Asset $asset): void {
+            if ($asset->isDirty('status') && $asset->status !== 'Active' && $asset->assigned_to) {
+                $asset->assigned_to = null;
+            }
+        });
+    }
+
+    public function assignmentHistory(): HasMany
+    {
+        return $this->hasMany(AssetAssignmentHistory::class);
     }
 
     public function type(): BelongsTo

@@ -146,7 +146,7 @@
                 Back
             </a>
 
-            @permission('users','export')
+            @permission('faculty','export')
             <a
                 href="{{ route('users.asset-history.export', $user) }}"
                 class="btn btn-primary"

@@ -106,7 +106,7 @@ class ReportController extends Controller
             $output = fopen('php://output', 'wb');
             fputcsv($output, [
                 'Asset ID', 'Asset Name', 'Type', 'Sub Type', 'Brand', 'Department',
-                'Sub Department', 'Assigned To', 'Status', 'Warranty Expiry', 'AMC Expiry',
+                'Sub Department', 'Assigned To', 'Allotment Date', 'Status', 'Warranty Expiry', 'AMC Expiry',
             ]);
 
             foreach ($assets as $asset) {
@@ -119,6 +119,7 @@ class ReportController extends Controller
                     $asset->department?->name,
                     $asset->subDepartment?->name,
                     $asset->assigned_to,
+                    $asset->updated_at?->format('Y-m-d'),
                     $asset->status,
                     $asset->warranty_expiry?->format('Y-m-d'),
                     $asset->amc_expiry?->format('Y-m-d'),
@@ -155,7 +156,7 @@ class ReportController extends Controller
 
         $headings = [
             'Asset ID', 'Asset Name', 'Type', 'Sub Type', 'Brand', 'Department',
-            'Sub Department', 'Assigned To', 'Status', 'Warranty Expiry', 'AMC Expiry',
+            'Sub Department', 'Assigned To', 'Allotment Date', 'Status', 'Warranty Expiry', 'AMC Expiry',
         ];
 
         $spreadsheet = $this->centreSplitSpreadsheet(
@@ -172,6 +173,7 @@ class ReportController extends Controller
                 $asset->department?->name,
                 $asset->subDepartment?->name,
                 $asset->assigned_to,
+                $asset->updated_at?->format('Y-m-d'),
                 $asset->status,
                 $asset->warranty_expiry?->format('Y-m-d'),
                 $asset->amc_expiry?->format('Y-m-d'),

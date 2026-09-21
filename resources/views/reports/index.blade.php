@@ -75,7 +75,7 @@
     </div>
     <div class="table-responsive">
         <table class="table data-table report-results-table">
-<thead><tr><th>Asset</th><th>Type</th><th>Brand</th><th>Department</th><th>Assigned To</th><th>Status</th><th>Warranty</th><th>AMC</th></tr></thead>
+<thead><tr><th>Asset</th><th>Type</th><th>Brand</th><th>Department</th><th>Assigned To</th><th>Allotment Date</th><th>Status</th><th>Warranty</th><th>AMC</th></tr></thead>
             <tbody>
             @forelse($assets as $asset)
                 @php
@@ -87,12 +87,13 @@
                     <td>{{ $asset->brand?->name ?: '—' }}</td>
                     <td><strong>{{ $asset->department?->name ?: '—' }}</strong><small class="d-block text-secondary">{{ $asset->subDepartment?->name ?: 'No sub department' }}</small></td>
                     <td>{{ $asset->assigned_to ?: 'Unassigned' }}</td>
+                    <td>{{ $asset->updated_at?->format($systemSettings?->date_format ?? 'd M Y') ?: '—' }}</td>
                     <td><span class="badge-soft {{ $asset->status==='Active'?'success':($asset->status==='Under Maintenance'?'warning':'muted') }}">{{ $asset->status }}</span></td>
                     <td><span class="badge-soft {{ $coverageClass($asset->warranty_expiry) }}">{{ $asset->warranty_expiry?->format($systemSettings?->date_format ?? 'd M Y') ?: 'Not applicable' }}</span></td>
                     <td><span class="badge-soft {{ $coverageClass($asset->amc_expiry) }}">{{ $asset->amc_expiry?->format($systemSettings?->date_format ?? 'd M Y') ?: 'Not applicable' }}</span></td>
                 </tr>
             @empty
-                <tr><td colspan="8"><div class="empty-report-state"><i class="fa-solid fa-filter-circle-xmark"></i><strong>No matching assets</strong><span>Change one or more filters and fetch the report again.</span></div></td></tr>
+                <tr><td colspan="9"><div class="empty-report-state"><i class="fa-solid fa-filter-circle-xmark"></i><strong>No matching assets</strong><span>Change one or more filters and fetch the report again.</span></div></td></tr>
             @endforelse
             </tbody>
         </table>
