@@ -16,6 +16,17 @@
     ];
 @endphp
 
+<div class="info-note mb-3">
+    <i class="fa-solid fa-circle-info"></i>
+    <span>
+        @if($centre)
+            You're editing permissions for <strong>{{ $centreLabel }}</strong> only. Each Centre keeps its own separate permission set for every role — changes made here do not affect the other Centre. Switch Centre from the menu above to view or edit that Centre's permissions.
+        @else
+            <strong>All Centres</strong> is selected. Each Centre has its own separate permissions per role, so they can't be shown or edited together here — select a specific Centre above to view and edit its permissions.
+        @endif
+    </span>
+</div>
+
 <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3 mb-3">
     @foreach($roles as $role)
         @php [$description,$icon,$class] = $roleDetails[$role]; @endphp

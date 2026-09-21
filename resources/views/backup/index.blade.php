@@ -25,6 +25,18 @@
     </div>
 </div>
 
+@php $selectedCentre = app(\App\Services\CentreContextService::class)->selected(); @endphp
+<div class="info-note mb-3">
+    <i class="fa-solid fa-circle-info"></i>
+    <span>
+        @if($selectedCentre)
+            This page is showing backups, schedules, and restore jobs for <strong>{{ ucfirst($selectedCentre) }}</strong> only. A backup created now will contain only {{ ucfirst($selectedCentre) }}'s data — switch Centre from the menu above to work with the other one.
+        @else
+            <strong>All Centres</strong> is selected — this page shows backups, schedules, and restore jobs from every Centre together. A backup created now will be a full, whole-system backup instead of one Centre's data. Select a specific Centre above for a Centre-only backup.
+        @endif
+    </span>
+</div>
+
 <div class="row row-cols-2 row-cols-xl-4 g-3 mb-3">
     @include('partials.stat-card',['icon'=>'fa-box-archive','label'=>'Total Backups','value'=>number_format($stats['total'])])
     @include('partials.stat-card',['icon'=>'fa-circle-check','label'=>'Successful','value'=>number_format($stats['successful']),'class'=>'success'])

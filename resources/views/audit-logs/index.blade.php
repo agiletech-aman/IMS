@@ -11,6 +11,8 @@
         ->filter(fn ($item) => $permissionService->allows($item[5] ?? '', 'view'))
         ->map(fn ($item) => ['value' => 'role:'.($item[4]['role'] ?? ''), 'label' => $item[2]])
         ->values();
+
+    $selectedCentre = app(\App\Services\CentreContextService::class)->selected();
 @endphp
 <div class="page-heading">
     <div><p class="eyebrow">Enterprise workspace</p><h1>Audit Logs</h1><p>Complete activity history for assets, users, masters, complaints, alerts, reports, and settings.</p></div>
@@ -37,6 +39,17 @@
             </form>
         @endif
     </div>
+</div>
+
+<div class="info-note mb-3">
+    <i class="fa-solid fa-circle-info"></i>
+    <span>
+        @if($selectedCentre)
+            Showing activity for <strong>{{ ucfirst($selectedCentre) }}</strong> only — switch Centre from the menu above to see the other Centre's activity.
+        @else
+            <strong>All Centres</strong> is selected — activity from both Noida and Lucknow is shown together below. Select a specific Centre above to narrow this list to just one.
+        @endif
+    </span>
 </div>
 
 <div class="row row-cols-2 row-cols-md-4 g-3 mb-3">
