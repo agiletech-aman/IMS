@@ -16,7 +16,7 @@
     ];
 @endphp
 
-<div class="info-note mb-3 {{ $centre ? '' : 'centre-selection-note' }}">
+<div class="{{ $centre ? 'info-note mb-3' : 'centre-selection-notice' }}">
     <i class="fa-solid {{ $centre ? 'fa-circle-info' : 'fa-triangle-exclamation' }}"></i>
     <span>
         @if($centre)

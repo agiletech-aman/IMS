@@ -41,7 +41,7 @@
     </div>
 </div>
 
-<div class="info-note mb-3 {{ $selectedCentre ? '' : 'centre-selection-note' }}">
+<div class="{{ $selectedCentre ? 'info-note mb-3' : 'centre-selection-notice' }}">
     <i class="fa-solid fa-circle-info"></i>
     <span>
         @if($selectedCentre)

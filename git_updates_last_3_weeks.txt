@@ -1,0 +1,78 @@
+IMS Project - Git Update Report
+Period: 02 September 2026 to 21 September 2026
+Source: Git history (last ~3 weeks)
+
+Summary
+-------
+Is period mein 88 files update hui hain: 3,713 lines add aur 971 lines remove hui hain.
+Focus areas asset management, centre-wise data handling, user management, backup/audit screens,
+permissions, validation aur UI improvements rahe.
+
+Main Updates
+------------
+1. Centre-wise data separation aur access control
+   - Noida aur Lucknow ke liye centre-scoped records ko mandatory kiya gaya.
+   - Agar specific Centre select nahi hai to asset/user/form save karne se pehle warning add ki gayi.
+   - Header mein Centre selection flow aur All Centres handling improve ki gayi.
+   - Roles & Permissions ab har Centre ke liye separately manage hoti hain.
+   - Role permissions ke liye Centre-wise unique database constraint/migration add hui.
+   - Audit Log aur Backup screens mein All Centres data ke liye clear information notices add hue.
+
+2. Asset Master aur asset configuration redesign
+   - Asset Category aur Vendor modules/tables remove kiye gaye.
+   - Asset Type ke andar flexible parameters add kiye gaye.
+   - Asset Subtype ke liye parameter values, required flag aur Brand mapping add ki gayi.
+   - Assets mein subtype relation add hui; asset form, master form aur detail pages update hue.
+   - Asset Master ka list, create/edit flow aur dedicated view page improve hua.
+   - Asset forms mein type/subtype-based fields aur checklist/import handling update hui.
+
+3. Asset import, export aur assignment history
+   - Asset CSV import/export logic ko naye type, subtype, brand aur parameter structure ke according update kiya.
+   - Subtype CSV utility add ki gayi.
+   - Asset assignment details aur asset detail screen mein improvements ki gayi.
+   - User asset-history page enhance hua.
+   - Existing assignment history ko complete karne ke liye BackfillAssignmentHistory command add hui.
+
+4. User management improvements
+   - Faculty unique ID prefix ko USR prefix mein rename/migrate kiya gaya.
+   - User create/edit forms aur listing ka flow improve hua.
+   - User import/export aur assigned asset history updates kiye gaye.
+   - User/Audit feature tests ko current behaviour ke according update kiya gaya.
+
+5. Backup aur Audit Log updates
+   - Backup schedules ke fields aur schedule handling update hui.
+   - Backup show/log screens mein display improvements kiye gaye.
+   - Audit log filtering/display aur centre-specific visibility improve hui.
+   - Audit-related model/controller support aur logging flows update hue.
+
+6. Dashboard, reports aur search
+   - Dashboard data/display update hua.
+   - Reports ke data handling aur page display mein updates kiye gaye.
+   - Global Search mein asset-related search handling improve hui.
+
+7. Form validation aur UI/UX
+   - Shared client-side validation script add ki gayi aur key forms mein apply hui.
+   - Name picker/combobox UI improve hua.
+   - Centre warning partial add hua.
+   - Roles & Permissions, Audit Log aur Backup Index par All Centres notice ko neutral grey styled information panel diya gaya.
+   - General CSS, page headers, sidebar aur responsive visual polish update hua.
+
+8. Documentation aur cleanup
+   - IMS SOP User Manual DOCX aur PDF add/update kiye gaye.
+   - Obsolete Vendor, Asset Category, Complaint aur old module files/routes cleanup kiye gaye.
+
+Important Database Migrations Added
+-------------------------------
+- Rename faculty unique ID prefix to USR.
+- Add required flag for asset subtypes.
+- Add parameters to asset types.
+- Add parameter values and brand mapping to asset subtypes.
+- Link assets with asset subtype.
+- Make centre compulsory on scoped tables.
+- Remove vendors and asset categories tables.
+- Make role permissions unique per Centre.
+
+Note
+----
+Git commit messages mostly generic the, isliye yeh report changed files, migrations aur implementation
+history ko review karke functional points ke form mein banayi gayi hai.
