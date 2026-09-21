@@ -41,7 +41,7 @@
     </div>
 </div>
 
-<div class="info-note mb-3" id="centreInfoNote">
+<div class="info-note mb-3">
     <i class="fa-solid fa-circle-info"></i>
     <span>
         @if($selectedCentre)
@@ -49,8 +49,8 @@
         @else
             <strong>All Centres</strong> is selected — activity from both Noida and Lucknow is shown together below. Select a specific Centre above to narrow this list to just one.
         @endif
+        <button type="button" class="info-note-close" data-dismiss-info aria-label="Dismiss"><i class="fa-solid fa-xmark"></i></button>
     </span>
-    <button type="button" class="info-note-close" data-dismiss-info aria-label="Dismiss">&times;</button>
 </div>
 
 <div class="row row-cols-2 row-cols-md-4 g-3 mb-3">

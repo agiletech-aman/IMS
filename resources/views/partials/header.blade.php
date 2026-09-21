@@ -226,25 +226,6 @@
 
         @endif 
  
- 
-        {{-- =========================================
-             Centre Info (only on pages that explain how
-             Centre selection affects them)
-        ========================================== --}}
-        @if($isAdminLoggedIn && request()->routeIs('backup.index', 'audit-logs.index', 'roles-permissions.index'))
-
-            <button
-                class="icon-btn"
-                id="centreInfoToggle"
-                type="button"
-                aria-label="Show Centre info"
-                title="How does Centre selection affect this page?"
-            >
-                <i class="fa-solid fa-circle-info"></i>
-            </button>
-
-        @endif
-
 
         {{-- =========================================
              Profile

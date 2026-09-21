@@ -268,20 +268,9 @@
 
         document.addEventListener('DOMContentLoaded', function() {
 
-            const centreInfoToggle = document.getElementById('centreInfoToggle');
-            const centreInfoNote = document.getElementById('centreInfoNote');
-
-            if (!centreInfoToggle || !centreInfoNote) {
-                return;
-            }
-
-            centreInfoToggle.addEventListener('click', () => {
-                centreInfoNote.classList.toggle('d-none');
-            });
-
             document.querySelectorAll('[data-dismiss-info]').forEach(button => {
                 button.addEventListener('click', () => {
-                    button.closest('.info-note')?.classList.add('d-none');
+                    button.closest('.info-note')?.remove();
                 });
             });
 
