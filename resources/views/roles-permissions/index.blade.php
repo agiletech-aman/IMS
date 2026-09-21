@@ -16,8 +16,8 @@
     ];
 @endphp
 
-<div class="info-note mb-3">
-    <i class="fa-solid fa-circle-info"></i>
+<div class="info-note mb-3 {{ $centre ? '' : 'warning' }}">
+    <i class="fa-solid {{ $centre ? 'fa-circle-info' : 'fa-triangle-exclamation' }}"></i>
     <span>
         @if($centre)
             You're editing permissions for <strong>{{ $centreLabel }}</strong> only. Each Centre keeps its own separate permission set for every role — changes made here do not affect the other Centre. Switch Centre from the menu above to view or edit that Centre's permissions.

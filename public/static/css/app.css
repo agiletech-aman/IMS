@@ -404,4 +404,11 @@ body:not(.auth-body) .btn-primary:hover{border-color:#29479b;background:linear-g
 .info-note.mb-3{margin-bottom:1rem}
 .info-note-close{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;margin-left:4px;border:0;background:none;color:var(--text-muted);font-size:12px;cursor:pointer;border-radius:6px}
 .info-note-close:hover{color:var(--text-primary);background:rgba(10,191,189,.12)}
+.info-note.warning{background:#fffbeb;border-color:#fcd34d;color:#92400e}
+.info-note.warning>i{color:#d97706}
+.info-note.warning strong{color:#78350f}
+.info-note.warning .info-note-close{color:#92400e}
+.info-note.warning .info-note-close:hover{color:#78350f;background:rgba(217,119,6,.14)}
+:root:not([data-theme="light"]) .info-note.warning,[data-theme="dark"] .info-note.warning{background:rgba(217,119,6,.12);border-color:rgba(217,119,6,.35);color:#fbbf24}
+:root:not([data-theme="light"]) .info-note.warning strong,[data-theme="dark"] .info-note.warning strong{color:#fde68a}
 .info-note-close:focus-visible{outline:2px solid #0abfbd;outline-offset:1px}
