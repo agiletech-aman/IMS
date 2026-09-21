@@ -51,6 +51,15 @@ class AssetCsv
     ];
 
     /**
+     * Read-only system timestamps — export only. Never part of import: these
+     * are always Eloquent-managed and never accepted as input.
+     */
+    private const TIMESTAMP_FIELDS = [
+        'created_at' => ['label' => 'Created At', 'required' => false],
+        'updated_at' => ['label' => 'Allotment Date', 'required' => false],
+    ];
+
+    /**
      * One read-only column per Parameter currently configured on the Asset
      * Type — export only. The value shown is that row's resolved Subtype's
      * configured value for that parameter; import never expects these.
@@ -70,10 +79,11 @@ class AssetCsv
     /**
      * The ordered column list for one Asset Type's sheet: Name, Asset Type,
      * Subtype Name, Brand, then the common/tail fields. Pass $forExport to
-     * additionally append that Type's read-only Parameter columns (export
-     * and the sample download only) — import never includes or requires
-     * them, since a row's Parameter values always come from its resolved
-     * Subtype's own configuration.
+     * additionally append that Type's read-only Parameter columns and the
+     * Created At / Allotment Date timestamps (export and the sample download
+     * only) — import never includes or requires any of these, since
+     * Parameter values always come from the resolved Subtype's own
+     * configuration and the timestamps are Eloquent-managed.
      */
     public static function columnSpec(AssetType $type, bool $withAssetTag = false, bool $forExport = false): array
     {
@@ -100,6 +110,12 @@ class AssetCsv
 
         foreach (self::TAIL_FIELDS as $key => $meta) {
             $spec[] = ['key' => $key, 'label' => $meta['label'], 'required' => $meta['required']];
+        }
+
+        if ($forExport) {
+            foreach (self::TIMESTAMP_FIELDS as $key => $meta) {
+                $spec[] = ['key' => $key, 'label' => $meta['label'], 'required' => $meta['required']];
+            }
         }
 
         return $spec;
@@ -232,6 +248,8 @@ class AssetCsv
             'warranty_expiry' => $asset->warranty_expiry?->format('Y-m-d') ?? '',
             'amc_expiry' => $asset->amc_expiry?->format('Y-m-d') ?? '',
             'notes' => (string) ($asset->notes ?? ''),
+            'created_at' => $asset->created_at?->format('Y-m-d H:i:s') ?? '',
+            'updated_at' => $asset->updated_at?->format('Y-m-d H:i:s') ?? '',
             default => '',
         };
     }
@@ -262,6 +280,8 @@ class AssetCsv
             'warranty_expiry' => '',
             'amc_expiry' => '',
             'notes' => '',
+            'created_at' => now()->format('Y-m-d H:i:s'),
+            'updated_at' => now()->format('Y-m-d H:i:s'),
             default => '',
         };
     }
