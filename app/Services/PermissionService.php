@@ -9,6 +9,8 @@ class PermissionService
 {
     private array $cache = [];
 
+    public function __construct(private readonly CentreContextService $centreContext) {}
+
     public function isAdministrator(): bool
     {
         return session('static_auth_user.role') === 'Administrator';
@@ -25,10 +27,16 @@ class PermissionService
             return false;
         }
 
-        $key = "{$role}:{$module}";
+        // A logged-in non-Administrator is always pinned to their own
+        // centre by CentreContextService::selected(), so this is never
+        // null for the accounts whose permissions are checked here.
+        $centre = $this->centreContext->selected();
+
+        $key = "{$role}:{$module}:{$centre}";
         if (! array_key_exists($key, $this->cache)) {
             $this->cache[$key] = RolePermission::where('role', $role)
                 ->where('module', $module)
+                ->where('centre', $centre)
                 ->first();
         }
 

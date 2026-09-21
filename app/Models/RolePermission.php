@@ -40,7 +40,7 @@ class RolePermission extends Model
     ];
 
     protected $fillable = [
-        'role', 'module', 'can_view', 'can_create', 'can_update',
+        'role', 'module', 'centre', 'can_view', 'can_create', 'can_update',
         'can_delete', 'can_assign', 'can_import', 'can_export',
         'can_download', 'can_verify', 'can_restore',
     ];

@@ -48,15 +48,15 @@
 
 <div class="panel mb-3">
     <div class="panel-header">
-        <div><h2>Filter Activity</h2><p>Search and narrow the audit trail by module, action, result, or date.</p></div>
-        @if(request()->hasAny(['search','module','action','result','date_from','date_to']))
+        <div><h2>Filter Activity</h2><p>Search and narrow the audit trail by module, action, result, user, asset, or date.</p></div>
+        @if(request()->hasAny(['search','module','action','result','user','asset_id','date_from','date_to']))
             <a class="btn btn-soft" href="{{ route('audit-logs.index') }}"><i class="fa-solid fa-rotate-left me-2"></i>Reset</a>
         @endif
     </div>
     <div class="panel-body">
         <form method="GET" action="{{ route('audit-logs.index') }}">
             <div class="row g-3">
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <label class="form-label">Search</label>
                     <div class="table-search w-100"><i class="fa-solid fa-magnifying-glass"></i><input type="search" name="search" value="{{ request('search') }}" placeholder="User, description, email or IP…"></div>
                 </div>
@@ -95,16 +95,34 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-lg-2 d-flex align-items-end">
-                    <button class="btn btn-primary w-100"><i class="fa-solid fa-filter me-2"></i>Apply</button>
+                <div class="col-md-6 col-lg-3">
+                    <label class="form-label">User</label>
+                    <select class="form-select" name="user">
+                        <option value="">All users</option>
+                        @foreach($users as $userOption)
+                            <option value="{{ $userOption }}" @selected(request('user') === $userOption)>{{ $userOption }}</option>
+                        @endforeach
+                    </select>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-3">
+                    <label class="form-label">Asset</label>
+                    <select class="form-select" name="asset_id">
+                        <option value="">All assets</option>
+                        @foreach($assets as $assetOption)
+                            <option value="{{ $assetOption->id }}" @selected((string) request('asset_id') === (string) $assetOption->id)>{{ $assetOption->asset_tag }} — {{ $assetOption->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-6 col-lg-3">
                     <label class="form-label">From Date</label>
                     <input class="form-control" type="date" name="date_from" value="{{ request('date_from') }}">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-3">
                     <label class="form-label">To Date</label>
                     <input class="form-control" type="date" name="date_to" value="{{ request('date_to') }}">
+                </div>
+                <div class="col-lg-3 d-flex align-items-end">
+                    <button class="btn btn-primary w-100"><i class="fa-solid fa-filter me-2"></i>Apply</button>
                 </div>
             </div>
         </form>

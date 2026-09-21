@@ -658,7 +658,7 @@
                             </td>
 
                             <td title="{{ $user->remark }}">
-                                {{ Str::limit($user->remark, 40) ?: '—' }}
+                                {{ Str::limit((string) $user->remark, 40) ?: '—' }}
                             </td>
 
                             <td>
@@ -890,7 +890,7 @@
                         <td title="{{ $user->address }}">
 
                             {{ Str::limit(
-                                $user->address,
+                                (string) $user->address,
                                 45
                             ) ?: '—' }}
 

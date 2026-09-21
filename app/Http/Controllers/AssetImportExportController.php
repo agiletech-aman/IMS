@@ -117,7 +117,18 @@ class AssetImportExportController extends Controller
                 $totalRows++;
                 $assetName = trim((string) ($row['name'] ?? '')) ?: 'Unnamed asset';
 
-                $resolved = AssetCsv::resolveRow($type, $row);
+                $providedAssetTag = trim((string) ($row['asset_tag'] ?? ''));
+
+                $existingAsset = $providedAssetTag !== ''
+                    ? Asset::where('asset_tag', $providedAssetTag)->first()
+                    : null;
+
+                // When updating an existing asset, resolve Department/Brand/
+                // Type names against ITS Centre — not whichever Centre the
+                // admin currently has selected — so re-importing a file never
+                // silently reattaches a record to the wrong Centre's master
+                // data just because both Centres happen to share a name.
+                $resolved = AssetCsv::resolveRow($type, $row, $existingAsset?->centre);
                 $rowErrors = $resolved['errors'] ?? [];
 
                 if ($rowErrors !== []) {
@@ -144,12 +155,6 @@ class AssetImportExportController extends Controller
                     'amc_expiry' => $resolvedIds['amc_expiry'] ?? null,
                     'notes' => (string) ($row['notes'] ?? ''),
                 ];
-
-                $providedAssetTag = trim((string) ($row['asset_tag'] ?? ''));
-
-                $existingAsset = $providedAssetTag !== ''
-                    ? Asset::where('asset_tag', $providedAssetTag)->first()
-                    : null;
 
                 /*
                 |--------------------------------------------------------------------------

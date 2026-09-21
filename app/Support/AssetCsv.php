@@ -8,6 +8,7 @@ use App\Models\AssetType;
 use App\Models\Brand;
 use App\Models\Department;
 use App\Models\SubDepartment;
+use App\Services\CentreContextService;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -410,8 +411,16 @@ class AssetCsv
      * spec — the type is fixed by which sheet the row came from, and the
      * row's own Asset Type column is cross-checked against it.
      */
-    public static function resolveRow(AssetType $type, array $row): array
+    public static function resolveRow(AssetType $type, array $row, ?string $centre = null): array
     {
+        // Department/Sub Department are genuinely managed per Centre (e.g.
+        // both Centres can independently have their own "IT Operations"),
+        // so those two lookups are scoped to the effective Centre this row's
+        // Asset belongs to (or will belong to) — the caller passes the
+        // existing Asset's Centre when updating one, otherwise this falls
+        // back to whichever Centre is currently selected. Asset Type and
+        // Brand are shared taxonomy used by every Centre and stay unscoped.
+        $centre ??= app(CentreContextService::class)->selected();
         $errors = [];
         $spec = self::columnSpec($type);
 
@@ -463,7 +472,9 @@ class AssetCsv
         $departmentName = trim((string) ($row['department'] ?? ''));
         $department = null;
         if ($departmentName !== '') {
-            $department = Department::whereRaw('LOWER(name)=?', [Str::lower($departmentName)])->first();
+            $department = Department::whereRaw('LOWER(name)=?', [Str::lower($departmentName)])
+                ->when($centre, fn ($query, $value) => $query->where('centre', $value))
+                ->first();
             if (! $department) {
                 $errors[] = "Department not found: {$departmentName}";
             }
@@ -472,7 +483,8 @@ class AssetCsv
         $subDepartmentName = trim((string) ($row['sub_department'] ?? ''));
         $subDepartment = null;
         if ($subDepartmentName !== '') {
-            $subDepartmentQuery = SubDepartment::whereRaw('LOWER(name)=?', [Str::lower($subDepartmentName)]);
+            $subDepartmentQuery = SubDepartment::whereRaw('LOWER(name)=?', [Str::lower($subDepartmentName)])
+                ->when($centre, fn ($query, $value) => $query->where('centre', $value));
             if ($department) {
                 $subDepartmentQuery->where('department_id', $department->id);
             }

@@ -1,11 +1,13 @@
 @extends('layouts.app')
 @section('title','Roles & Permissions')
 @section('content')
-@include('partials.page-header',['title'=>'Roles & Permissions','description'=>'Control module access and View, Create, Update, Delete, Assign, Import, and Export actions for every dashboard role.'])
+@include('partials.page-header',['title'=>'Roles & Permissions','description'=>'Control module access and View, Create, Update, Delete, Assign, Import, and Export actions for every dashboard role — configured separately per Centre.'])
+@include('partials.centre-warning')
 
 @php
     $permissionService = app(\App\Services\PermissionService::class);
-    $canUpdatePermissions = $permissionService->allows('roles_permissions', 'update');
+    $canUpdatePermissions = $permissionService->allows('roles_permissions', 'update') && $centre !== null;
+    $centreLabel = $centre ? \Illuminate\Support\Str::ucfirst($centre) : null;
     $roleDetails = [
         'Asset Manager' => ['Create, assign, update, import, and maintain asset operations','fa-laptop-file','info'],
         'Sub admin' => ['Manage business modules and system operations','fa-user-gear','warning'],
@@ -33,9 +35,18 @@
     @foreach($roles as $role)
         <div class="panel role-permission-panel {{ $loop->first ? '' : 'd-none' }}" id="rolePanel{{ $loop->index }}">
             <div class="panel-header">
-                <div><h2>{{ \App\Support\RoleLabel::display($role) }} Permissions</h2><p>Changes apply to all active {{ \App\Support\RoleLabel::display($role) }} login accounts immediately</p></div>
+                <div>
+                    <h2>{{ \App\Support\RoleLabel::display($role) }} Permissions</h2>
+                    @if($centre)
+                        <p>Changes apply to all active {{ \App\Support\RoleLabel::display($role) }} login accounts in <strong>{{ $centreLabel }}</strong> only</p>
+                    @else
+                        <p>Select a Centre above to view and edit its {{ \App\Support\RoleLabel::display($role) }} permissions — each Centre has its own permission set</p>
+                    @endif
+                </div>
                 @if($canUpdatePermissions)
                     <button class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Permissions</button>
+                @elseif($centre === null)
+                    <span class="badge-soft warning"><i class="fa-solid fa-triangle-exclamation me-1"></i>Select a Centre to edit</span>
                 @else
                     <span class="badge-soft muted"><i class="fa-solid fa-eye me-1"></i>Read only</span>
                 @endif

@@ -45,7 +45,7 @@ class BackupController extends Controller
         return view('backup.index', [
             'backups' => $backups,
             'schedules' => BackupSchedule::latest()->get(),
-            'restoreJobs' => RestoreJob::with(['backup', 'safetyBackup'])->latest()->limit(10)->get(),
+            'restoreJobs' => RestoreJob::with(['backup', 'safetyBackup'])->whereHas('backup')->latest()->limit(10)->get(),
             'stats' => [
                 'total' => Backup::count(),
                 'successful' => (clone $successful)->count(),

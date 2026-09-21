@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\ExportsCentreSplitExcel;
+use App\Models\Asset;
 use App\Models\AuditLog;
 use App\Services\AuditLogger;
 use App\Services\CentreContextService;
@@ -50,6 +51,8 @@ class AuditLogController extends Controller
                 ->sort()
                 ->values(),
             'actions' => $this->visibleLogs()->distinct()->orderBy('action')->pluck('action'),
+            'users' => $this->visibleLogs()->whereNotNull('actor_name')->distinct()->orderBy('actor_name')->pluck('actor_name'),
+            'assets' => Asset::orderBy('asset_tag')->get(['id', 'asset_tag', 'name']),
             'stats' => [
                 'today' => $this->visibleLogs()->whereDate('created_at', today())->count(),
                 'logins' => $this->visibleLogs()->whereIn('action', ['LOGIN', 'LOGIN FAILED', 'LOGOUT'])->count(),
@@ -193,6 +196,10 @@ class AuditLogController extends Controller
             })
             ->when($filters['action'] ?? null, fn (Builder $query, string $action) => $query->where('action', $action))
             ->when($filters['result'] ?? null, fn (Builder $query, string $result) => $query->where('result', $result))
+            ->when($filters['user'] ?? null, fn (Builder $query, string $user) => $query->where('actor_name', $user))
+            ->when($filters['asset_id'] ?? null, function (Builder $query, $assetId): void {
+                $query->where('auditable_type', Asset::class)->where('auditable_id', $assetId);
+            })
             ->when($filters['date_from'] ?? null, fn (Builder $query, string $date) => $query->whereDate('created_at', '>=', $date))
             ->when($filters['date_to'] ?? null, fn (Builder $query, string $date) => $query->whereDate('created_at', '<=', $date));
     }
@@ -204,6 +211,8 @@ class AuditLogController extends Controller
             'module' => ['nullable', 'string', 'max:80'],
             'action' => ['nullable', 'string', 'max:40'],
             'result' => ['nullable', 'in:Success,Failed,Blocked'],
+            'user' => ['nullable', 'string', 'max:255'],
+            'asset_id' => ['nullable', 'integer', 'exists:assets,id'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ];
