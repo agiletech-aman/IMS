@@ -35,7 +35,7 @@
             <strong>All Centres</strong> is selected — this page shows backups, schedules, and restore jobs from every Centre together. A backup created now will be a full, whole-system backup instead of one Centre's data. Select a specific Centre above for a Centre-only backup.
         @endif
     </span>
-    <button type="button" class="info-note-close" data-dismiss-info aria-label="Dismiss"><i class="fa-solid fa-xmark"></i></button>
+    <span class="info-note-close" data-dismiss-info role="button" tabindex="0" aria-label="Dismiss"><i class="fa-solid fa-xmark"></i></span>
 </div>
 
 <div class="row row-cols-2 row-cols-xl-4 g-3 mb-3">

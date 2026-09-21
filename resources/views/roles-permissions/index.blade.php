@@ -25,7 +25,7 @@
             <strong>All Centres</strong> is selected. Each Centre has its own separate permissions per role, so they can't be shown or edited together here — select a specific Centre above to view and edit its permissions.
         @endif
     </span>
-    <button type="button" class="info-note-close" data-dismiss-info aria-label="Dismiss"><i class="fa-solid fa-xmark"></i></button>
+    <span class="info-note-close" data-dismiss-info role="button" tabindex="0" aria-label="Dismiss"><i class="fa-solid fa-xmark"></i></span>
 </div>
 
 <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3 mb-3">

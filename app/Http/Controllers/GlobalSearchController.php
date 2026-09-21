@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
+use App\Models\Faculty;
 use App\Models\User;
 use App\Services\PermissionService;
 use Illuminate\Http\JsonResponse;
@@ -11,6 +12,13 @@ use Illuminate\Http\Request;
 class GlobalSearchController extends Controller
 {
     private const RESULTS_PER_GROUP = 5;
+
+    private const ACCESS_ACCOUNT_MODULES = [
+        'Asset Manager' => 'access_accounts_asset_manager',
+        'Sub admin' => 'access_accounts_sub_admin',
+        'Auditor' => 'access_accounts_auditor',
+        'Viewer' => 'access_accounts_viewer',
+    ];
 
     public function __construct(private readonly PermissionService $permissions) {}
 
@@ -39,24 +47,32 @@ class GlobalSearchController extends Controller
             }
         }
 
-        if ($this->permissions->allows('users')) {
-            foreach ($this->users($query) as $user) {
-                $parameters = ['search' => $user->unique_id];
-                $route = 'users.index';
-
-                if ($user->login_enabled) {
-                    $parameters['role'] = $user->role;
-                    $route = 'access-accounts.index';
-                }
-
+        if ($this->permissions->allows('faculty')) {
+            foreach ($this->faculty($query) as $person) {
                 $results[] = [
                     'type' => 'Users',
                     'icon' => 'user',
-                    'title' => $user->name,
-                    'description' => collect([$user->unique_id, $user->email])->filter()->join(' · '),
-                    'url' => route($route, $parameters),
+                    'title' => $person->name,
+                    'description' => collect([$person->unique_id, $person->email])->filter()->join(' · '),
+                    'url' => route('users.index', ['search' => $person->unique_id]),
                 ];
             }
+        }
+
+        foreach ($this->accessAccounts($query) as $account) {
+            $module = self::ACCESS_ACCOUNT_MODULES[$account->role] ?? null;
+
+            if (! $module || ! $this->permissions->allows($module)) {
+                continue;
+            }
+
+            $results[] = [
+                'type' => 'Access Accounts',
+                'icon' => 'user',
+                'title' => $account->name,
+                'description' => collect([$account->unique_id, $account->email])->filter()->join(' · '),
+                'url' => route('access-accounts.index', ['role' => $account->role, 'search' => $account->unique_id]),
+            ];
         }
 
         return response()->json(['results' => $results]);
@@ -76,7 +92,21 @@ $builder->where('asset_tag', 'like', "%{$query}%")
             ->get(['id', 'asset_tag', 'name', 'fr_number', 'status']);
     }
 
-    private function users(string $query)
+    private function faculty(string $query)
+    {
+        return Faculty::query()
+            ->where(function ($builder) use ($query): void {
+                $builder->where('name', 'like', "%{$query}%")
+                    ->orWhere('email', 'like', "%{$query}%")
+                    ->orWhere('unique_id', 'like', "%{$query}%")
+                    ->orWhere('contact', 'like', "%{$query}%");
+            })
+            ->orderBy('name')
+            ->limit(self::RESULTS_PER_GROUP)
+            ->get(['id', 'unique_id', 'name', 'email', 'contact']);
+    }
+
+    private function accessAccounts(string $query)
     {
         return User::query()
             ->where(function ($builder) use ($query): void {
@@ -87,6 +117,6 @@ $builder->where('asset_tag', 'like', "%{$query}%")
             })
             ->orderBy('name')
             ->limit(self::RESULTS_PER_GROUP)
-            ->get(['id', 'unique_id', 'name', 'email', 'role', 'login_enabled']);
+            ->get(['id', 'unique_id', 'name', 'email', 'role']);
     }
 }

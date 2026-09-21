@@ -402,5 +402,6 @@ body:not(.auth-body) .btn-primary:hover{border-color:#29479b;background:linear-g
 .info-note>span{flex:1 1 auto;min-width:0}
 .info-note strong{color:var(--text-primary)}
 .info-note.mb-3{margin-bottom:1rem}
-.info-note-close{all:unset;box-sizing:border-box;flex:0 0 auto;display:inline-block;cursor:pointer;color:var(--text-muted);font-size:12px;line-height:1;padding:5px;margin:-5px -5px -5px 4px;border-radius:6px}
+.info-note-close{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;margin-left:4px;border:0;background:none;color:var(--text-muted);font-size:12px;cursor:pointer;border-radius:6px}
 .info-note-close:hover{color:var(--text-primary);background:rgba(10,191,189,.12)}
+.info-note-close:focus-visible{outline:2px solid #0abfbd;outline-offset:1px}

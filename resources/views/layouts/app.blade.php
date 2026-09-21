@@ -272,6 +272,12 @@
                 button.addEventListener('click', () => {
                     button.closest('.info-note')?.remove();
                 });
+                button.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        button.closest('.info-note')?.remove();
+                    }
+                });
             });
 
         });

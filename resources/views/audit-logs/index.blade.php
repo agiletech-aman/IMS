@@ -50,7 +50,7 @@
             <strong>All Centres</strong> is selected — activity from both Noida and Lucknow is shown together below. Select a specific Centre above to narrow this list to just one.
         @endif
     </span>
-    <button type="button" class="info-note-close" data-dismiss-info aria-label="Dismiss"><i class="fa-solid fa-xmark"></i></button>
+    <span class="info-note-close" data-dismiss-info role="button" tabindex="0" aria-label="Dismiss"><i class="fa-solid fa-xmark"></i></span>
 </div>
 
 <div class="row row-cols-2 row-cols-md-4 g-3 mb-3">

@@ -1658,9 +1658,8 @@ class AssetMasterController extends Controller
             'name' => [
                 'required',
                 'string',
-                'min:3',
                 'max:50',
-                'regex:/^[A-Za-z ]+$/',
+                'regex:/^[A-Za-z0-9 ]+$/',
                 Rule::unique($table, 'name')
                     ->where(fn ($query) => $centre ? $query->where('centre', $centre) : $query)
                     ->ignore($id),
