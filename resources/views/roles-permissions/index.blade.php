@@ -56,7 +56,10 @@
                     @endif
                 </div>
                 @if($canUpdatePermissions)
-                    <button class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Permissions</button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-soft" type="button" data-check-all><i class="fa-solid fa-check-double me-2"></i>Check All</button>
+                        <button class="btn btn-primary" type="submit"><i class="fa-solid fa-floppy-disk me-2"></i>Save All Permissions</button>
+                    </div>
                 @elseif($centre === null)
                     <span class="badge-soft warning"><i class="fa-solid fa-triangle-exclamation me-1"></i>Select a Centre to edit</span>
                 @else
@@ -80,6 +83,7 @@
                                     $checked = $applicable && (bool) $record?->getAttribute('can_'.$action);
                                 @endphp
                                 <td class="text-center">
+                                    <div class="form-check form-switch d-flex justify-content-center p-0 m-0">
                                     <input
                                         class="form-check-input permission-check"
                                         type="checkbox"
@@ -89,6 +93,7 @@
                                         @disabled(! $applicable || ! $canUpdatePermissions)
                                         aria-label="{{ ucfirst($action) }} {{ $module['label'] }} for {{ $role }}"
                                     >
+                                    </div>
                                     @if(!$applicable)<span class="permission-na">N/A</span>@endif
                                 </td>
                             @endforeach
@@ -108,7 +113,7 @@
 <style>
 .role-selector{border:1px solid var(--border-color);color:var(--text-primary);transition:.2s}
 .role-selector:hover,.role-selector.is-selected{transform:translateY(-2px);border-color:var(--accent-color);box-shadow:0 12px 30px color-mix(in srgb,var(--accent-color) 13%,transparent)}
-.permission-table .form-check-input{width:18px;height:18px;margin:0;cursor:pointer}
+.permission-table .form-check-input{width:2.1em;height:1.1em;margin:0;cursor:pointer}
 .permission-table .form-check-input:disabled{opacity:.32;cursor:not-allowed}
 .permission-na{display:block;margin-top:3px;color:var(--text-muted);font-size:8px}
 .permission-note{display:flex;align-items:center;gap:9px;color:var(--text-muted);font-size:11px}
@@ -121,6 +126,10 @@
 document.querySelectorAll('.role-selector').forEach(button=>button.addEventListener('click',()=>{
  document.querySelectorAll('.role-selector').forEach(item=>item.classList.toggle('is-selected',item===button));
  document.querySelectorAll('.role-permission-panel').forEach(panel=>panel.classList.toggle('d-none',panel.id!==button.dataset.roleTarget));
+}));
+document.querySelectorAll('[data-check-all]').forEach(button=>button.addEventListener('click',()=>{
+ const panel=button.closest('.role-permission-panel');
+ panel.querySelectorAll('.permission-check:not(:disabled)').forEach(input=>input.checked=true);
 }));
 document.querySelectorAll('.permission-table tbody tr').forEach(row=>{
  const inputs=[...row.querySelectorAll('.permission-check:not(:disabled)')];
