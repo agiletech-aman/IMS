@@ -28,7 +28,7 @@
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
         <h2 class="h5 mb-1">Asset History</h2>
-        <p class="mb-0 text-secondary small">Full movement path — department moves, assignment, reallocation, return and status changes.</p>
+        <p class="mb-0 text-secondary small">Full movement path — department moves, assignment, reallocation, return and status changes. Click a section to view details.</p>
     </div>
     @permission('assets','export')
     <div class="d-flex gap-2">
@@ -38,6 +38,13 @@
     @endpermission
 </div>
 
+<style>
+.history-toggle{cursor:pointer;user-select:none}
+.history-toggle:not(.collapsed){border-bottom:1px solid var(--border-color,#e3eaf1)}
+.history-toggle.collapsed{border-bottom:0}
+.history-chevron{transition:transform .2s;color:var(--text-secondary,#718096)}
+.history-toggle:not(.collapsed) .history-chevron{transform:rotate(180deg)}
+</style>
 @php
     $movementStyles = [
         'created' => ['muted', 'fa-plus'],
@@ -49,8 +56,8 @@
     ];
 @endphp
 <div class="panel mb-3">
-    <div class="panel-header"><div><h2>Movement Timeline</h2><p class="mb-0 text-secondary small">Every department move, assignment, reallocation, return and status change, newest first.</p></div></div>
-    <div class="table-responsive">
+    <div class="panel-header history-toggle collapsed" role="button" data-bs-toggle="collapse" data-bs-target="#historyMovement" aria-expanded="false" aria-controls="historyMovement"><div><h2>Movement Timeline</h2><p class="mb-0 text-secondary small">Every department move, assignment, reallocation, return and status change, newest first.</p></div><div class="d-flex align-items-center gap-2"><span class="badge-soft muted">{{ $movementTimeline->count() }} {{ \Illuminate\Support\Str::plural('entry', $movementTimeline->count()) }}</span><i class="fa-solid fa-chevron-down history-chevron"></i></div></div>
+    <div class="collapse" id="historyMovement"><div class="table-responsive">
         <table class="table data-table mb-0">
             <thead><tr><th>Date</th><th>Changed By</th><th>Movement</th></tr></thead>
             <tbody>
@@ -79,12 +86,12 @@
                 @endforelse
             </tbody>
         </table>
-    </div>
+    </div></div>
 </div>
 
 <div class="panel mb-3">
-    <div class="panel-header"><div><h2>Department History</h2><p class="mb-0 text-secondary small">Which department this asset sat in, and for how long.</p></div></div>
-    <div class="table-responsive">
+    <div class="panel-header history-toggle collapsed" role="button" data-bs-toggle="collapse" data-bs-target="#historyDepartment" aria-expanded="false" aria-controls="historyDepartment"><div><h2>Department History</h2><p class="mb-0 text-secondary small">Which department this asset sat in, and for how long.</p></div><div class="d-flex align-items-center gap-2"><span class="badge-soft muted">{{ $departmentPeriods->count() }} {{ \Illuminate\Support\Str::plural('entry', $departmentPeriods->count()) }}</span><i class="fa-solid fa-chevron-down history-chevron"></i></div></div>
+    <div class="collapse" id="historyDepartment"><div class="table-responsive">
         <table class="table data-table mb-0">
             <thead><tr><th>Department</th><th>Sub Department</th><th>From</th><th>To</th><th>Duration</th></tr></thead>
             <tbody>
@@ -104,12 +111,12 @@
                 @endforeach
             </tbody>
         </table>
-    </div>
+    </div></div>
 </div>
 
 <div class="panel mb-3">
-    <div class="panel-header"><div><h2>Assignment History</h2><p class="mb-0 text-secondary small">Who this asset was assigned to, and when.</p></div></div>
-    <div class="table-responsive">
+    <div class="panel-header history-toggle collapsed" role="button" data-bs-toggle="collapse" data-bs-target="#historyAssignment" aria-expanded="false" aria-controls="historyAssignment"><div><h2>Assignment History</h2><p class="mb-0 text-secondary small">Who this asset was assigned to, and when.</p></div><div class="d-flex align-items-center gap-2"><span class="badge-soft muted">{{ $assignmentHistory->count() }} {{ \Illuminate\Support\Str::plural('entry', $assignmentHistory->count()) }}</span><i class="fa-solid fa-chevron-down history-chevron"></i></div></div>
+    <div class="collapse" id="historyAssignment"><div class="table-responsive">
         <table class="table data-table mb-0">
             <thead><tr><th>Assigned To</th><th>Assigned At</th><th>Assigned By</th><th>Unassigned At</th><th>Unassigned By</th></tr></thead>
             <tbody>
@@ -131,12 +138,12 @@
                 @endforelse
             </tbody>
         </table>
-    </div>
+    </div></div>
 </div>
 
 <div class="panel">
-    <div class="panel-header"><div><h2>Status Changes</h2><p class="mb-0 text-secondary small">When this asset's status or assignment changed.</p></div></div>
-    <div class="table-responsive">
+    <div class="panel-header history-toggle collapsed" role="button" data-bs-toggle="collapse" data-bs-target="#historyStatus" aria-expanded="false" aria-controls="historyStatus"><div><h2>Status Changes</h2><p class="mb-0 text-secondary small">When this asset's status or assignment changed.</p></div><div class="d-flex align-items-center gap-2"><span class="badge-soft muted">{{ $activityLog->count() }} {{ \Illuminate\Support\Str::plural('entry', $activityLog->count()) }}</span><i class="fa-solid fa-chevron-down history-chevron"></i></div></div>
+    <div class="collapse" id="historyStatus"><div class="table-responsive">
         <table class="table data-table mb-0">
             <thead><tr><th>Date</th><th>Changed By</th><th>Change</th></tr></thead>
             <tbody>
@@ -172,7 +179,7 @@
                 @endforelse
             </tbody>
         </table>
-    </div>
+    </div></div>
 </div>
 
 </div>
