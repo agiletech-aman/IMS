@@ -28,12 +28,19 @@
         <details class="asset-type-preview">
             <summary>Preview sheet columns per type</summary>
             @foreach($activeTypes as $type)
-                @php $columns = $csvClass::columnSpec($type); @endphp
+                @php
+                    // Asset workbooks (export and sample) also carry the type's
+                    // Parameter columns and timestamps, plus Asset Tag on export —
+                    // preview exactly what the downloaded sheet will contain.
+                    $columns = $csvClass === \App\Support\AssetCsv::class
+                        ? $csvClass::columnSpec($type, withAssetTag: $prefix === 'export', forExport: true)
+                        : $csvClass::columnSpec($type);
+                @endphp
                 <div class="asset-type-preview-row">
                     <strong>{{ $type->name }}</strong>
                     <div class="asset-import-columns">
                         @foreach($columns as $column)
-                            <span class="asset-import-chip {{ isset($column['parameter']) ? 'dynamic' : '' }}">{{ $column['label'] }}{{ $column['required'] ? '' : ' (optional)' }}</span>
+                            <span class="asset-import-chip {{ isset($column['parameter']) ? 'dynamic' : '' }}">{{ $column['label'] }}{{ isset($column['parameter']) ? ' (parameter)' : ($column['required'] ? '' : ' (optional)') }}</span>
                         @endforeach
                     </div>
                 </div>
