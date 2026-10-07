@@ -30,7 +30,11 @@ $existingAssetNames = \App\Models\Asset::query()->pluck('name')->filter()->uniqu
                         'selected' => $field('name'),
                         'label' => 'asset name',
                         'placeholder' => 'Enter asset name',
+                        'pattern' => '[A-Za-z ]*[0-9]*[A-Za-z ]*',
+                        'patternTitle' => 'Letters, spaces and only one number are allowed (e.g. Dell Laptop 5420).',
+                        'stripPattern' => '[^A-Za-z0-9 ]',
                     ])
+                    <small class="text-secondary">Letters, spaces and at most one number</small>
                 </div>
                 <div class="col-md-6 col-xl-4"><label class="form-label">Type <span class="text-danger">*</span></label><select class="form-select" name="asset_type_id" id="assetType" required>
                         <option value="">Select type</option>@foreach($types as $type)<option value="{{ $type->id }}" @selected((string)$field('asset_type_id')===(string)$type->id)>{{ $type->name }}</option>@endforeach
@@ -59,7 +63,7 @@ $existingAssetNames = \App\Models\Asset::query()->pluck('name')->filter()->uniqu
                         <div class="combo-menu" id="assignedToMenu" hidden>
                             <div class="combo-option" data-value="">Unassigned</div>
                             @foreach($users as $user)
-                                <div class="combo-option" data-value="{{ $user->name }}"><span>{{ $user->name }}</span><small>{{ $user->unique_id }}</small></div>
+                                <div class="combo-option" data-value="{{ $user->name }}" data-search="{{ strtolower($user->name.' '.$user->unique_id.' '.($user->department?->name ?? '')) }}"><span>{{ $user->name }}</span> <small class="text-secondary">{{ $user->unique_id }}{{ $user->department ? ' · '.$user->department->name : '' }}</small></div>
                             @endforeach
                         </div>
                     </div>
@@ -204,7 +208,7 @@ filter('assetDepartment', 'assetSubDepartment', 'department');
                 const term = assignedSearch.value.trim().toLowerCase();
                 let visibleCount = 0;
                 options.forEach(option => {
-                    const match = option.dataset.value === '' || option.dataset.value.toLowerCase().includes(term);
+                    const match = option.dataset.value === '' || (option.dataset.search || option.dataset.value.toLowerCase()).includes(term);
                     option.hidden = !match;
                     if (match) visibleCount++;
                 });

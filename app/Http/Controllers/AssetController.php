@@ -10,6 +10,7 @@ use App\Models\AssetType;
 use App\Models\Department;
 use App\Models\Faculty;
 use App\Models\SubDepartment;
+use App\Services\AssetMovementHistory;
 use App\Services\CentreContextService;
 use App\Services\NotificationService;
 use App\Support\UniqueCodeGenerator;
@@ -262,6 +263,16 @@ $assets = $query
             'status',
             'Under Maintenance'
         )->count(),
+
+        'amc_due' => Asset::whereBetween(
+            'amc_expiry',
+            [today(), today()->addDays(30)]
+        )->count(),
+
+        'warranty_due' => Asset::whereBetween(
+            'warranty_expiry',
+            [today(), today()->addDays(30)]
+        )->count(),
     ];
 
 
@@ -283,7 +294,7 @@ $assets = $query
 
     public function store(Request $request): RedirectResponse
     {
-        $data = $request->validate($this->rules($request));
+        $data = $request->validate($this->rules($request), $this->messages());
         $data['brand_id'] = AssetSubtype::find($data['asset_subtype_id'] ?? null)?->brand_id;
         $characters = Str::of($data['name'])->ascii()->upper()->replaceMatches('/[^A-Z0-9]/', '')->value();
         $first = $characters[0] ?? 'X';
@@ -316,7 +327,11 @@ public function show(Asset $asset): View
      */
     private function historyData(Asset $asset): array
     {
+        $movement = AssetMovementHistory::for($asset);
+
         return [
+            'movementTimeline' => $movement->timeline(),
+            'departmentPeriods' => $movement->departmentPeriods(),
             'assignmentHistory' => $asset->assignmentHistory()->with('faculty')->orderByDesc('assigned_at')->get(),
             'activityLog' => AuditLog::where('auditable_type', Asset::class)
                 ->where('auditable_id', $asset->id)
@@ -391,7 +406,37 @@ public function show(Asset $asset): View
             $row++;
         }
 
-        foreach ([$assignmentSheet, $statusSheet] as $sheet) {
+        $timelineSheet = $spreadsheet->createSheet();
+        $timelineSheet->setTitle('Movement Timeline');
+        $timelineSheet->fromArray(['Date', 'Changed By', 'Movement'], null, 'A1');
+
+        $row = 2;
+        foreach ($data['movementTimeline'] as $entry) {
+            $timelineSheet->fromArray([
+                $entry['date']->format('d M Y h:i A'),
+                $entry['actor'],
+                AssetMovementHistory::describe($entry['events']),
+            ], null, "A{$row}");
+            $row++;
+        }
+
+        $departmentSheet = $spreadsheet->createSheet();
+        $departmentSheet->setTitle('Department History');
+        $departmentSheet->fromArray(['Department', 'Sub Department', 'From', 'To', 'Days'], null, 'A1');
+
+        $row = 2;
+        foreach ($data['departmentPeriods'] as $period) {
+            $departmentSheet->fromArray([
+                $period['department'],
+                $period['sub_department'],
+                $period['from']?->format('d M Y h:i A'),
+                $period['to']?->format('d M Y h:i A') ?? 'Current',
+                $period['days'],
+            ], null, "A{$row}");
+            $row++;
+        }
+
+        foreach ([$assignmentSheet, $statusSheet, $timelineSheet, $departmentSheet] as $sheet) {
             foreach (range('A', $sheet->getHighestColumn()) as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
@@ -415,7 +460,7 @@ public function show(Asset $asset): View
     {
         $previousAssignedTo = $asset->assigned_to;
 
-        $data = $request->validate($this->rules($request, $asset->id));
+        $data = $request->validate($this->rules($request, $asset->id), $this->messages());
         $data['brand_id'] = AssetSubtype::find($data['asset_subtype_id'] ?? null)?->brand_id;
         if ($request->hasFile('image')) {
             if ($asset->image_path) {
@@ -496,7 +541,15 @@ return [
             'subtypes' => AssetSubtype::where('status', 'Active')->orderBy('name')->get(['id', 'asset_type_id', 'name', 'parameter_values']),
             'departments' => Department::where('status', 'Active')->orderBy('name')->get(),
             'subDepartments' => SubDepartment::where('status', 'Active')->orderBy('name')->get(),
-            'users' => Faculty::where('status', 'Active')->orderBy('name')->get(['id', 'name', 'unique_id']),
+            'users' => Faculty::with('department:id,name')->where('status', 'Active')->orderBy('name')->get(['id', 'name', 'unique_id', 'department_id']),
+        ];
+    }
+
+    private function messages(): array
+    {
+        return [
+            'name.regex' => 'Asset name may only contain letters, numbers and spaces.',
+            'name.not_regex' => 'Asset name can contain only one number (for example "Dell Laptop 5420"). Remove the extra number.',
         ];
     }
 
@@ -509,6 +562,9 @@ $rules = [
                 'string',
                 'max:50',
                 'regex:/^[A-Za-z0-9 ]+$/',
+                // At most one number (a run of digits of any length), e.g.
+                // "Dell Laptop 5420" is fine but "Dell 5420 Laptop 2" is not.
+                'not_regex:/[0-9]+[^0-9]+[0-9]/',
                 Rule::unique('assets', 'name')
                     ->where(fn ($query) => $centre ? $query->where('centre', $centre) : $query)
                     ->ignore($id),

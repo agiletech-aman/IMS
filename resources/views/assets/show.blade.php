@@ -28,7 +28,7 @@
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
         <h2 class="h5 mb-1">Asset History</h2>
-        <p class="mb-0 text-secondary small">Assignment trail and status changes for this asset.</p>
+        <p class="mb-0 text-secondary small">Full movement path — department moves, assignment, reallocation, return and status changes.</p>
     </div>
     @permission('assets','export')
     <div class="d-flex gap-2">
@@ -36,6 +36,75 @@
         <a class="btn btn-soft btn-sm" href="{{ route('assets.history.export.xlsx',$asset) }}"><i class="fa-solid fa-file-excel me-2 text-success"></i>Export Excel</a>
     </div>
     @endpermission
+</div>
+
+@php
+    $movementStyles = [
+        'created' => ['muted', 'fa-plus'],
+        'department' => ['warning', 'fa-building'],
+        'assigned' => ['success', 'fa-user-plus'],
+        'reallocated' => ['warning', 'fa-right-left'],
+        'returned' => ['danger', 'fa-rotate-left'],
+        'status' => ['muted', 'fa-rotate'],
+    ];
+@endphp
+<div class="panel mb-3">
+    <div class="panel-header"><div><h2>Movement Timeline</h2><p class="mb-0 text-secondary small">Every department move, assignment, reallocation, return and status change, newest first.</p></div></div>
+    <div class="table-responsive">
+        <table class="table data-table mb-0">
+            <thead><tr><th>Date</th><th>Changed By</th><th>Movement</th></tr></thead>
+            <tbody>
+                @forelse($movementTimeline as $entry)
+                <tr>
+                    <td class="text-nowrap">{{ $entry['date']->format('d M Y, h:i A') }}</td>
+                    <td>{{ $entry['actor'] }}</td>
+                    <td>
+                        <div class="d-flex flex-column gap-1 align-items-start">
+                            @foreach($entry['events'] as $event)
+                                @php [$tone, $icon] = $movementStyles[$event['type']] ?? ['muted', 'fa-circle']; @endphp
+                                <span class="badge-soft {{ $tone }}">
+                                    <i class="fa-solid {{ $icon }} me-1"></i>{{ $event['label'] }}:
+                                    @if($event['from'] !== null && $event['to'] !== null)
+                                        {{ $event['from'] }} → {{ $event['to'] }}
+                                    @else
+                                        {{ $event['to'] ?? $event['from'] }}
+                                    @endif
+                                </span>
+                            @endforeach
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="3"><div class="empty-report-state"><i class="fa-solid fa-route"></i><strong>No movement recorded yet</strong><span>Department moves and assignment changes will show up here.</span></div></td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="panel mb-3">
+    <div class="panel-header"><div><h2>Department History</h2><p class="mb-0 text-secondary small">Which department this asset sat in, and for how long.</p></div></div>
+    <div class="table-responsive">
+        <table class="table data-table mb-0">
+            <thead><tr><th>Department</th><th>Sub Department</th><th>From</th><th>To</th><th>Duration</th></tr></thead>
+            <tbody>
+                @foreach($departmentPeriods as $period)
+                <tr>
+                    <td>
+                        <strong>{{ $period['department'] }}</strong>
+                        @unless($period['to'])
+                            <span class="badge-soft success ms-2">Current</span>
+                        @endunless
+                    </td>
+                    <td>{{ $period['sub_department'] }}</td>
+                    <td>{{ $period['from']?->format('d M Y, h:i A') ?? '—' }}</td>
+                    <td>{{ $period['to']?->format('d M Y, h:i A') ?? '—' }}</td>
+                    <td>{{ $period['days'] === null ? '—' : $period['days'].' '.\Illuminate\Support\Str::plural('day', $period['days']) }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <div class="panel mb-3">

@@ -227,7 +227,7 @@
      STAT CARDS
 ========================================================= --}}
 
-<div class="row row-cols-2 row-cols-md-4 g-3 mb-3">
+<div class="row row-cols-2 row-cols-md-3 row-cols-xl-6 g-3 mb-3">
 
     @include('partials.stat-card',[
         'icon'=>'fa-cubes',
@@ -254,6 +254,22 @@
         'label'=>'Maintenance',
         'value'=>number_format($stats['maintenance']),
         'class'=>'warning'
+    ])
+
+    @include('partials.stat-card',[
+        'icon'=>'fa-shield-halved',
+        'label'=>'AMC Due (30d)',
+        'value'=>number_format($stats['amc_due']),
+        'class'=>'warning',
+        'href'=>route('assets.index', request('coverage_due') === 'amc' ? [] : ['coverage_due'=>'amc'])
+    ])
+
+    @include('partials.stat-card',[
+        'icon'=>'fa-certificate',
+        'label'=>'Warranty Due (30d)',
+        'value'=>number_format($stats['warranty_due']),
+        'class'=>'danger',
+        'href'=>route('assets.index', request('coverage_due') === 'warranty' ? [] : ['coverage_due'=>'warranty'])
     ])
 
 </div>

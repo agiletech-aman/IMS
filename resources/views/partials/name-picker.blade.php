@@ -2,6 +2,9 @@
     $inputName = $inputName ?? 'name';
     $selected = $selected ?? '';
     $isRequired = $required ?? true;
+    $pattern = $pattern ?? '[A-Za-z ]+';
+    $patternTitle = $patternTitle ?? 'Only letters and spaces are allowed.';
+    $stripPattern = $stripPattern ?? '[^A-Za-z ]';
 @endphp
 <div class="combo-select" data-name-field style="position:relative">
     <input
@@ -12,11 +15,11 @@
         autocomplete="off"
         minlength="3"
         maxlength="50"
-        pattern="[A-Za-z ]+"
-        title="Only letters and spaces are allowed."
+        pattern="{{ $pattern }}"
+        title="{{ $patternTitle }}"
         placeholder="{{ $placeholder ?? 'Type or select '.($label ?? 'name') }}"
         value="{{ $selected }}"
-        oninput="this.value=this.value.replace(/[^A-Za-z ]/g,'');var m=this.closest('[data-name-field]').querySelector('[data-name-menu]'),t=this.value.trim().toLowerCase(),any=false;for(var i=0;i<m.children.length;i++){var o=m.children[i],ok=o.dataset.value.toLowerCase().indexOf(t)!==-1;o.hidden=!ok;if(ok)any=true;}m.hidden=!any;"
+        oninput="this.value=this.value.replace(/{{ $stripPattern }}/g,'');var m=this.closest('[data-name-field]').querySelector('[data-name-menu]'),t=this.value.trim().toLowerCase(),any=false;for(var i=0;i<m.children.length;i++){var o=m.children[i],ok=o.dataset.value.toLowerCase().indexOf(t)!==-1;o.hidden=!ok;if(ok)any=true;}m.hidden=!any;"
         onfocus="var m=this.closest('[data-name-field]').querySelector('[data-name-menu]'),t=this.value.trim().toLowerCase(),any=false;for(var i=0;i<m.children.length;i++){var o=m.children[i],ok=o.dataset.value.toLowerCase().indexOf(t)!==-1;o.hidden=!ok;if(ok)any=true;}m.hidden=!any;"
         onblur="var m=this.closest('[data-name-field]').querySelector('[data-name-menu]');setTimeout(function(){m.hidden=true;},150);"
         @if($isRequired) required @endif
