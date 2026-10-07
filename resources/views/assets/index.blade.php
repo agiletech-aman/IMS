@@ -833,6 +833,9 @@
 
                         <td class="text-end text-nowrap">
 
+                            {{-- Retired assets get no row actions. --}}
+                            @if($asset->status !== 'Retired')
+
                             {{-- VIEW --}}
 
                             <a
@@ -892,6 +895,8 @@
                                 </form>
 
                             @endpermission
+
+                            @endif
 
                         </td>
 

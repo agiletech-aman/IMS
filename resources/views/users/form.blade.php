@@ -84,6 +84,9 @@
                                     'selected' => old('name', $user?->name),
                                     'label' => 'user name',
                                     'placeholder' => 'Enter full name',
+                                    'pattern' => '[A-Za-z0-9 ]+',
+                                    'patternTitle' => 'Only letters, numbers and spaces are allowed.',
+                                    'stripPattern' => '[^A-Za-z0-9 ]',
                                 ])
                             </div>
 
@@ -178,6 +181,9 @@
                                     'selected' => old('name', $user?->name),
                                     'label' => 'user name',
                                     'placeholder' => 'Enter full name',
+                                    'pattern' => '[A-Za-z0-9 ]+',
+                                    'patternTitle' => 'Only letters, numbers and spaces are allowed.',
+                                    'stripPattern' => '[^A-Za-z0-9 ]',
                                 ])
                             </div>
 

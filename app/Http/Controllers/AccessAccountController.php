@@ -217,7 +217,7 @@ class AccessAccountController extends Controller
                 'string',
                 'min:3',
                 'max:50',
-                'regex:/^[A-Za-z ]+$/',
+                'regex:/^[A-Za-z0-9 ]+$/',
                 Rule::unique('users', 'name')
                     ->where(fn ($query) => $centre ? $query->where('centre', $centre) : $query)
                     ->ignore($accessAccount?->id),

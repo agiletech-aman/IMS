@@ -299,10 +299,10 @@ $brand = Brand::where('name', 'Lenovo')->firstOrFail();
         $rows = $sheet->toArray();
 
         $this->assertSame('Travel History', $sheet->getTitle());
-        $this->assertSame(['Department', 'Assigned User'], [$rows[0][1], $rows[0][3]]);
+        $this->assertSame(['Asset Name', 'Asset Code', 'Department', 'Assigned User'], [$rows[0][1], $rows[0][2], $rows[0][3], $rows[0][5]]);
         $last = $rows[count($rows) - 1];
-        $this->assertSame([$to->name, 'Travel Tester', 'Current'], [$last[1], $last[3], $last[5]]);
+        $this->assertSame([$asset->asset_tag, $to->name, 'Travel Tester', 'Current'], [$last[2], $last[3], $last[5], $last[7]]);
         $previous = $rows[count($rows) - 2];
-        $this->assertSame([$from->name, 'Travel Tester'], [$previous[1], $previous[3]]);
+        $this->assertSame([$from->name, 'Travel Tester'], [$previous[3], $previous[5]]);
     }
 }

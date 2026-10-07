@@ -59,10 +59,11 @@
     <div class="panel-header history-toggle collapsed" role="button" data-bs-toggle="collapse" data-bs-target="#historyMovement" aria-expanded="false" aria-controls="historyMovement"><div><h2>Movement Timeline</h2><p class="mb-0 text-secondary small">Every department move, assignment, reallocation, return and status change, newest first.</p></div><div class="d-flex align-items-center gap-2"><span class="badge-soft muted">{{ $movementTimeline->count() }} {{ \Illuminate\Support\Str::plural('entry', $movementTimeline->count()) }}</span><i class="fa-solid fa-chevron-down history-chevron"></i></div></div>
     <div class="collapse" id="historyMovement"><div class="table-responsive">
         <table class="table data-table mb-0">
-            <thead><tr><th>Date</th><th>Changed By</th><th>Movement</th></tr></thead>
+            <thead><tr><th>Asset</th><th>Date</th><th>Changed By</th><th>Movement</th></tr></thead>
             <tbody>
                 @forelse($movementTimeline as $entry)
                 <tr>
+                    <td class="text-nowrap"><strong>{{ $asset->name }}</strong><div class="small text-secondary">{{ $asset->asset_tag }}</div></td>
                     <td class="text-nowrap">{{ $entry['date']->format('d M Y, h:i A') }}</td>
                     <td>{{ $entry['actor'] }}</td>
                     <td>
@@ -82,7 +83,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="3"><div class="empty-report-state"><i class="fa-solid fa-route"></i><strong>No movement recorded yet</strong><span>Department moves and assignment changes will show up here.</span></div></td></tr>
+                <tr><td colspan="4"><div class="empty-report-state"><i class="fa-solid fa-route"></i><strong>No movement recorded yet</strong><span>Department moves and assignment changes will show up here.</span></div></td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -93,10 +94,11 @@
     <div class="panel-header history-toggle collapsed" role="button" data-bs-toggle="collapse" data-bs-target="#historyDepartment" aria-expanded="false" aria-controls="historyDepartment"><div><h2>Department History</h2><p class="mb-0 text-secondary small">Which department this asset sat in, and for how long.</p></div><div class="d-flex align-items-center gap-2"><span class="badge-soft muted">{{ $departmentPeriods->count() }} {{ \Illuminate\Support\Str::plural('entry', $departmentPeriods->count()) }}</span><i class="fa-solid fa-chevron-down history-chevron"></i></div></div>
     <div class="collapse" id="historyDepartment"><div class="table-responsive">
         <table class="table data-table mb-0">
-            <thead><tr><th>Department</th><th>Sub Department</th><th>From</th><th>To</th><th>Duration</th></tr></thead>
+            <thead><tr><th>Asset</th><th>Department</th><th>Sub Department</th><th>From</th><th>To</th><th>Duration</th></tr></thead>
             <tbody>
                 @foreach($departmentPeriods as $period)
                 <tr>
+                    <td class="text-nowrap"><strong>{{ $asset->name }}</strong><div class="small text-secondary">{{ $asset->asset_tag }}</div></td>
                     <td>
                         <strong>{{ $period['department'] }}</strong>
                         @unless($period['to'])
@@ -118,10 +120,11 @@
     <div class="panel-header history-toggle collapsed" role="button" data-bs-toggle="collapse" data-bs-target="#historyAssignment" aria-expanded="false" aria-controls="historyAssignment"><div><h2>Assignment History</h2><p class="mb-0 text-secondary small">Who this asset was assigned to, and when.</p></div><div class="d-flex align-items-center gap-2"><span class="badge-soft muted">{{ $assignmentHistory->count() }} {{ \Illuminate\Support\Str::plural('entry', $assignmentHistory->count()) }}</span><i class="fa-solid fa-chevron-down history-chevron"></i></div></div>
     <div class="collapse" id="historyAssignment"><div class="table-responsive">
         <table class="table data-table mb-0">
-            <thead><tr><th>Assigned To</th><th>Assigned At</th><th>Assigned By</th><th>Unassigned At</th><th>Unassigned By</th></tr></thead>
+            <thead><tr><th>Asset</th><th>Assigned To</th><th>Assigned At</th><th>Assigned By</th><th>Unassigned At</th><th>Unassigned By</th></tr></thead>
             <tbody>
                 @forelse($assignmentHistory as $entry)
                 <tr>
+                    <td class="text-nowrap"><strong>{{ $asset->name }}</strong><div class="small text-secondary">{{ $asset->asset_tag }}</div></td>
                     <td>
                         <strong>{{ $entry->faculty?->name ?? '—' }}</strong>
                         @unless($entry->unassigned_at)
@@ -134,7 +137,7 @@
                     <td>{{ $entry->unassigned_by ?? '—' }}</td>
                 </tr>
                 @empty
-                <tr><td colspan="5"><div class="empty-report-state"><i class="fa-solid fa-user-clock"></i><strong>No assignment history yet</strong><span>This asset hasn't been assigned to anyone so far.</span></div></td></tr>
+                <tr><td colspan="6"><div class="empty-report-state"><i class="fa-solid fa-user-clock"></i><strong>No assignment history yet</strong><span>This asset hasn't been assigned to anyone so far.</span></div></td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -145,7 +148,7 @@
     <div class="panel-header history-toggle collapsed" role="button" data-bs-toggle="collapse" data-bs-target="#historyStatus" aria-expanded="false" aria-controls="historyStatus"><div><h2>Status Changes</h2><p class="mb-0 text-secondary small">When this asset's status or assignment changed.</p></div><div class="d-flex align-items-center gap-2"><span class="badge-soft muted">{{ $activityLog->count() }} {{ \Illuminate\Support\Str::plural('entry', $activityLog->count()) }}</span><i class="fa-solid fa-chevron-down history-chevron"></i></div></div>
     <div class="collapse" id="historyStatus"><div class="table-responsive">
         <table class="table data-table mb-0">
-            <thead><tr><th>Date</th><th>Changed By</th><th>Change</th></tr></thead>
+            <thead><tr><th>Asset</th><th>Date</th><th>Changed By</th><th>Change</th></tr></thead>
             <tbody>
                 @forelse($activityLog as $log)
                 @php
@@ -154,6 +157,7 @@
                     $newAssignee = $log->new_values['assigned_to'] ?? null;
                 @endphp
                 <tr>
+                    <td class="text-nowrap"><strong>{{ $asset->name }}</strong><div class="small text-secondary">{{ $asset->asset_tag }}</div></td>
                     <td class="text-nowrap">{{ $log->created_at->format('d M Y, h:i A') }}</td>
                     <td>{{ $log->actor_name ?? 'System' }}</td>
                     <td>
@@ -175,7 +179,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="3"><div class="empty-report-state"><i class="fa-solid fa-clock-rotate-left"></i><strong>No status changes yet</strong><span>Status and assignment changes for this asset will show up here.</span></div></td></tr>
+                <tr><td colspan="4"><div class="empty-report-state"><i class="fa-solid fa-clock-rotate-left"></i><strong>No status changes yet</strong><span>Status and assignment changes for this asset will show up here.</span></div></td></tr>
                 @endforelse
             </tbody>
         </table>

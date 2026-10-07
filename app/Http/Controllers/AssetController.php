@@ -378,13 +378,15 @@ public function show(Asset $asset): View
 
         $travelSheet = $spreadsheet->getActiveSheet();
         $travelSheet->setTitle('Travel History');
-        $travelSheet->fromArray(['#', 'Department', 'Sub Department', 'Assigned User', 'From', 'To', 'Days', 'Moved By'], null, 'A1');
-        $travelSheet->getStyle('A1:H1')->getFont()->setBold(true);
+        $travelSheet->fromArray(['#', 'Asset Name', 'Asset Code', 'Department', 'Sub Department', 'Assigned User', 'From', 'To', 'Days', 'Moved By'], null, 'A1');
+        $travelSheet->getStyle('A1:J1')->getFont()->setBold(true);
 
         $row = 2;
         foreach (AssetMovementHistory::for($asset)->travelPeriods() as $index => $period) {
             $travelSheet->fromArray([
                 $index + 1,
+                $asset->name,
+                $asset->asset_tag,
                 $period['department'],
                 $period['sub_department'],
                 $period['user'],
@@ -398,11 +400,13 @@ public function show(Asset $asset): View
 
         $assignmentSheet = $spreadsheet->createSheet();
         $assignmentSheet->setTitle('Assignment History');
-        $assignmentSheet->fromArray(['Assigned To', 'Assigned At', 'Assigned By', 'Unassigned At', 'Unassigned By'], null, 'A1');
+        $assignmentSheet->fromArray(['Asset Name', 'Asset Code', 'Assigned To', 'Assigned At', 'Assigned By', 'Unassigned At', 'Unassigned By'], null, 'A1');
 
         $row = 2;
         foreach ($data['assignmentHistory'] as $entry) {
             $assignmentSheet->fromArray([
+                $asset->name,
+                $asset->asset_tag,
                 $entry->faculty?->name,
                 $entry->assigned_at?->format('d M Y h:i A'),
                 $entry->assigned_by,
@@ -414,11 +418,13 @@ public function show(Asset $asset): View
 
         $statusSheet = $spreadsheet->createSheet();
         $statusSheet->setTitle('Status Changes');
-        $statusSheet->fromArray(['Date', 'Changed By', 'Change'], null, 'A1');
+        $statusSheet->fromArray(['Asset Name', 'Asset Code', 'Date', 'Changed By', 'Change'], null, 'A1');
 
         $row = 2;
         foreach ($data['activityLog'] as $log) {
             $statusSheet->fromArray([
+                $asset->name,
+                $asset->asset_tag,
                 $log->created_at->format('d M Y h:i A'),
                 $log->actor_name ?? 'System',
                 $log->describeStatusAssignmentChange(),
@@ -428,11 +434,13 @@ public function show(Asset $asset): View
 
         $timelineSheet = $spreadsheet->createSheet();
         $timelineSheet->setTitle('Movement Timeline');
-        $timelineSheet->fromArray(['Date', 'Changed By', 'Movement'], null, 'A1');
+        $timelineSheet->fromArray(['Asset Name', 'Asset Code', 'Date', 'Changed By', 'Movement'], null, 'A1');
 
         $row = 2;
         foreach ($data['movementTimeline'] as $entry) {
             $timelineSheet->fromArray([
+                $asset->name,
+                $asset->asset_tag,
                 $entry['date']->format('d M Y h:i A'),
                 $entry['actor'],
                 AssetMovementHistory::describe($entry['events']),
@@ -442,11 +450,13 @@ public function show(Asset $asset): View
 
         $departmentSheet = $spreadsheet->createSheet();
         $departmentSheet->setTitle('Department History');
-        $departmentSheet->fromArray(['Department', 'Sub Department', 'From', 'To', 'Days'], null, 'A1');
+        $departmentSheet->fromArray(['Asset Name', 'Asset Code', 'Department', 'Sub Department', 'From', 'To', 'Days'], null, 'A1');
 
         $row = 2;
         foreach ($data['departmentPeriods'] as $period) {
             $departmentSheet->fromArray([
+                $asset->name,
+                $asset->asset_tag,
                 $period['department'],
                 $period['sub_department'],
                 $period['from']?->format('d M Y h:i A'),
