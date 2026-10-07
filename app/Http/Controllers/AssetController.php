@@ -376,7 +376,27 @@ public function show(Asset $asset): View
 
         $spreadsheet = new Spreadsheet();
 
-        $assignmentSheet = $spreadsheet->getActiveSheet();
+        $travelSheet = $spreadsheet->getActiveSheet();
+        $travelSheet->setTitle('Travel History');
+        $travelSheet->fromArray(['#', 'Department', 'Sub Department', 'Assigned User', 'From', 'To', 'Days', 'Moved By'], null, 'A1');
+        $travelSheet->getStyle('A1:H1')->getFont()->setBold(true);
+
+        $row = 2;
+        foreach (AssetMovementHistory::for($asset)->travelPeriods() as $index => $period) {
+            $travelSheet->fromArray([
+                $index + 1,
+                $period['department'],
+                $period['sub_department'],
+                $period['user'],
+                $period['from']?->format('d M Y h:i A'),
+                $period['to']?->format('d M Y h:i A') ?? 'Current',
+                $period['days'],
+                $period['changed_by'],
+            ], null, "A{$row}");
+            $row++;
+        }
+
+        $assignmentSheet = $spreadsheet->createSheet();
         $assignmentSheet->setTitle('Assignment History');
         $assignmentSheet->fromArray(['Assigned To', 'Assigned At', 'Assigned By', 'Unassigned At', 'Unassigned By'], null, 'A1');
 
@@ -436,7 +456,7 @@ public function show(Asset $asset): View
             $row++;
         }
 
-        foreach ([$assignmentSheet, $statusSheet, $timelineSheet, $departmentSheet] as $sheet) {
+        foreach ([$travelSheet, $assignmentSheet, $statusSheet, $timelineSheet, $departmentSheet] as $sheet) {
             foreach (range('A', $sheet->getHighestColumn()) as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }

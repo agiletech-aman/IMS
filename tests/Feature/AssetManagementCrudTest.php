@@ -282,4 +282,27 @@ $brand = Brand::where('name', 'Lenovo')->firstOrFail();
         $this->assertSame($originalName, $existing->fresh()->name);
         $this->assertDatabaseMissing('assets', ['name' => 'Changed Duplicate Name']);
     }
+
+    public function test_history_excel_starts_with_combined_department_and_user_travel_sheet(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $asset = Asset::firstOrFail();
+        $asset->update(['status' => 'Active', 'assigned_to' => null]);
+        $from = $asset->department;
+        $to = Department::whereKeyNot($asset->department_id)->firstOrFail();
+
+        $asset->update(['assigned_to' => 'Travel Tester']);
+        $asset->update(['department_id' => $to->id, 'sub_department_id' => null]);
+
+        $response = $this->get(route('assets.history.export.xlsx', $asset))->assertOk();
+        $sheet = IOFactory::load($response->baseResponse->getFile()->getPathname())->getSheet(0);
+        $rows = $sheet->toArray();
+
+        $this->assertSame('Travel History', $sheet->getTitle());
+        $this->assertSame(['Department', 'Assigned User'], [$rows[0][1], $rows[0][3]]);
+        $last = $rows[count($rows) - 1];
+        $this->assertSame([$to->name, 'Travel Tester', 'Current'], [$last[1], $last[3], $last[5]]);
+        $previous = $rows[count($rows) - 2];
+        $this->assertSame([$from->name, 'Travel Tester'], [$previous[1], $previous[3]]);
+    }
 }

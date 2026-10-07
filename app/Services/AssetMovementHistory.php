@@ -99,6 +99,56 @@ class AssetMovementHistory
     }
 
     /**
+     * Combined department + user stays, oldest first: a new row starts whenever
+     * the department, sub-department or assigned user changes. Each row:
+     * department, sub_department, user, from, to (null = current), days, changed_by.
+     */
+    public function travelPeriods(): Collection
+    {
+        $keys = ['department_id', 'sub_department_id', 'assigned_to'];
+        $moves = $this->logs()
+            ->filter(fn (AuditLog $log) => $log->action === 'UPDATE')
+            ->filter(fn (AuditLog $log) => $this->touches($log->new_values ?? [], $keys))
+            ->values();
+
+        // Rewind from the asset's current state through each move's old values
+        // to find where (and with whom) the asset started.
+        $state = [
+            'department_id' => $this->asset->department_id,
+            'sub_department_id' => $this->asset->sub_department_id,
+            'assigned_to' => $this->asset->assigned_to,
+        ];
+        foreach ($moves->reverse() as $log) {
+            foreach ($keys as $key) {
+                if (array_key_exists($key, $log->new_values ?? [])) {
+                    $state[$key] = $log->old_values[$key] ?? null;
+                }
+            }
+        }
+
+        $create = $this->logs()->firstWhere('action', 'CREATE');
+        $periods = [];
+        $start = $this->asset->created_at;
+        $actor = $create?->actor_name ?? 'System';
+
+        foreach ($moves as $log) {
+            $periods[] = $this->travelPeriod($state, $start, $log->created_at, $actor);
+
+            foreach ($keys as $key) {
+                if (array_key_exists($key, $log->new_values ?? [])) {
+                    $state[$key] = $log->new_values[$key];
+                }
+            }
+            $start = $log->created_at;
+            $actor = $log->actor_name ?? 'System';
+        }
+
+        $periods[] = $this->travelPeriod($state, $start, null, $actor);
+
+        return collect($periods)->values();
+    }
+
+    /**
      * Plain-text summary of a timeline row's events, for CSV/XLSX export.
      */
     public static function describe(array $events): string
@@ -197,6 +247,19 @@ class AssetMovementHistory
             'from' => $from,
             'to' => $to,
             'days' => $from ? (int) $from->diffInDays($to ?? now()) : null,
+        ];
+    }
+
+    private function travelPeriod(array $state, ?CarbonInterface $from, ?CarbonInterface $to, string $actor): array
+    {
+        return [
+            'department' => $this->departmentName($state['department_id']),
+            'sub_department' => $this->subDepartmentName($state['sub_department_id']),
+            'user' => filled($state['assigned_to']) ? $state['assigned_to'] : 'Unassigned',
+            'from' => $from,
+            'to' => $to,
+            'days' => $from ? (int) $from->diffInDays($to ?? now()) : null,
+            'changed_by' => $actor,
         ];
     }
 
