@@ -1,7 +1,7 @@
 /**
  * Shared real-time form validation for Name, Email, and Mobile/Phone fields
  * across every Add/Edit form in the app. Applies to any input matching:
- *   - input[name="name"]            -> up to 50 characters
+ *   - input[name="name"]            -> up to 100 characters
  *   - input[type="email"]           -> valid email format
  *   - input[name="contact"|"phone"] -> exactly 10 digits, numbers only
  *
@@ -11,7 +11,7 @@
 (function () {
     'use strict';
 
-    const NAME_MAX = 50;
+    const NAME_MAX = 100;
     const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const PHONE_LENGTH = 10;
     const PHONE_FIELD_NAMES = ['contact', 'phone'];
