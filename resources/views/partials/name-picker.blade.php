@@ -14,7 +14,7 @@
         data-name-input
         autocomplete="off"
         minlength="3"
-        maxlength="100"
+        maxlength="101"
         pattern="{{ $pattern }}"
         title="{{ $patternTitle }}"
         placeholder="{{ $placeholder ?? 'Type or select '.($label ?? 'name') }}"
