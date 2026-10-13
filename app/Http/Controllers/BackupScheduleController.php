@@ -61,7 +61,7 @@ class BackupScheduleController extends Controller
             'name' => [
                 'required',
                 'string',
-                'max:50',
+                'max:100',
                 'regex:/^[A-Za-z0-9 ]+$/',
                 Rule::unique('backup_schedules', 'name')
                     ->where(fn ($query) => $centre ? $query->where('centre', $centre) : $query)

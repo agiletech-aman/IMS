@@ -590,7 +590,7 @@ $rules = [
             'name' => [
                 'required',
                 'string',
-                'max:50',
+                'max:100',
                 'regex:/^[A-Za-z0-9 ]+$/',
                 // At most one number (a run of digits of any length), e.g.
                 // "Dell Laptop 5420" is fine but "Dell 5420 Laptop 2" is not.
