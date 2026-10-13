@@ -90,7 +90,7 @@ class AdminController extends Controller
                 'string',
                 'min:3',
                 'max:50',
-                'regex:/^[A-Za-z ]+$/',
+                'regex:/^[A-Za-z0-9 ]+$/',
                 Rule::unique('admins', 'name')->ignore($admin?->id),
             ],
             'email' => ['required', 'email', 'max:255', Rule::unique('admins', 'email')->ignore($admin?->id)],

@@ -29,11 +29,7 @@
                         'selected' => $value('name'),
                         'label' => strtolower($singular).' name',
                         'placeholder' => 'Enter '.strtolower($singular).' name',
-                    ] + (in_array($module, ['departments', 'sub-departments']) ? [
-                        'pattern' => '[A-Za-z0-9 ]+',
-                        'patternTitle' => 'Only letters, numbers and spaces are allowed.',
-                        'stripPattern' => '[^A-Za-z0-9 ]',
-                    ] : []))
+                    ])
                 </div>
                 <div class="{{ $module === 'sub-types' ? 'col-12 col-sm-6 col-md-3' : 'col-md-5' }}"><label class="form-label">Code</label><input class="form-control" value="{{ $editing ? $record->code : $prefix.'-Auto' }}" readonly><small class="text-secondary">Generated automatically</small></div>
                 @if($module === 'sub-departments')

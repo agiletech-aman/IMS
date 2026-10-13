@@ -2,9 +2,9 @@
     $inputName = $inputName ?? 'name';
     $selected = $selected ?? '';
     $isRequired = $required ?? true;
-    $pattern = $pattern ?? '[A-Za-z ]+';
-    $patternTitle = $patternTitle ?? 'Only letters and spaces are allowed.';
-    $stripPattern = $stripPattern ?? '[^A-Za-z ]';
+    $pattern = $pattern ?? '[A-Za-z0-9 ]+';
+    $patternTitle = $patternTitle ?? 'Only letters, numbers and spaces are allowed.';
+    $stripPattern = $stripPattern ?? '[^A-Za-z0-9 ]';
 @endphp
 <div class="combo-select" data-name-field style="position:relative">
     <input
