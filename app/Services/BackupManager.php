@@ -188,13 +188,13 @@ class BackupManager
         $count = 0;
         $seenRoots = [];
 
-        foreach ((array) config('backup.upload_paths', []) as $index => $configuredRoot) {
+        foreach ((array) config('backup.upload_paths', []) as $name => $configuredRoot) {
             $root = realpath($configuredRoot);
             if ($root === false || ! is_dir($root) || isset($seenRoots[$root])) {
                 continue;
             }
             $seenRoots[$root] = true;
-            $prefix = $index === 0 ? 'uploads/storage' : 'uploads/public';
+            $prefix = 'uploads/'.$name;
             $iterator = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS),
                 \RecursiveIteratorIterator::LEAVES_ONLY,

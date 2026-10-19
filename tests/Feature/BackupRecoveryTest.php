@@ -31,7 +31,7 @@ class BackupRecoveryTest extends TestCase
         config([
             'backup.path' => $this->backupPath,
             'backup.shell_enabled' => false,
-            'backup.upload_paths' => [$this->uploadPath],
+            'backup.upload_paths' => ['storage' => $this->uploadPath],
         ]);
     }
 

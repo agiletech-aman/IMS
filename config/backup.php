@@ -19,11 +19,13 @@ return [
     /*
     | Only upload roots are archived. This deliberately prevents application
     | source, .env, credentials, dependencies, logs, caches and prior backups
-    | from entering a files backup.
+    | from entering a files backup. Each key is the folder name under
+    | "uploads/" inside the backup ZIP.
     */
     'upload_paths' => [
-        storage_path('app/public'),
-        public_path('uploads'),
+        'storage' => storage_path('app/public'),
+        'public' => public_path('uploads'),
+        'private' => storage_path('app/private'),
     ],
 
     /*
