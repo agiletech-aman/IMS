@@ -160,7 +160,7 @@ class BackupManager
                 $this->log($backup, 'info', 'database_exported', "Database exported using {$databaseMethod}.");
             }
 
-            $fileCount = $this->addUploads($zip);
+            $fileCount = $this->addProjectFiles($zip);
             $zip->addFromString('backup-manifest.json', json_encode([
                 'backup_number' => $backup->backup_number,
                 'type' => $backup->type,
@@ -168,7 +168,7 @@ class BackupManager
                 'file_count' => $fileCount,
                 'database_method' => $databaseMethod,
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-            $this->log($backup, 'info', 'files_archived', "{$fileCount} uploaded files added to the archive.");
+            $this->log($backup, 'info', 'files_archived', "{$fileCount} project files added to the archive.");
         } finally {
             $zip->close();
             if ($temporarySql) {
@@ -183,52 +183,60 @@ class BackupManager
         return $databaseMethod;
     }
 
-    private function addUploads(ZipArchive $zip): int
+    private function addProjectFiles(ZipArchive $zip): int
     {
-        $count = 0;
-        $seenRoots = [];
+        $root = realpath((string) config('backup.source_root', base_path()));
+        if ($root === false || ! is_dir($root)) {
+            throw new RuntimeException('The backup source directory is missing.');
+        }
+        $root = rtrim($root, DIRECTORY_SEPARATOR);
+        $excluded = $this->excludedPaths($root);
 
-        foreach ((array) config('backup.upload_paths', []) as $name => $configuredRoot) {
-            $root = realpath($configuredRoot);
-            if ($root === false || ! is_dir($root) || isset($seenRoots[$root])) {
+        // Prune excluded directories while walking so vendor/, .git/ etc.
+        // are never traversed. Symlinks (e.g. public/storage) are skipped.
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveCallbackFilterIterator(
+                new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS),
+                fn (\SplFileInfo $file) => ! $file->isLink()
+                    && ! in_array($this->relativePath($root, $file->getPathname()), $excluded, true),
+            ),
+            \RecursiveIteratorIterator::LEAVES_ONLY,
+        );
+
+        $count = 0;
+        foreach ($iterator as $file) {
+            if (! $file->isFile()) {
                 continue;
             }
-            $seenRoots[$root] = true;
-            $prefix = 'uploads/'.$name;
-            $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS),
-                \RecursiveIteratorIterator::LEAVES_ONLY,
-            );
-
-            foreach ($iterator as $file) {
-                if (! $file->isFile() || $file->isLink()) {
-                    continue;
-                }
-                $path = $file->getRealPath();
-                if ($path === false || ! str_starts_with($path, rtrim($root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR)) {
-                    continue;
-                }
-                $relative = str_replace('\\', '/', substr($path, strlen($root) + 1));
-                if ($this->excludedUploadPath($relative)) {
-                    continue;
-                }
-                if (! $zip->addFile($path, $prefix.'/'.$relative)) {
-                    throw new RuntimeException("Unable to add an uploaded file to the archive: {$relative}");
-                }
-                $count++;
+            $relative = $this->relativePath($root, $file->getPathname());
+            if (! $zip->addFile($file->getPathname(), 'files/'.$relative)) {
+                throw new RuntimeException("Unable to add a file to the archive: {$relative}");
             }
+            $count++;
         }
 
         return $count;
     }
 
-    private function excludedUploadPath(string $relative): bool
+    /** @return string[] paths relative to $root */
+    private function excludedPaths(string $root): array
     {
-        $segments = array_map('strtolower', explode('/', str_replace('\\', '/', $relative)));
-        $blocked = ['.env', 'vendor', 'node_modules', 'cache', 'logs', 'backups'];
+        $paths = array_map(
+            fn (string $path) => trim(str_replace('\\', '/', $path), '/'),
+            (array) config('backup.excluded_paths', []),
+        );
 
-        return collect($segments)->contains(fn (string $segment) => in_array($segment, $blocked, true))
-            || str_starts_with(basename($relative), '.');
+        $backupDir = realpath($this->storage->root());
+        if ($backupDir !== false && str_starts_with($backupDir, $root.DIRECTORY_SEPARATOR)) {
+            $paths[] = $this->relativePath($root, $backupDir);
+        }
+
+        return array_values(array_unique($paths));
+    }
+
+    private function relativePath(string $root, string $path): string
+    {
+        return str_replace('\\', '/', substr($path, strlen($root) + 1));
     }
 
     private function log(Backup $backup, string $level, string $event, string $message, array $context = []): void

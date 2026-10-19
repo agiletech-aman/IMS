@@ -31,7 +31,7 @@ class BackupRecoveryTest extends TestCase
         config([
             'backup.path' => $this->backupPath,
             'backup.shell_enabled' => false,
-            'backup.upload_paths' => ['storage' => $this->uploadPath],
+            'backup.source_root' => $this->uploadPath,
         ]);
     }
 
@@ -79,11 +79,11 @@ class BackupRecoveryTest extends TestCase
         $this->assertSame('completed', $full->status);
         $zip = new \ZipArchive;
         $this->assertTrue($zip->open($this->backupPath.DIRECTORY_SEPARATOR.$files->file_path) === true);
-        $this->assertNotFalse($zip->locateName('uploads/storage/manual.pdf'));
+        $this->assertNotFalse($zip->locateName('files/manual.pdf'));
         $zip->close();
         $this->assertTrue($zip->open($this->backupPath.DIRECTORY_SEPARATOR.$full->file_path) === true);
         $this->assertNotFalse($zip->locateName('database.sql'));
-        $this->assertNotFalse($zip->locateName('uploads/storage/manual.pdf'));
+        $this->assertNotFalse($zip->locateName('files/manual.pdf'));
         $zip->close();
     }
 

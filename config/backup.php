@@ -17,15 +17,22 @@ return [
     ],
 
     /*
-    | Only upload roots are archived. This deliberately prevents application
-    | source, .env, credentials, dependencies, logs, caches and prior backups
-    | from entering a files backup. Each key is the folder name under
-    | "uploads/" inside the backup ZIP.
+    | The whole project directory (including .env) is archived under "files/"
+    | in the backup ZIP. Paths below are relative to source_root and skipped:
+    | Composer/NPM dependencies, git history, runtime caches, logs and prior
+    | backups (the backup directory itself is always skipped as well).
     */
-    'upload_paths' => [
-        'storage' => storage_path('app/public'),
-        'public' => public_path('uploads'),
-        'private' => storage_path('app/private'),
+    'source_root' => base_path(),
+
+    'excluded_paths' => [
+        'vendor',
+        'node_modules',
+        '.git',
+        'storage/app/backups',
+        'storage/framework/cache',
+        'storage/framework/sessions',
+        'storage/framework/views',
+        'storage/logs',
     ],
 
     /*
