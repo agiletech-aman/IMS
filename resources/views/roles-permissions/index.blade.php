@@ -113,7 +113,12 @@
 <style>
 .role-selector{border:1px solid var(--border-color);color:var(--text-primary);transition:.2s}
 .role-selector:hover,.role-selector.is-selected{transform:translateY(-2px);border-color:var(--accent-color);box-shadow:0 12px 30px color-mix(in srgb,var(--accent-color) 13%,transparent)}
-.role-permission-panel .table-responsive{scrollbar-width:none;-ms-overflow-style:none}
+.role-permission-panel .table-responsive{max-height:calc(100vh - 230px);overflow:auto;scrollbar-width:none;-ms-overflow-style:none}
+.permission-table{border-collapse:separate;border-spacing:0}
+.permission-table thead th{position:sticky;top:0;z-index:2;background:var(--bg-secondary);box-shadow:inset 0 -1px 0 var(--border-color)}
+.permission-table tbody td:first-child{position:sticky;left:0;z-index:1;background:var(--card-bg);box-shadow:inset -1px 0 0 var(--border-color)}
+.permission-table thead th:first-child{left:0;z-index:3;box-shadow:inset -1px 0 0 var(--border-color),inset 0 -1px 0 var(--border-color)}
+.permission-table tbody tr:hover td:first-child{background:var(--bg-secondary)}
 .role-permission-panel .table-responsive::-webkit-scrollbar{display:none;width:0;height:0}
 .permission-table .form-check-input{width:2.1em;height:1.1em;margin:0;cursor:pointer}
 .permission-table .form-check-input:disabled{opacity:.32;cursor:not-allowed}
