@@ -13,6 +13,7 @@ use App\Models\SubDepartment;
 use App\Services\AssetMovementHistory;
 use App\Services\CentreContextService;
 use App\Services\NotificationService;
+use App\Services\PermissionService;
 use App\Support\UniqueCodeGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,6 +31,7 @@ class AssetController extends Controller
     public function __construct(
         private readonly NotificationService $notifications,
         private readonly CentreContextService $centreContext,
+        private readonly PermissionService $permissions,
     ) {}
 
 
@@ -572,6 +574,7 @@ return [
             'departments' => Department::where('status', 'Active')->orderBy('name')->get(),
             'subDepartments' => SubDepartment::where('status', 'Active')->orderBy('name')->get(),
             'users' => Faculty::with('department:id,name')->where('status', 'Active')->orderBy('name')->get(['id', 'name', 'unique_id', 'department_id']),
+            'optionalFields' => $this->optionalFields(),
         ];
     }
 
@@ -583,9 +586,21 @@ return [
         ];
     }
 
+    /**
+     * Roles granted "Optional Fields" on the Assets module may leave these
+     * otherwise mandatory fields blank. Super Admin keeps the normal rules,
+     * since it bypasses the permission grid and cannot be configured there.
+     */
+    private function optionalFields(): bool
+    {
+        return ! $this->permissions->isAdministrator()
+            && $this->permissions->allows('assets', 'skip_required');
+    }
+
     private function rules(Request $request, ?int $id = null): array
     {
 $centre = $this->centreContext->selected();
+$presence = $this->optionalFields() ? 'nullable' : 'required';
 $rules = [
             'name' => [
                 'required',
@@ -601,11 +616,11 @@ $rules = [
             ],
             'asset_type_id' => ['required', 'exists:asset_types,id'],
             'asset_subtype_id' => ['nullable', Rule::exists('asset_subtypes', 'id')->where('asset_type_id', $request->input('asset_type_id'))],
-            'department_id' => ['required', 'exists:departments,id'],
-            'sub_department_id' => ['required', Rule::exists('sub_departments', 'id')->where('department_id', $request->input('department_id'))],
-            'serial_number' => ['required', 'string', 'max:255', Rule::unique('assets')->ignore($id)],
-            'fr_number' => ['required', 'string', 'max:255'],
-            'installation_date' => ['required', 'date'],
+            'department_id' => [$presence, 'exists:departments,id'],
+            'sub_department_id' => [$presence, Rule::exists('sub_departments', 'id')->where('department_id', $request->input('department_id'))],
+            'serial_number' => [$presence, 'string', 'max:255', Rule::unique('assets')->ignore($id)],
+            'fr_number' => [$presence, 'string', 'max:255'],
+            'installation_date' => [$presence, 'date'],
             'assigned_to' => ['nullable', 'string', 'max:255', function ($attribute, $value, $fail) {
                 if ($value === null || $value === '') {
                     return;

@@ -8,7 +8,11 @@ class RolePermission extends Model
 {
     public const ACTIONS = [
         'view', 'create', 'update', 'delete', 'assign', 'import', 'export',
-        'download', 'verify', 'restore',
+        'download', 'verify', 'restore', 'skip_required',
+    ];
+
+    public const ACTION_LABELS = [
+        'skip_required' => 'Optional Fields',
     ];
 
     public const MODULES = [
@@ -42,7 +46,7 @@ class RolePermission extends Model
     protected $fillable = [
         'role', 'module', 'centre', 'can_view', 'can_create', 'can_update',
         'can_delete', 'can_assign', 'can_import', 'can_export',
-        'can_download', 'can_verify', 'can_restore',
+        'can_download', 'can_verify', 'can_restore', 'can_skip_required',
     ];
 
     protected function casts(): array
@@ -58,6 +62,7 @@ class RolePermission extends Model
             'can_download' => 'boolean',
             'can_verify' => 'boolean',
             'can_restore' => 'boolean',
+            'can_skip_required' => 'boolean',
         ];
     }
 }

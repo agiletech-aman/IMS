@@ -68,7 +68,7 @@
             </div>
             <div class="table-responsive">
                 <table class="table data-table permission-table">
-                    <thead><tr><th>Module</th>@foreach($actions as $action)<th class="text-center">{{ ucfirst($action) }}</th>@endforeach</tr></thead>
+                    <thead><tr><th>Module</th>@foreach($actions as $action)<th class="text-center">{{ \App\Models\RolePermission::ACTION_LABELS[$action] ?? ucfirst($action) }}</th>@endforeach</tr></thead>
                     <tbody>
                     @foreach($modules as $moduleKey=>$module)
                         @php
@@ -104,7 +104,7 @@
             </div>
             <div class="panel-body border-top permission-note">
                 <i class="fa-solid fa-circle-info"></i>
-                <span><strong>View</strong> is the module-access switch and is required for every other action. Super Admin retains unrestricted access.</span>
+                <span><strong>View</strong> is the module-access switch and is required for every other action. <strong>Optional Fields</strong> lets the role save assets without Serial Number, FR Number, Department, Sub Department, or Installation Date. Super Admin retains unrestricted access.</span>
             </div>
         </div>
     @endforeach

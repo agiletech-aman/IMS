@@ -3,6 +3,8 @@ $editing = isset($asset);
 $field = fn ($name, $default = '') => old($name, $editing ? $asset->{$name} : $default);
 $warrantyEnabled = (bool) old('warranty_enabled', $editing && filled($asset->warranty_expiry));
 $amcEnabled = (bool) old('amc_enabled', $editing && filled($asset->amc_expiry));
+$optionalFields = $optionalFields ?? false;
+$requiredMark = $optionalFields ? '' : ' <span class="text-danger">*</span>';
 $existingAssetNames = \App\Models\Asset::query()->pluck('name')->filter()->unique()->sort()->values();
 @endphp
 <style>
@@ -42,15 +44,15 @@ $existingAssetNames = \App\Models\Asset::query()->pluck('name')->filter()->uniqu
                 <div class="col-md-6 col-xl-4"><label class="form-label">Subtype</label><select class="form-select" id="assetSubtype" name="asset_subtype_id">
                         <option value="">Select subtype</option>@foreach($subtypes as $subtype)<option value="{{ $subtype->id }}" data-asset-type="{{ $subtype->asset_type_id }}" @selected((string)$field('asset_subtype_id')===(string)$subtype->id)>{{ $subtype->name }}</option>@endforeach
                     </select></div>
-                <div class="col-md-6 col-xl-4"><label class="form-label">Serial Number <span class="text-danger">*</span></label><input class="form-control" name="serial_number" value="{{ $field('serial_number') }}" placeholder="Enter unique serial number" required></div>
-                <div class="col-md-6 col-xl-4"><label class="form-label">FR Number <span class="text-danger">*</span></label><input class="form-control" name="fr_number" value="{{ $field('fr_number') }}" placeholder="Enter FR number" required></div>
-                <div class="col-md-6 col-xl-4"><label class="form-label">Department <span class="text-danger">*</span></label><select class="form-select" name="department_id" id="assetDepartment" required>
+                <div class="col-md-6 col-xl-4"><label class="form-label">Serial Number{!! $requiredMark !!}</label><input class="form-control" name="serial_number" value="{{ $field('serial_number') }}" placeholder="Enter unique serial number" @required(! $optionalFields)></div>
+                <div class="col-md-6 col-xl-4"><label class="form-label">FR Number{!! $requiredMark !!}</label><input class="form-control" name="fr_number" value="{{ $field('fr_number') }}" placeholder="Enter FR number" @required(! $optionalFields)></div>
+                <div class="col-md-6 col-xl-4"><label class="form-label">Department{!! $requiredMark !!}</label><select class="form-select" name="department_id" id="assetDepartment" @required(! $optionalFields)>
                         <option value="">Select department</option>@foreach($departments as $department)<option value="{{ $department->id }}" @selected((string)$field('department_id')===(string)$department->id)>{{ $department->name }}</option>@endforeach
                     </select></div>
-                <div class="col-md-6 col-xl-4"><label class="form-label">Sub Department <span class="text-danger">*</span></label><select class="form-select" name="sub_department_id" id="assetSubDepartment" required>
+                <div class="col-md-6 col-xl-4"><label class="form-label">Sub Department{!! $requiredMark !!}</label><select class="form-select" name="sub_department_id" id="assetSubDepartment" @required(! $optionalFields)>
                         <option value="">Select sub department</option>@foreach($subDepartments as $subDepartment)<option value="{{ $subDepartment->id }}" data-department="{{ $subDepartment->department_id }}" @selected((string)$field('sub_department_id')===(string)$subDepartment->id)>{{ $subDepartment->name }}</option>@endforeach
                     </select></div>
-<div class="col-md-6 col-xl-4"><label class="form-label">Installation Date <span class="text-danger">*</span></label><input class="form-control" type="date" name="installation_date" value="{{ old('installation_date', $editing ? $asset->installation_date?->format('Y-m-d') : '') }}" placeholder="Select installation date" required></div>
+<div class="col-md-6 col-xl-4"><label class="form-label">Installation Date{!! $requiredMark !!}</label><input class="form-control" type="date" name="installation_date" value="{{ old('installation_date', $editing ? $asset->installation_date?->format('Y-m-d') : '') }}" placeholder="Select installation date" @required(! $optionalFields)></div>
                 <div class="col-12" id="subtypeFieldsWrap" hidden>
                     <hr class="my-1">
                     <p class="form-label mb-2">Parameters</p>
