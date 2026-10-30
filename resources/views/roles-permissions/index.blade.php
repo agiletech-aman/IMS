@@ -113,6 +113,8 @@
 <style>
 .role-selector{border:1px solid var(--border-color);color:var(--text-primary);transition:.2s}
 .role-selector:hover,.role-selector.is-selected{transform:translateY(-2px);border-color:var(--accent-color);box-shadow:0 12px 30px color-mix(in srgb,var(--accent-color) 13%,transparent)}
+.role-permission-panel .table-responsive{scrollbar-width:none;-ms-overflow-style:none}
+.role-permission-panel .table-responsive::-webkit-scrollbar{display:none;width:0;height:0}
 .permission-table .form-check-input{width:2.1em;height:1.1em;margin:0;cursor:pointer}
 .permission-table .form-check-input:disabled{opacity:.32;cursor:not-allowed}
 .permission-na{display:block;margin-top:3px;color:var(--text-muted);font-size:8px}
